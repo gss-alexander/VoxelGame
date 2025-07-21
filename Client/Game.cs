@@ -3,6 +3,7 @@ using System.Numerics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
+using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 
 namespace Client;
@@ -33,6 +34,8 @@ public class Game
     private IKeyboard _primaryKeyboard;
 
     private IWindow _window;
+
+    private ImGuiController _imGuiController;
     
     public unsafe void Load(IWindow window)
     {
@@ -73,6 +76,8 @@ public class Game
             .Build(_gl);
 
         _frameBufferSize = window.Size;
+
+        _imGuiController = new ImGuiController(_gl, window, inputContext);
     }
 
     public void Update(double deltaTime)
@@ -103,11 +108,12 @@ public class Game
     
     public unsafe void Render(double deltaTime)
     {
+        _imGuiController.Update((float)deltaTime);
+        
         _gl.Enable(EnableCap.DepthTest);
         _gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Add this for debugging
         _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
     
-        _vao.Bind();
         
         _textureArray.Bind(TextureUnit.Texture0);
         // _texture.Bind(TextureUnit.Texture0);
@@ -127,6 +133,12 @@ public class Game
         _shader.SetUniform("uProjection", projection);
 
         _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_chunkMesh.Vertices.Length / 6)); 
+        
+        ImGuiNET.ImGui.Begin("Debug");
+        ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");
+        ImGuiNET.ImGui.End(); 
+        
+        _imGuiController.Render();
     }
 
     private static float DegreesToRadians(float degrees)
