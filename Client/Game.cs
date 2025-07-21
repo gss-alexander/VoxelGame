@@ -12,22 +12,12 @@ public class Game
 {
     private GL _gl;
 
-    // vertex array object - holds information required to draw an object to the screen, such as vertex data.
-    private VertexArrayObject<float, uint> _vao;
-
-    // vertex buffer object - area of memory that holds vertex data
-    private BufferObject<float> _vbo;
-
-    // entity buffer object - stores indices to re-use vertices when drawing
-    private BufferObject<uint> _ebo;
-
     private Shader _shader;
     private TextureArray _textureArray;
 
     private Camera _camera = new();
 
-    private Chunk _chunk = new(0, 0);
-    private Mesh _chunkMesh;
+    private List<Chunk> _chunks = new();
     
     private Vector2D<int> _frameBufferSize;
 
@@ -55,16 +45,15 @@ public class Game
 
         _gl = window.CreateOpenGL();
 
-        // _ebo = new BufferObject<uint>(_gl, BlockData.Indices, BufferTargetARB.ElementArrayBuffer);
-        // _vbo = new BufferObject<float>(_gl, BlockData.Vertices, BufferTargetARB.ArrayBuffer);
-        _chunkMesh = _chunk.GenerateMesh();
-        _ebo = new BufferObject<uint>(_gl, _chunkMesh.Indices, BufferTargetARB.ElementArrayBuffer);
-        _vbo = new BufferObject<float>(_gl, _chunkMesh.Vertices, BufferTargetARB.ArrayBuffer);
-        _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
-        
-        _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 6, 0);
-        _vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 6, 3);
-        _vao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 6, 5);
+        for (int x = -3; x <= 3; x++)
+        {
+            for (int z = -3; z <= 3; z++)
+            {
+                var chunk = new Chunk(x, z);
+                chunk.Initialize(_gl);
+                _chunks.Add(chunk);
+            }
+        }
         
         _shader = new Shader(_gl, 
             "C:\\dev\\personal\\VoxelGame\\Client\\Shaders\\shader.vert",
@@ -111,12 +100,11 @@ public class Game
         _imGuiController.Update((float)deltaTime);
         
         _gl.Enable(EnableCap.DepthTest);
-        _gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Add this for debugging
+        _gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
     
         
         _textureArray.Bind(TextureUnit.Texture0);
-        // _texture.Bind(TextureUnit.Texture0);
         _shader.Use();
         _shader.SetUniform("uTextureArray", 0);
 
@@ -132,10 +120,15 @@ public class Game
         _shader.SetUniform("uView", view);
         _shader.SetUniform("uProjection", projection);
 
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_chunkMesh.Vertices.Length / 6)); 
+        // Render all chunks
+        foreach (var chunk in _chunks)
+        {
+            chunk.Render();
+        }
         
         ImGuiNET.ImGui.Begin("Debug");
         ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");
+        ImGuiNET.ImGui.Text($"Chunks: {_chunks.Count}");
         ImGuiNET.ImGui.End(); 
         
         _imGuiController.Render();

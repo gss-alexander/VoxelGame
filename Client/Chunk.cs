@@ -11,6 +11,11 @@ public class Chunk
     private Vector2D<int> _position;
 
     private Mesh _mesh;
+    private GL _gl;
+    private VertexArrayObject<float, uint> _vao;
+    private BufferObject<float> _vbo;
+    private BufferObject<uint> _ebo;
+    private bool _isInitialized;
 
     public Chunk(int chunkX, int chunkY)
     {
@@ -19,6 +24,31 @@ public class Chunk
         Fill(BlockType.Dirt);
         RandomFill();
         _mesh = GenerateMesh();
+    }
+
+    public void Initialize(GL gl)
+    {
+        _gl = gl;
+        
+        // Create buffers and VAO for this chunk
+        _ebo = new BufferObject<uint>(_gl, _mesh.Indices, BufferTargetARB.ElementArrayBuffer);
+        _vbo = new BufferObject<float>(_gl, _mesh.Vertices, BufferTargetARB.ArrayBuffer);
+        _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
+        
+        // Set up vertex attributes
+        _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 6, 0);
+        _vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 6, 3);
+        _vao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 6, 5);
+        
+        _isInitialized = true;
+    }
+
+    public void Render()
+    {
+        if (!_isInitialized) return;
+        
+        _vao.Bind();
+        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_mesh.Vertices.Length / 6));
     }
 
     public void Fill(BlockType block)
