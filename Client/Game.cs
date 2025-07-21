@@ -113,7 +113,7 @@ public class Game
         var model = Matrix4x4.CreateRotationY(DegreesToRadians(0f)) *
                     Matrix4x4.CreateRotationX(DegreesToRadians(0f));
         var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Position + _camera.Front, _camera.Up);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView(DegreesToRadians(45.0f),
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(DegreesToRadians(75.0f),
             (float)_frameBufferSize.X / _frameBufferSize.Y, 0.1f, 100.0f);
     
         _shader.SetUniform("uModel", model);
