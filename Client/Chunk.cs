@@ -5,6 +5,8 @@ namespace Client;
 
 public class Chunk
 {
+    public Vector2D<int> Position => _position;
+    
     public const int Size = 16; 
 
     private readonly BlockType[] _blocks;
@@ -21,8 +23,7 @@ public class Chunk
     {
         _position = new Vector2D<int>(chunkX, chunkY);
         _blocks = new BlockType[Size * Size * Size];
-        Fill(BlockType.Dirt);
-        RandomFill();
+        GenerateChunk();
         _mesh = GenerateMesh();
     }
 
@@ -36,9 +37,10 @@ public class Chunk
         _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
         
         // Set up vertex attributes
-        _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 6, 0);
-        _vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 6, 3);
-        _vao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 6, 5);
+        _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
+        _vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
+        _vao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
+        _vao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness 
         
         _isInitialized = true;
     }
@@ -65,30 +67,32 @@ public class Chunk
         }
     }
 
-    private void RandomFill()
+    private void GenerateChunk()
     {
-        var rng = new Random(DateTime.Now.Millisecond);
+        var noise = new FastNoiseLite();
+        noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+        noise.SetFrequency(0.04f); // Lower frequency for larger features
+    
         for (var x = 0; x < Size; x++)
         {
-            for (var y = 0; y < Size; y++)
+            for (var z = 0; z < Size; z++)
             {
-                for (var z = 0; z < Size; z++)
+                var worldX = x + (_position.X * Size);
+                var worldZ = z + (_position.Y * Size);
+            
+                // Sample multiple octaves for more natural variation
+                var baseHeight = noise.GetNoise(worldX, worldZ);
+                var detailHeight = noise.GetNoise(worldX * 4, worldZ * 4) * 0.25f;
+                var combinedNoise = baseHeight + detailHeight;
+            
+                // Use a base terrain level and scale height more gradually
+                var baseLevel = 6;
+                var heightVariation = 8;
+                var height = (int)Math.Clamp(baseLevel + (combinedNoise * heightVariation), 1, Size - 1);
+            
+                for (var y = 0; y < height; y++)
                 {
-                    var randomNumber = rng.Next(0, 4);
-                    if (randomNumber == 0)
-                    {
-                        SetBlock(x, y, z, BlockType.Air);
-                    }
-                    
-                    else if (randomNumber == 1)
-                    {
-                        SetBlock(x, y, z, BlockType.Dirt);
-                    }
-
-                    else
-                    {
-                        SetBlock(x, y, z, BlockType.Stone);
-                    }
+                    SetBlock(x, y, z, BlockType.Cobblestone);
                 }
             }
         }
@@ -132,19 +136,22 @@ public class Chunk
 
                     var textureIndex = GetTextureIndex(blockType);
                     
-                    for (var vertexIndex = 0; vertexIndex < BlockData.Vertices.Length; vertexIndex += 5)
+                    for (var vertexIndex = 0; vertexIndex < BlockData.Vertices.Length; vertexIndex += 6)
                     {
                         var vX = BlockData.Vertices[vertexIndex] + x + (Size * _position.X);
                         var vY = BlockData.Vertices[vertexIndex + 1] + y;
-                        var vZ = BlockData.Vertices[vertexIndex + 2] + z + (Size *  _position.Y);
+                        var vZ = BlockData.Vertices[vertexIndex + 2] + z + (Size * _position.Y);
                         var vU = BlockData.Vertices[vertexIndex + 3];
                         var vV = BlockData.Vertices[vertexIndex + 4];
+                        var brightness = BlockData.Vertices[vertexIndex + 5];
+    
                         vertices.Add(vX);
                         vertices.Add(vY);
                         vertices.Add(vZ);
                         vertices.Add(vU);
                         vertices.Add(vV);
                         vertices.Add(textureIndex);
+                        vertices.Add(brightness); 
                     }
 
                     foreach (var index in BlockData.Indices)
@@ -166,7 +173,7 @@ public class Chunk
         {
             BlockType.Air => 0f,
             BlockType.Dirt => 0f,
-            BlockType.Stone => 1f,
+            BlockType.Cobblestone => 1f,
             _ => throw new NotImplementedException()
         };
     }

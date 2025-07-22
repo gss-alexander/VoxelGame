@@ -1,13 +1,14 @@
 #version 330 core
 in vec2 fUv;
-flat in int fTextureIndex; // Receives integer texture index
+flat in int fTextureIndex;
+in float fBrightness;
 
-uniform sampler2DArray uTextureArray; // Changed from sampler2D to sampler2DArray
+uniform sampler2DArray uTextureArray;
 
 out vec4 FragColor;
 
 void main()
 {
-    // Sample from texture array using vec3(u, v, layer)
-    FragColor = texture(uTextureArray, vec3(fUv, float(fTextureIndex)));
+    vec4 textureColor = texture(uTextureArray, vec3(fUv, float(fTextureIndex)));
+    FragColor = vec4(textureColor.rgb * fBrightness, textureColor.a);
 }

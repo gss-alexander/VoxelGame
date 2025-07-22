@@ -7,7 +7,7 @@ var game = new Game();
 
 var windowOptions = WindowOptions.Default with
 {
-    Size = new Vector2D<int>(1920, 1080),
+    Size = new Vector2D<int>(800, 600),
     Title = "Silk.NET application!"
 };
 

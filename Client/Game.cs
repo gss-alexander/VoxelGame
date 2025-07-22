@@ -18,10 +18,12 @@ public class Game
     private Camera _camera = new();
 
     private List<Chunk> _chunks = new();
+    private ChunkSystem _chunkSystem;
     
     private Vector2D<int> _frameBufferSize;
 
     private IKeyboard _primaryKeyboard;
+    private IMouse _primaryMouse;
 
     private IWindow _window;
 
@@ -40,20 +42,22 @@ public class Game
             inputContext.Mice[i].Cursor.CursorMode = CursorMode.Raw;
             inputContext.Mice[i].MouseMove += OnMouseMove;
             inputContext.Mice[i].Scroll += OnMouseWheel;
-            
         }
+
+        _primaryMouse = inputContext.Mice.First();
 
         _gl = window.CreateOpenGL();
 
-        for (int x = -3; x <= 3; x++)
-        {
-            for (int z = -3; z <= 3; z++)
-            {
-                var chunk = new Chunk(x, z);
-                chunk.Initialize(_gl);
-                _chunks.Add(chunk);
-            }
-        }
+        _chunkSystem = new ChunkSystem(_gl);
+        // for (int x = -3; x <= 3; x++)
+        // {
+        //     for (int z = -3; z <= 3; z++)
+        //     {
+        //         var chunk = new Chunk(x, z);
+        //         chunk.Initialize(_gl);
+        //         _chunks.Add(chunk);
+        //     }
+        // }
         
         _shader = new Shader(_gl, 
             "C:\\dev\\personal\\VoxelGame\\Client\\Shaders\\shader.vert",
@@ -71,6 +75,8 @@ public class Game
 
     public void Update(double deltaTime)
     {
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 64);
+        
         var moveSpeed = 5f * (float)deltaTime;
         if (_primaryKeyboard.IsKeyPressed(Key.W))
         {
@@ -91,6 +97,9 @@ public class Game
         {
             _camera.Position += Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * moveSpeed;
         }
+
+        var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
+        _primaryMouse.Cursor.CursorMode = cursorMode;
     }
 
     private float _time;
@@ -100,7 +109,7 @@ public class Game
         _imGuiController.Update((float)deltaTime);
         
         _gl.Enable(EnableCap.DepthTest);
-        _gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        _gl.ClearColor(0.47f, 0.742f, 1f, 1.0f);
         _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
     
         
@@ -121,14 +130,15 @@ public class Game
         _shader.SetUniform("uProjection", projection);
 
         // Render all chunks
-        foreach (var chunk in _chunks)
-        {
-            chunk.Render();
-        }
+        // foreach (var chunk in _chunks)
+        // {
+        //     chunk.Render();
+        // }
+        _chunkSystem.RenderChunks();
         
         ImGuiNET.ImGui.Begin("Debug");
         ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");
-        ImGuiNET.ImGui.Text($"Chunks: {_chunks.Count}");
+        ImGuiNET.ImGui.Text($"Visible chunks: {_chunkSystem.VisibleChunkCount}");
         ImGuiNET.ImGui.End(); 
         
         _imGuiController.Render();

@@ -4,55 +4,55 @@ public static class BlockData
 {
     public static readonly float[] Vertices =
     {
-        //X      Y      Z      U    V
-    
-        // Back face (South - facing negative Z)
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        //X      Y      Z      U    V    Brightness
 
-        // Front face (North - facing positive Z)
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        // Back face (South - facing negative Z) - Side face
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.8f,
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.8f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.8f,
 
-        // Left face (West - facing negative X)
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        // Front face (North - facing positive Z) - Side face
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.8f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.8f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.8f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
 
-        // Right face (East - facing positive X)
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        // Left face (West - facing negative X) - Side face
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
 
-        // Bottom face (Down - facing negative Y)
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        // Right face (East - facing positive X) - Side face
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
 
-        // Top face (Up - facing positive Y)
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        // Bottom face (Down - facing negative Y) - Darkest
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.6f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.6f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.6f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.6f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.6f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.6f,
+
+        // Top face (Up - facing positive Y) - Brightest
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f
     };
     
     public static readonly uint[] Indices =
