@@ -75,7 +75,7 @@ public class Game
 
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 64);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 6);
         
         var moveSpeed = 5f * (float)deltaTime;
         if (_primaryKeyboard.IsKeyPressed(Key.W))
@@ -139,6 +139,8 @@ public class Game
         ImGuiNET.ImGui.Begin("Debug");
         ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");
         ImGuiNET.ImGui.Text($"Visible chunks: {_chunkSystem.VisibleChunkCount}");
+        ImGuiNET.ImGui.Text($"Player position: {_camera.Position}");
+        ImGuiNET.ImGui.Text($"Player chunk position: {Chunk.WorldToChunkPosition(_camera.Position)}");
         ImGuiNET.ImGui.End(); 
         
         _imGuiController.Render();

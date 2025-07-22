@@ -2,62 +2,77 @@
 
 public static class BlockData
 {
-    public static readonly float[] Vertices =
+    public enum FaceDirection
     {
-        //X      Y      Z      U    V    Brightness
+        Back,
+        Front,
+        Left,
+        Right,
+        Top,
+        Bottom
+    }
 
-        // Back face (South - facing negative Z) - Side face
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.8f,
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.8f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.8f,
-
-        // Front face (North - facing positive Z) - Side face
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.8f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.8f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.8f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
-
-        // Left face (West - facing negative X) - Side face
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
-
-        // Right face (East - facing positive X) - Side face
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
-
-        // Bottom face (Down - facing negative Y) - Darkest
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.6f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.6f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.6f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.6f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.6f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.6f,
-
-        // Top face (Up - facing positive Y) - Brightest
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f
-    };
-    
-    public static readonly uint[] Indices =
+    public readonly struct Face
     {
-        0, 1, 3,
-        1, 2, 3
+        public readonly FaceDirection Direction;
+        public readonly float[] Vertices;
+        
+        public Face(FaceDirection direction, float[] vertices)
+        {
+            Direction = direction;
+            Vertices = vertices;
+        }
+    }
+
+    public static readonly Face[] Faces =
+    {
+        new(FaceDirection.Back, [
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.8f,
+            0.5f, -0.5f, -0.5f,  1.0f, 0.0f, 0.8f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f, 0.8f
+        ]),
+        new(FaceDirection.Front, [
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.8f,
+            0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.8f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f, 0.8f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+        ]),
+        new(FaceDirection.Left, [
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+        ]),
+        new(FaceDirection.Right, [
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 0.8f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+            0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.8f,
+            0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.8f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.8f,
+        ]),
+        new(FaceDirection.Bottom, [
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.6f,
+            0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 0.6f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.6f,
+            0.5f, -0.5f,  0.5f,  1.0f, 0.0f, 0.6f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f, 0.6f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f, 0.6f,
+        ]),
+        new(FaceDirection.Top, [
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f,
+            0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
+            0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f, 1.0f
+        ])
     };
 }

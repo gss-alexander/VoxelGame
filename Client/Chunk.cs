@@ -1,4 +1,5 @@
-﻿using Silk.NET.Maths;
+﻿using System.Numerics;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 namespace Client;
@@ -18,6 +19,13 @@ public class Chunk
     private BufferObject<float> _vbo;
     private BufferObject<uint> _ebo;
     private bool _isInitialized;
+
+    public static Vector2D<int> WorldToChunkPosition(Vector3 worldPosition)
+    {
+        var x = (int)MathF.Floor(worldPosition.X / Size);
+        var y = (int)MathF.Floor(worldPosition.Z / Size);
+        return new Vector2D<int>(x, y);
+    }
 
     public Chunk(int chunkX, int chunkY)
     {
@@ -112,6 +120,11 @@ public class Chunk
 
     public bool IsBlockSolid(int x, int y, int z)
     {
+        if (x >= Size || x < 0 || y >= Size || y < 0 || z >= Size || z < 0)
+        {
+            return false;
+        }
+        
         var block = GetBlock(x, y, z);
         return block != BlockType.Air;
     }
@@ -135,36 +148,53 @@ public class Chunk
                     }
 
                     var textureIndex = GetTextureIndex(blockType);
-                    
-                    for (var vertexIndex = 0; vertexIndex < BlockData.Vertices.Length; vertexIndex += 6)
-                    {
-                        var vX = BlockData.Vertices[vertexIndex] + x + (Size * _position.X);
-                        var vY = BlockData.Vertices[vertexIndex + 1] + y;
-                        var vZ = BlockData.Vertices[vertexIndex + 2] + z + (Size * _position.Y);
-                        var vU = BlockData.Vertices[vertexIndex + 3];
-                        var vV = BlockData.Vertices[vertexIndex + 4];
-                        var brightness = BlockData.Vertices[vertexIndex + 5];
-    
-                        vertices.Add(vX);
-                        vertices.Add(vY);
-                        vertices.Add(vZ);
-                        vertices.Add(vU);
-                        vertices.Add(vV);
-                        vertices.Add(textureIndex);
-                        vertices.Add(brightness); 
-                    }
 
-                    foreach (var index in BlockData.Indices)
+                    foreach (var face in BlockData.Faces)
                     {
-                        indices.Add(index + indexOffset);
+                        if (IsFaceBlockSolid(x, y, z, face.Direction))
+                        {
+                            continue;
+                        }
+                        
+                        for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
+                        {
+                            var vX = face.Vertices[vertexIndex] + x + (Size * _position.X);
+                            var vY = face.Vertices[vertexIndex + 1] + y;
+                            var vZ = face.Vertices[vertexIndex + 2] + z + (Size * _position.Y);
+                            var vU = face.Vertices[vertexIndex + 3];
+                            var vV = face.Vertices[vertexIndex + 4];
+                            var brightness = face.Vertices[vertexIndex + 5];
+        
+                            vertices.Add(vX);
+                            vertices.Add(vY);
+                            vertices.Add(vZ);
+                            vertices.Add(vU);
+                            vertices.Add(vV);
+                            vertices.Add(textureIndex);
+                            vertices.Add(brightness); 
+                        }
                     }
-
-                    indexOffset += 36;
                 }
             }
         }
 
         return new Mesh(vertices.ToArray(), indices.ToArray());
+    }
+
+    private bool IsFaceBlockSolid(int x, int y, int z, BlockData.FaceDirection face)
+    {
+        var facePositionOffset = face switch
+        {
+            BlockData.FaceDirection.Back => new Vector3D<int>(0, 0, -1),
+            BlockData.FaceDirection.Front => new Vector3D<int>(0, 0, 1),
+            BlockData.FaceDirection.Left => new Vector3D<int>(-1, 0, 0),
+            BlockData.FaceDirection.Right => new Vector3D<int>(1, 0, 0),
+            BlockData.FaceDirection.Top => new Vector3D<int>(0, 1, 0),
+            BlockData.FaceDirection.Bottom => new Vector3D<int>(0, -1, 0),
+            _ => throw new Exception($"No offset defined for face {face}")
+        };
+
+        return IsBlockSolid(x + facePositionOffset.X, y + facePositionOffset.Y, z + facePositionOffset.Z);
     }
 
     private static float GetTextureIndex(BlockType blockType)

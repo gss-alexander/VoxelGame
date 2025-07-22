@@ -20,52 +20,46 @@ public class ChunkSystem
         _gl = gl;
     }
 
-    public void UpdateChunkVisibility(Vector3 playerWorldPosition, float renderDistance)
+    public void UpdateChunkVisibility(Vector3 playerWorldPosition, int renderDistance)
     {
+        var playerChunkPosition = Chunk.WorldToChunkPosition(playerWorldPosition);
+        
         // Hide all chunks that are outside of the render distance of the player
         _chunksToHide.Clear();
         foreach (var chunk in _visibleChunks)
         {
-            var chunkPositionInWorld = chunk.Position * Chunk.Size;
-
-            playerWorldPosition.Y = 0f;
-            var distanceFromPlayer = Vector3.Distance(playerWorldPosition,
-                new Vector3(chunkPositionInWorld.X, 0f, chunkPositionInWorld.Y));
-
-            if (distanceFromPlayer > renderDistance)
+            var distance = CalculateChunkPositionDistance(playerChunkPosition, chunk.Position);
+            if (CalculateChunkPositionDistance(playerChunkPosition, chunk.Position) > renderDistance)
             {
+                Console.WriteLine(distance);
                 _chunksToHide.Add(chunk);
             }
         }
         foreach (var chunk in _chunksToHide)
         {
+            Console.WriteLine($"Removing chunk outside of render distance ({chunk.Position.X},{chunk.Position.Y})");
             _visibleChunks.Remove(chunk);
         }
         
         // Find chunks that are within the render distance of the player and is not currently visible
-        var playerChunkX = (int)MathF.Floor(playerWorldPosition.X / Chunk.Size);
-        var playerChunkZ = (int)MathF.Floor(playerWorldPosition.Z / Chunk.Size);
-        var chunkRadius = (int)MathF.Ceiling(renderDistance / Chunk.Size);
         var chunksInRange = new List<Vector2D<int>>();
-        for (var x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius; x++)
+        for (var x = -renderDistance; x <= renderDistance; x++)
         {
-            for (var z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius; z++)
+            for (var y = -renderDistance; y <= renderDistance; y++)
             {
-                var chunkWorldCenter = new Vector2(x * Chunk.Size + Chunk.Size / 2f, z * Chunk.Size + Chunk.Size / 2f);
-                var playerPosition2D = new Vector2(playerWorldPosition.X, playerWorldPosition.Z);
-                if (Vector2.Distance(chunkWorldCenter, playerPosition2D) <= renderDistance)
+                var playerX = x + playerChunkPosition.X;
+                var playerY = y + playerChunkPosition.Y;
+                if (_visibleChunks.All(chunk => chunk.Position.X != playerX || chunk.Position.Y != playerY))
                 {
-                    chunksInRange.Add(new Vector2D<int>(x, z));
+                    chunksInRange.Add(new Vector2D<int>(playerX, playerY));
                 }
             }
         }
         foreach (var chunkPosition in chunksInRange)
         {
-            if (_visibleChunks.All(chunk => chunk.Position != chunkPosition))
-            {
-                var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
-                _visibleChunks.Add(newChunk);
-            }
+            Console.WriteLine($"Creating new chunk at ({chunkPosition.X},{chunkPosition.Y})");
+            var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
+            _visibleChunks.Add(newChunk);
         }
     }
     
@@ -75,6 +69,12 @@ public class ChunkSystem
         {
             chunk.Render();
         }
+    }
+
+    private static int CalculateChunkPositionDistance(Vector2D<int> a, Vector2D<int> b)
+    {
+        // Chebyshev distance calculation
+        return Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
     }
 
     private Chunk CreateChunk(int worldX, int worldY)
