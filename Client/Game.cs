@@ -166,6 +166,12 @@ public class Game
             ImGuiNET.ImGui.Text($"Looking at block pos: {raycastHit.Value.Position}");
             ImGuiNET.ImGui.Text($"Looking at block face: {raycastHit.Value.Face}");
         }
+
+        else
+        {
+            ImGuiNET.ImGui.Text($"Looking at block pos: NaN");
+            ImGuiNET.ImGui.Text($"Looking at block face: NaN");
+        }
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
