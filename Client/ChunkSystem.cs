@@ -20,6 +20,56 @@ public class ChunkSystem
         _gl = gl;
     }
 
+    public bool IsBlockSolid(Vector3D<int> blockPosition)
+    {
+        var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
+        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
+        if (chunk == null)
+        {
+            return false;
+        }
+
+        var localPosition = BlockToLocalPosition(blockPosition);
+        return chunk.IsBlockSolid(localPosition.X, localPosition.Y, localPosition.Z);
+    }
+
+    
+    public Vector3D<int> BlockToLocalPosition(Vector3D<int> blockPosition)
+    {
+        int localX = ((blockPosition.X % 16) + 16) % 16;
+        int localY = ((blockPosition.Y % 16) + 16) % 16;
+        int localZ = ((blockPosition.Z % 16) + 16) % 16;
+    
+        return new Vector3D<int>(localX, localY, localZ);
+    } 
+
+    public void DestroyBlock(Vector3D<int> blockPosition)
+    {
+        var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
+        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
+        if (chunk == null)
+        {
+            return;
+        }
+
+        var localPosition = BlockToLocalPosition(blockPosition);
+        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, BlockType.Air);
+    }
+
+    public void DestroyBlock(Vector3 worldPosition)
+    {
+        var chunkPosition = Chunk.WorldToChunkPosition(worldPosition);
+        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
+        if (chunk == null)
+        {
+            return;
+        }
+
+        var localPosition = Chunk.WorldToLocalChunkPosition(worldPosition);
+        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, BlockType.Air);
+        Console.WriteLine("Destroyed block");
+    }
+
     public void UpdateChunkVisibility(Vector3 playerWorldPosition, int renderDistance)
     {
         var playerChunkPosition = Chunk.WorldToChunkPosition(playerWorldPosition);

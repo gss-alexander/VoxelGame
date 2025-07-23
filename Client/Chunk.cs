@@ -27,11 +27,28 @@ public class Chunk
         return new Vector2D<int>(x, y);
     }
 
+    public static Vector3D<int> WorldToLocalChunkPosition(Vector3 worldPosition)
+    {
+        var x = ((int)MathF.Floor(worldPosition.X) % Size + Size) % Size;
+        var y = ((int)MathF.Floor(worldPosition.Y) % Size + Size) % Size;
+        var z = ((int)MathF.Floor(worldPosition.Z) % Size + Size) % Size;
+        return new Vector3D<int>(x, y, z);
+    }
+
+    public static Vector2D<int> BlockToChunkPosition(Vector3D<int> blockPosition)
+    {
+        return new Vector2D<int>(
+            blockPosition.X >= 0 ? blockPosition.X / Size : (blockPosition.X + 1) / Size - 1,
+            blockPosition.Z >= 0 ? blockPosition.Z / Size : (blockPosition.Z + 1) / Size - 1
+        );
+    }
+
     public Chunk(int chunkX, int chunkY)
     {
         _position = new Vector2D<int>(chunkX, chunkY);
         _blocks = new BlockType[Size * Size * Size];
         GenerateChunk();
+        // CreateFlatWorld();
         _mesh = GenerateMesh();
     }
 
@@ -60,6 +77,16 @@ public class Chunk
         _vao.Bind();
         _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_mesh.Vertices.Length / 6));
     }
+    
+    public void RegenerateMesh()
+    {
+        if (!_isInitialized) return;
+    
+        _mesh = GenerateMesh();
+    
+        _vbo.UpdateData(_mesh.Vertices);
+        _ebo.UpdateData(_mesh.Indices);
+    }
 
     public void Fill(BlockType block)
     {
@@ -71,6 +98,17 @@ public class Chunk
                 {
                     SetBlock(x, y, z, block);
                 }
+            }
+        }
+    }
+
+    private void CreateFlatWorld()
+    {
+        for (var x = 0; x < Size; x++)
+        {
+            for (var z = 0; z < Size; z++)
+            {
+                SetBlock(x, 0, z, BlockType.Cobblestone, false);
             }
         }
     }
@@ -94,22 +132,26 @@ public class Chunk
                 var combinedNoise = baseHeight + detailHeight;
             
                 // Use a base terrain level and scale height more gradually
-                var baseLevel = 6;
-                var heightVariation = 8;
+                var baseLevel = 3;
+                var heightVariation = 28;
                 var height = (int)Math.Clamp(baseLevel + (combinedNoise * heightVariation), 1, Size - 1);
             
                 for (var y = 0; y < height; y++)
                 {
-                    SetBlock(x, y, z, BlockType.Cobblestone);
+                    SetBlock(x, y, z, BlockType.Cobblestone, false);
                 }
             }
         }
     }
 
-    public void SetBlock(int x, int y, int z, BlockType block)
+    public void SetBlock(int x, int y, int z, BlockType block, bool regenerateMesh = true)
     {
         var position = PositionToBlockIndex(x, y, z);
         _blocks[position] = block;
+        if (regenerateMesh)
+        {
+            RegenerateMesh();
+        }
     }
 
     public BlockType GetBlock(int x, int y, int z)

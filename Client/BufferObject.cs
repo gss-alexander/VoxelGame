@@ -21,6 +21,15 @@ public class BufferObject<TDataType> where TDataType : unmanaged
             BufferUsageARB.StaticDraw);
     }
 
+    public unsafe void UpdateData(TDataType[] data, BufferUsageARB usage = BufferUsageARB.DynamicDraw)
+    {
+        Bind();
+        _gl.BufferData(_target,
+            (nuint)(data.Length * sizeof(TDataType)),
+            new ReadOnlySpan<TDataType>(data),
+            usage);
+    }
+
     public void Bind()
     {
         _gl.BindBuffer(_target, _handle);

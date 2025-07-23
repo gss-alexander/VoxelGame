@@ -28,6 +28,9 @@ public class Game
     private IWindow _window;
 
     private ImGuiController _imGuiController;
+    private CrosshairRenderer _crosshairRenderer;
+
+    private VoxelRaycaster _voxelRaycaster;
     
     public unsafe void Load(IWindow window)
     {
@@ -71,11 +74,16 @@ public class Game
         _frameBufferSize = window.Size;
 
         _imGuiController = new ImGuiController(_gl, window, inputContext);
+
+        _crosshairRenderer = new CrosshairRenderer();
+        _crosshairRenderer.Initialize(_gl, window.Size.X, window.Size.Y);
+
+        _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
     }
 
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 6);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 2);
         
         var moveSpeed = 5f * (float)deltaTime;
         if (_primaryKeyboard.IsKeyPressed(Key.W))
@@ -119,8 +127,7 @@ public class Game
 
         _time += (float)deltaTime * 100f;
 
-        var model = Matrix4x4.CreateRotationY(DegreesToRadians(0f)) *
-                    Matrix4x4.CreateRotationX(DegreesToRadians(0f));
+        var model = Matrix4x4.Identity;
         var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Position + _camera.Front, _camera.Up);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(DegreesToRadians(75.0f),
             (float)_frameBufferSize.X / _frameBufferSize.Y, 0.1f, 100.0f);
@@ -141,7 +148,14 @@ public class Game
         ImGuiNET.ImGui.Text($"Visible chunks: {_chunkSystem.VisibleChunkCount}");
         ImGuiNET.ImGui.Text($"Player position: {_camera.Position}");
         ImGuiNET.ImGui.Text($"Player chunk position: {Chunk.WorldToChunkPosition(_camera.Position)}");
+        var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
+        if (raycastHit.HasValue)
+        {
+            ImGuiNET.ImGui.Text($"Looking at block: {raycastHit.Value.Position}");
+        }
         ImGuiNET.ImGui.End(); 
+        
+        _crosshairRenderer.Render();
         
         _imGuiController.Render();
     }
@@ -163,6 +177,21 @@ public class Game
         if (pressedKey == Key.Escape)
         {
             _window.Close();
+        }
+
+        if (pressedKey == Key.Space)
+        {
+            var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
+            if (raycastHit.HasValue)
+            {
+                Console.WriteLine($"Hit: {raycastHit.Value.Position}");
+                _chunkSystem.DestroyBlock(raycastHit.Value.Position);
+            }
+
+            else
+            {
+                Console.WriteLine("No hit");
+            }
         }
     }
 
@@ -199,4 +228,15 @@ public class Game
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
     {
     }
+    
+    private Vector3 GetFaceNormal(int axis, Vector3 step)
+    {
+        return axis switch
+        {
+            0 => new Vector3(-step.X, 0, 0), // X face
+            1 => new Vector3(0, -step.Y, 0), // Y face  
+            2 => new Vector3(0, 0, -step.Z), // Z face
+            _ => Vector3.Zero
+        };
+    } 
 }
