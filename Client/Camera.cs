@@ -5,7 +5,7 @@ namespace Client;
 
 public class Camera
 {
-    public Vector3 Position = new(0.0f, 3.0f, 0.0f);
+    public Vector3 Position = new(0.0f, 75.0f, 0.0f);
     public Vector3 Target = Vector3.Zero;
     public Vector3 Direction;
     public Vector3 Right => Vector3.Normalize(Vector3.Cross(Vector3.UnitY, Direction));

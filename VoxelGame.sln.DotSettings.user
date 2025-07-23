@@ -1,9 +1,6 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AInputWindowExtensions_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FUsers_003Fkontor1_002D1_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003F11066d8406985556c0b76b616068961290d79cf71f3c9d1a987a8f36f0e38a_003FInputWindowExtensions_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=bda79828_002D90a2_002D4e06_002Db1bc_002D0c60e8d892f0/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="WorldToBlockPosition_CalculatesCorrectly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::B4EA4EA7-CCDF-42C1-B1C0-30B53F110D6E::net8.0::Client.Tests.BlockTests.WorldToBlockPosition_CalculatesCorrectly&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::B4EA4EA7-CCDF-42C1-B1C0-30B53F110D6E::net8.0::Client.Tests.VoxelRaycasterTests&lt;/TestId&gt;&#xD;
-    &lt;TestId&gt;NUnit3x::B4EA4EA7-CCDF-42C1-B1C0-30B53F110D6E::net8.0::Client.Tests.ChunkTests.BlockToChunkPosition_Returns_ExpectedChunkPositions&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=33f0c056_002Defc6_002D4a58_002D8c15_002D0d8a72a9498f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;Client.Tests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Project Location="C:\dev\personal\VoxelGame\Client.Tests" Presentation="&amp;lt;Client.Tests&amp;gt;" /&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	</wpf:ResourceDictionary>

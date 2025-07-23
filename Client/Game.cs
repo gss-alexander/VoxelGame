@@ -59,6 +59,8 @@ public class Game
         _textureArray = new TextureArrayBuilder(16, 16)
             .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\dirt.png")
             .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\cobblestone.png")
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_side.png")
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_top.png")
             .Build(_gl);
 
         _frameBufferSize = window.Size;
@@ -76,7 +78,7 @@ public class Game
 
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 5);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 8);
 
         if (_currentMouseClickCooldown <= 0f)
         {
@@ -147,7 +149,7 @@ public class Game
         var model = Matrix4x4.Identity;
         var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Position + _camera.Front, _camera.Up);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(DegreesToRadians(75.0f),
-            (float)_frameBufferSize.X / _frameBufferSize.Y, 0.1f, 100.0f);
+            (float)_frameBufferSize.X / _frameBufferSize.Y, 0.1f, 1000.0f);
     
         _shader.SetUniform("uModel", model);
         _shader.SetUniform("uView", view);

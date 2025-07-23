@@ -14,10 +14,13 @@ public class ChunkSystem
     
     // Will be updated by chunk visibility checks
     private readonly List<Chunk> _chunksToHide = new();
+
+    private FastNoiseLite _noise;
     
     public ChunkSystem(GL gl)
     {
         _gl = gl;
+        _noise = new FastNoiseLite(123);
     }
 
     public bool IsBlockSolid(Vector3D<int> blockPosition)
@@ -36,9 +39,9 @@ public class ChunkSystem
     
     public Vector3D<int> BlockToLocalPosition(Vector3D<int> blockPosition)
     {
-        int localX = ((blockPosition.X % 16) + 16) % 16;
-        int localY = ((blockPosition.Y % 16) + 16) % 16;
-        int localZ = ((blockPosition.Z % 16) + 16) % 16;
+        int localX = ((blockPosition.X % Chunk.Size) + Chunk.Size) % Chunk.Size;
+        int localY = ((blockPosition.Y % Chunk.Height) + Chunk.Height) % Chunk.Height;
+        int localZ = ((blockPosition.Z % Chunk.Size) + Chunk.Size) % Chunk.Size;
     
         return new Vector3D<int>(localX, localY, localZ);
     } 
@@ -126,6 +129,7 @@ public class ChunkSystem
     private Chunk CreateChunk(int worldX, int worldY)
     {
         var chunk = new Chunk(worldX, worldY);
+        chunk.GenerateChunkData(_noise);
         chunk.Initialize(_gl);
         return chunk;
     }
