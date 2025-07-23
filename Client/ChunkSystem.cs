@@ -45,6 +45,16 @@ public class ChunkSystem
 
     public void DestroyBlock(Vector3D<int> blockPosition)
     {
+        SetBlock(blockPosition, BlockType.Air);
+    }
+
+    public void PlaceBlock(Vector3D<int> blockPosition, BlockType block)
+    {
+        SetBlock(blockPosition, block);
+    }
+
+    private void SetBlock(Vector3D<int> blockPosition, BlockType blockType)
+    {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
         var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
         if (chunk == null)
@@ -53,21 +63,7 @@ public class ChunkSystem
         }
 
         var localPosition = BlockToLocalPosition(blockPosition);
-        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, BlockType.Air);
-    }
-
-    public void DestroyBlock(Vector3 worldPosition)
-    {
-        var chunkPosition = Chunk.WorldToChunkPosition(worldPosition);
-        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
-        if (chunk == null)
-        {
-            return;
-        }
-
-        var localPosition = Chunk.WorldToLocalChunkPosition(worldPosition);
-        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, BlockType.Air);
-        Console.WriteLine("Destroyed block");
+        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, blockType);
     }
 
     public void UpdateChunkVisibility(Vector3 playerWorldPosition, int renderDistance)

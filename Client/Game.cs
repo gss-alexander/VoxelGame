@@ -17,7 +17,6 @@ public class Game
 
     private Camera _camera = new();
 
-    private List<Chunk> _chunks = new();
     private ChunkSystem _chunkSystem;
     
     private Vector2D<int> _frameBufferSize;
@@ -52,15 +51,6 @@ public class Game
         _gl = window.CreateOpenGL();
 
         _chunkSystem = new ChunkSystem(_gl);
-        // for (int x = -3; x <= 3; x++)
-        // {
-        //     for (int z = -3; z <= 3; z++)
-        //     {
-        //         var chunk = new Chunk(x, z);
-        //         chunk.Initialize(_gl);
-        //         _chunks.Add(chunk);
-        //     }
-        // }
         
         _shader = new Shader(_gl, 
             "C:\\dev\\personal\\VoxelGame\\Client\\Shaders\\shader.vert",
@@ -81,9 +71,40 @@ public class Game
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
     }
 
+    private float _mouseClickCooldownInSeconds = 0.1f;
+    private float _currentMouseClickCooldown;
+
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 2);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 5);
+
+        if (_currentMouseClickCooldown <= 0f)
+        {
+            if (_primaryMouse.IsButtonPressed(MouseButton.Left))
+            {
+                var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
+                if (raycastHit.HasValue)
+                {
+                    _chunkSystem.DestroyBlock(raycastHit.Value.Position);
+                    _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
+                }
+            }
+
+            if (_primaryMouse.IsButtonPressed(MouseButton.Right))
+            {
+                var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
+                if (raycastHit.HasValue)
+                {
+                    _chunkSystem.PlaceBlock(Block.GetFaceNeighbour(raycastHit.Value.Position, raycastHit.Value.Face), BlockType.Dirt);
+                    _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
+                }
+            }
+        }
+
+        else
+        {
+            _currentMouseClickCooldown -= (float)deltaTime;
+        }
         
         var moveSpeed = 5f * (float)deltaTime;
         if (_primaryKeyboard.IsKeyPressed(Key.W))
@@ -110,8 +131,6 @@ public class Game
         _primaryMouse.Cursor.CursorMode = cursorMode;
     }
 
-    private float _time;
-    
     public unsafe void Render(double deltaTime)
     {
         _imGuiController.Update((float)deltaTime);
@@ -125,8 +144,6 @@ public class Game
         _shader.Use();
         _shader.SetUniform("uTextureArray", 0);
 
-        _time += (float)deltaTime * 100f;
-
         var model = Matrix4x4.Identity;
         var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Position + _camera.Front, _camera.Up);
         var projection = Matrix4x4.CreatePerspectiveFieldOfView(DegreesToRadians(75.0f),
@@ -136,11 +153,6 @@ public class Game
         _shader.SetUniform("uView", view);
         _shader.SetUniform("uProjection", projection);
 
-        // Render all chunks
-        // foreach (var chunk in _chunks)
-        // {
-        //     chunk.Render();
-        // }
         _chunkSystem.RenderChunks();
         
         ImGuiNET.ImGui.Begin("Debug");
@@ -151,7 +163,8 @@ public class Game
         var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
         if (raycastHit.HasValue)
         {
-            ImGuiNET.ImGui.Text($"Looking at block: {raycastHit.Value.Position}");
+            ImGuiNET.ImGui.Text($"Looking at block pos: {raycastHit.Value.Position}");
+            ImGuiNET.ImGui.Text($"Looking at block face: {raycastHit.Value.Face}");
         }
         ImGuiNET.ImGui.End(); 
         
@@ -177,21 +190,6 @@ public class Game
         if (pressedKey == Key.Escape)
         {
             _window.Close();
-        }
-
-        if (pressedKey == Key.Space)
-        {
-            var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
-            if (raycastHit.HasValue)
-            {
-                Console.WriteLine($"Hit: {raycastHit.Value.Position}");
-                _chunkSystem.DestroyBlock(raycastHit.Value.Position);
-            }
-
-            else
-            {
-                Console.WriteLine("No hit");
-            }
         }
     }
 
@@ -228,15 +226,4 @@ public class Game
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
     {
     }
-    
-    private Vector3 GetFaceNormal(int axis, Vector3 step)
-    {
-        return axis switch
-        {
-            0 => new Vector3(-step.X, 0, 0), // X face
-            1 => new Vector3(0, -step.Y, 0), // Y face  
-            2 => new Vector3(0, 0, -step.Z), // Z face
-            _ => Vector3.Zero
-        };
-    } 
 }
