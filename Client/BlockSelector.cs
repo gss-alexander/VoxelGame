@@ -11,7 +11,8 @@ public class BlockSelector
         BlockType.Cobblestone,
         BlockType.Sand,
         BlockType.Log,
-        BlockType.Leaves
+        BlockType.Leaves,
+        BlockType.Glass
     };
     
     private int _currentSelectedBlockIndex;

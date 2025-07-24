@@ -68,6 +68,7 @@ public class Game
             .AddTexture(GetTexturePath("log_top.png")) // 5
             .AddTexture(GetTexturePath("log_side.png")) // 6
             .AddTexture(GetTexturePath("leaves.png")) // 7
+            .AddTexture(GetTexturePath("glass.png")) // 8
             .Build(_gl);
 
         _frameBufferSize = window.Size;
@@ -146,6 +147,8 @@ public class Game
         _imGuiController.Update((float)deltaTime);
         
         _gl.Enable(EnableCap.DepthTest);
+        _gl.Enable(EnableCap.Blend);
+        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         _gl.ClearColor(0.47f, 0.742f, 1f, 1.0f);
         _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
     
@@ -164,6 +167,9 @@ public class Game
         _shader.SetUniform("uProjection", projection);
 
         _chunkSystem.RenderChunks();
+        _gl.DepthMask(false);
+        _chunkSystem.RenderTransparency(_camera.Position);
+        _gl.DepthMask(true);
         
         ImGuiNET.ImGui.Begin("Debug");
         ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");

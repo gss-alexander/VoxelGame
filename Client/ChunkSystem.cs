@@ -141,7 +141,26 @@ public class ChunkSystem
     {
         foreach (var chunk in _visibleChunks)
         {
-            chunk.Render();
+            chunk.RenderOpaque();
+        }
+    }
+
+    public void RenderTransparency(Vector3 playerPosition)
+    {
+        var chunksWithTransparency = new List<Chunk>();
+        foreach (var chunk in _visibleChunks)
+        {
+            if (chunk.HasTransparentBlocks())
+            {
+                chunksWithTransparency.Add(chunk);
+            }
+        }
+
+        chunksWithTransparency = chunksWithTransparency.OrderBy(chunk =>
+            Vector2.Distance(chunk.ChunkWorldCenter, new Vector2(playerPosition.X, playerPosition.Z))).ToList();
+        foreach (var chunk in chunksWithTransparency)
+        {
+            chunk.RenderTransparent();
         }
     }
 

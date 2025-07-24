@@ -6,19 +6,28 @@ namespace Client;
 
 public class Chunk
 {
+    public Vector2 ChunkWorldCenter => new Vector2(_position.X, _position.Y) * Size;
     public Vector2D<int> Position => _position;
     
     public const int Size = 16;
-    public const int Height = 256; // New height constant
+    public const int Height = 256;
 
     private readonly BlockType[] _blocks;
     private Vector2D<int> _position;
 
-    private Mesh _mesh;
+    // Opaque rendering
+    private Mesh _opaqueMesh;
+    private VertexArrayObject<float, uint> _opaqueVao;
+    private BufferObject<float> _opaqueVbo;
+    private BufferObject<uint> _opaqueEbo;
+
+    // Transparent rendering
+    private Mesh _transparentMesh;
+    private VertexArrayObject<float, uint> _transparentVao;
+    private BufferObject<float> _transparentVbo;
+    private BufferObject<uint> _transparentEbo;
+
     private GL _gl;
-    private VertexArrayObject<float, uint> _vao;
-    private BufferObject<float> _vbo;
-    private BufferObject<uint> _ebo;
     private bool _isInitialized;
 
     public static Vector2D<int> WorldToChunkPosition(Vector3 worldPosition)
@@ -42,42 +51,83 @@ public class Chunk
         _blocks = new BlockType[Size * Height * Size];
     }
 
+
     public void Initialize(GL gl)
     {
-        _mesh = GenerateMesh();
+        var meshes = GenerateMeshes();
+        _opaqueMesh = meshes.opaque;
+        _transparentMesh = meshes.transparent;
         
         _gl = gl;
         
-        // Create buffers and VAO for this chunk
-        _ebo = new BufferObject<uint>(_gl, _mesh.Indices, BufferTargetARB.ElementArrayBuffer);
-        _vbo = new BufferObject<float>(_gl, _mesh.Vertices, BufferTargetARB.ArrayBuffer);
-        _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
+        // Create opaque buffers and VAO
+        _opaqueEbo = new BufferObject<uint>(_gl, _opaqueMesh.Indices, BufferTargetARB.ElementArrayBuffer);
+        _opaqueVbo = new BufferObject<float>(_gl, _opaqueMesh.Vertices, BufferTargetARB.ArrayBuffer);
+        _opaqueVao = new VertexArrayObject<float, uint>(_gl, _opaqueVbo, _opaqueEbo);
         
-        // Set up vertex attributes
-        _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
-        _vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
-        _vao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
-        _vao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness 
+        // Set up opaque vertex attributes
+        _opaqueVao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
+        _opaqueVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
+        _opaqueVao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
+        _opaqueVao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
+
+        // Create transparent buffers and VAO
+        _transparentEbo = new BufferObject<uint>(_gl, _transparentMesh.Indices, BufferTargetARB.ElementArrayBuffer);
+        _transparentVbo = new BufferObject<float>(_gl, _transparentMesh.Vertices, BufferTargetARB.ArrayBuffer);
+        _transparentVao = new VertexArrayObject<float, uint>(_gl, _transparentVbo, _transparentEbo);
+        
+        // Set up transparent vertex attributes
+        _transparentVao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
+        _transparentVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
+        _transparentVao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
+        _transparentVao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
         
         _isInitialized = true;
     }
 
-    public void Render()
+    public void RenderOpaque()
     {
-        if (!_isInitialized) return;
+        if (!_isInitialized || _opaqueMesh.Vertices.Length == 0) return;
         
-        _vao.Bind();
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_mesh.Vertices.Length / 6));
+        _opaqueVao.Bind();
+        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_opaqueMesh.Vertices.Length / 7));
+    }
+
+    public void RenderTransparent()
+    {
+        if (!_isInitialized || _transparentMesh.Vertices.Length == 0) return;
+        
+        _transparentVao.Bind();
+        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_transparentMesh.Vertices.Length / 7));
+    }
+
+    public bool HasTransparentBlocks()
+    {
+        return _transparentMesh.Vertices.Length > 0;
+    }
+
+    public Vector3 GetCenterPosition()
+    {
+        return new Vector3(
+            _position.X * Size + Size / 2f,
+            Height / 2f,
+            _position.Y * Size + Size / 2f
+        );
     }
     
     public void RegenerateMesh()
     {
         if (!_isInitialized) return;
     
-        _mesh = GenerateMesh();
-    
-        _vbo.UpdateData(_mesh.Vertices);
-        _ebo.UpdateData(_mesh.Indices);
+        var meshes = GenerateMeshes();
+        _opaqueMesh = meshes.opaque;
+        _transparentMesh = meshes.transparent;
+
+        _opaqueVbo.UpdateData(_opaqueMesh.Vertices);
+        _opaqueEbo.UpdateData(_opaqueMesh.Indices);
+        
+        _transparentVbo.UpdateData(_transparentMesh.Vertices);
+        _transparentEbo.UpdateData(_transparentMesh.Indices);
     }
 
     public void GenerateFlatWorld()
@@ -213,7 +263,7 @@ public class Chunk
 
     public bool IsBlockSolid(int x, int y, int z)
     {
-        if (x >= Size || x < 0 || y >= Height || y < 0 || z >= Size || z < 0) // Updated bounds check
+        if (x >= Size || x < 0 || y >= Height || y < 0 || z >= Size || z < 0)
         {
             return false;
         }
@@ -222,15 +272,16 @@ public class Chunk
         return block != BlockType.Air;
     }
 
-    public Mesh GenerateMesh()
+    public (Mesh opaque, Mesh transparent) GenerateMeshes()
     {
-        var vertices = new List<float>();
-        var indices = new List<uint>();
+        var opaqueVertices = new List<float>();
+        var opaqueIndices = new List<uint>();
+        var transparentVertices = new List<float>();
+        var transparentIndices = new List<uint>();
 
-        var indexOffset = 0u;
         for (var x = 0; x < Size; x++)
         {
-            for (var y = 0; y < Height; y++) // Updated to use Height
+            for (var y = 0; y < Height; y++)
             {
                 for (var z = 0; z < Size; z++)
                 {
@@ -240,6 +291,9 @@ public class Chunk
                         continue;
                     }
 
+                    var isTransparent = blockType.IsTransparent();
+                    var vertices = isTransparent ? transparentVertices : opaqueVertices;
+                    var indices = isTransparent ? transparentIndices : opaqueIndices;
 
                     foreach (var face in BlockData.Faces)
                     {
@@ -247,8 +301,8 @@ public class Chunk
                         {
                             continue;
                         }
-                        
-                        var textureIndex = GetTextureIndex(blockType, face.Direction);
+
+                        var textureIndex = blockType.GetTextureIndex(face.Direction);
                         
                         for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
                         {
@@ -272,7 +326,10 @@ public class Chunk
             }
         }
 
-        return new Mesh(vertices.ToArray(), indices.ToArray());
+        return (
+            new Mesh(opaqueVertices.ToArray(), opaqueIndices.ToArray()),
+            new Mesh(transparentVertices.ToArray(), transparentIndices.ToArray())
+        );
     }
 
     private bool IsFaceBlockSolid(int x, int y, int z, BlockData.FaceDirection face)
@@ -288,34 +345,23 @@ public class Chunk
             _ => throw new Exception($"No offset defined for face {face}")
         };
 
-        return IsBlockSolid(x + facePositionOffset.X, y + facePositionOffset.Y, z + facePositionOffset.Z);
+        
+        var neighbourBlockSolid = IsBlockSolid(x + facePositionOffset.X, y + facePositionOffset.Y, z + facePositionOffset.Z);
+        var neighbourIsTransparent = false;
+        if (!IsPositionOutOfBounds(x + facePositionOffset.X, y + facePositionOffset.Y, z + facePositionOffset.Z))
+        {
+            neighbourIsTransparent =
+                GetBlock(x + facePositionOffset.X, y + facePositionOffset.Y, z + facePositionOffset.Z).IsTransparent();
+        }
+
+        return neighbourBlockSolid && !neighbourIsTransparent;
     }
 
-    private static float GetTextureIndex(BlockType blockType, BlockData.FaceDirection faceDirection)
+    private static bool IsPositionOutOfBounds(int x, int y, int z)
     {
-        return blockType switch
-        {
-            BlockType.Air => 0f,
-            BlockType.Dirt => 0f,
-            BlockType.Cobblestone => 1f,
-            BlockType.Grass => faceDirection switch
-            {
-                BlockData.FaceDirection.Top => 3f,
-                BlockData.FaceDirection.Bottom => 0f,
-                _ => 2f
-            },
-            BlockType.Sand => 4f,
-            BlockType.Log => faceDirection switch
-            {
-                BlockData.FaceDirection.Top => 5f,
-                BlockData.FaceDirection.Bottom => 5f,
-                _ => 6f
-            },
-            BlockType.Leaves => 7f,
-            _ => throw new NotImplementedException()
-        };
+        return x >= Size || x < 0 || y >= Height || y < 0 || z >= Size || z < 0;
     }
-    
+
     private static int PositionToBlockIndex(int x, int y, int z)
     {
         return (x + (y * Size)) + (z * Size * Height);
