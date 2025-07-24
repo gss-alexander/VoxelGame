@@ -53,20 +53,21 @@ public class Game
         _gl = window.CreateOpenGL();
 
         _chunkSystem = new ChunkSystem(_gl);
-        
-        _shader = new Shader(_gl, 
-            "C:\\dev\\personal\\VoxelGame\\Client\\Shaders\\shader.vert",
-            "C:\\dev\\personal\\VoxelGame\\Client\\Shaders\\shader.frag");
+
+        _shader = new Shader(_gl,
+            GetShaderPath("shader.vert"),
+            GetShaderPath("shader.frag")
+        );
 
         _textureArray = new TextureArrayBuilder(16, 16)
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\dirt.png") //0
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\cobblestone.png") // 1
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_side.png") // 2
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_top.png") // 3
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\sand.png") // 4
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\log_top.png") // 5
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\log_side.png") // 6
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\leaves.png") // 7
+            .AddTexture(GetTexturePath("dirt.png")) //0
+            .AddTexture(GetTexturePath("cobblestone.png")) // 1
+            .AddTexture(GetTexturePath("grass_side.png")) // 2
+            .AddTexture(GetTexturePath("grass_top.png")) // 3
+            .AddTexture(GetTexturePath("sand.png")) // 4
+            .AddTexture(GetTexturePath("log_top.png")) // 5
+            .AddTexture(GetTexturePath("log_side.png")) // 6
+            .AddTexture(GetTexturePath("leaves.png")) // 7
             .Build(_gl);
 
         _frameBufferSize = window.Size;
@@ -84,6 +85,16 @@ public class Game
         });
 
         _blockSelector = new BlockSelector();
+    }
+
+    private static string GetTexturePath(string name)
+    {
+        return Path.Combine("..", "..", "..", "Textures", name);
+    }
+
+    private static string GetShaderPath(string name)
+    {
+        return Path.Combine("..", "..", "..", "Shaders", name);
     }
 
     private float _mouseClickCooldownInSeconds = 0.1f;
