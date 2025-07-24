@@ -30,6 +30,7 @@ public class Game
     private CrosshairRenderer _crosshairRenderer;
 
     private VoxelRaycaster _voxelRaycaster;
+    private Player _player;
     
     public unsafe void Load(IWindow window)
     {
@@ -71,6 +72,11 @@ public class Game
         _crosshairRenderer.Initialize(_gl, window.Size.X, window.Size.Y);
 
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
+        _player = new Player(new Vector3(0f, 100f, 0f), worldPos =>
+        {
+            var blockPos = Block.WorldToBlockPosition(worldPos);
+            return _chunkSystem.IsBlockSolid(blockPos);
+        });
     }
 
     private float _mouseClickCooldownInSeconds = 0.1f;
@@ -78,7 +84,7 @@ public class Game
 
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 8);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 6);
 
         if (_currentMouseClickCooldown <= 0f)
         {
@@ -107,27 +113,11 @@ public class Game
         {
             _currentMouseClickCooldown -= (float)deltaTime;
         }
+
+        var movementInput = GetMovementInputWithCamera();
+        _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z), _primaryKeyboard.IsKeyPressed(Key.Space));
+        _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y / 2f, 0f);
         
-        var moveSpeed = 5f * (float)deltaTime;
-        if (_primaryKeyboard.IsKeyPressed(Key.W))
-        {
-            _camera.Position += moveSpeed * _camera.Front;
-        }
-        
-        if (_primaryKeyboard.IsKeyPressed(Key.S))
-        {
-            _camera.Position -= moveSpeed * _camera.Front;
-        }
-        
-        if (_primaryKeyboard.IsKeyPressed(Key.A))
-        {
-            _camera.Position -= Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * moveSpeed;
-        }
-        
-        if (_primaryKeyboard.IsKeyPressed(Key.D))
-        {
-            _camera.Position += Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * moveSpeed;
-        }
 
         var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
         _primaryMouse.Cursor.CursorMode = cursorMode;
@@ -186,6 +176,68 @@ public class Game
         return MathF.PI / 180f * degrees;
     }
 
+    private Vector2 GetMovementInput()
+    {
+        var x = 0f;
+        var z = 0f;
+
+        if (_primaryKeyboard.IsKeyPressed(Key.W))
+        {
+            x += 1f;
+        }
+        
+        if (_primaryKeyboard.IsKeyPressed(Key.S))
+        {
+            x -= 1f;
+        }
+        
+        if (_primaryKeyboard.IsKeyPressed(Key.D))
+        {
+            z += 1f;
+        }
+        
+        if (_primaryKeyboard.IsKeyPressed(Key.A))
+        {
+            z -= 1f;
+        }
+
+        return new Vector2(x, z);
+    }
+    
+    private Vector3 GetMovementInputWithCamera()
+    {
+        var inputVector = Vector2.Zero;
+    
+        if (_primaryKeyboard.IsKeyPressed(Key.W))
+            inputVector.Y += 1f; // Forward
+    
+        if (_primaryKeyboard.IsKeyPressed(Key.S))
+            inputVector.Y -= 1f; // Backward
+    
+        if (_primaryKeyboard.IsKeyPressed(Key.D))
+            inputVector.X += 1f; // Right
+    
+        if (_primaryKeyboard.IsKeyPressed(Key.A))
+            inputVector.X -= 1f; // Left
+
+        // Transform input based on camera orientation
+        var forward = _camera.Direction; // Forward is opposite of camera direction
+        var right = -_camera.Right;
+    
+        // Project onto horizontal plane (remove Y component for ground movement)
+        forward.Y = 0;
+        right.Y = 0;
+        forward = Vector3.Normalize(forward);
+        right = Vector3.Normalize(right);
+
+        if (inputVector == Vector2.Zero)
+        {
+            return Vector3.Zero;
+        }
+        
+        return  Vector3.Normalize((forward * inputVector.Y + right * inputVector.X));
+    } 
+
     public void OnFrameBufferResize(Vector2D<int> newSize)
     {
         _gl.Viewport(newSize);
@@ -230,6 +282,7 @@ public class Game
             _camera.Front = Vector3.Normalize(direction);
         }
     }
+
     
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
     {

@@ -80,6 +80,24 @@ public class Chunk
         _ebo.UpdateData(_mesh.Indices);
     }
 
+    public void GenerateFlatWorld()
+    {
+        const int height = 6;
+        for (var x = 0; x < Size; x++)
+        {
+            for (var z = 0; z < Size; z++)
+            {
+                for (var y = 0; y < height - 2; y++)
+                {
+                    SetBlock(x, y, z, BlockType.Cobblestone, false);
+                }
+                
+                SetBlock(x, height - 2, z, BlockType.Dirt, false);
+                SetBlock(x, height - 1, z, BlockType.Grass, false);
+            }
+        }
+    }
+
     public void GenerateChunkData(FastNoiseLite noise)
     {
         noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);

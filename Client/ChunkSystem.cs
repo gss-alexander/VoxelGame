@@ -155,6 +155,7 @@ public class ChunkSystem
     {
         var chunk = new Chunk(worldX, worldY);
         chunk.GenerateChunkData(_noise);
+        // chunk.GenerateFlatWorld();
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
         {
