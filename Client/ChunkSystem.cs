@@ -16,6 +16,8 @@ public class ChunkSystem
     private readonly List<Chunk> _chunksToHide = new();
 
     private FastNoiseLite _noise;
+
+    private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, BlockType>>> _modifiedBlocks = new();
     
     public ChunkSystem(GL gl)
     {
@@ -67,6 +69,29 @@ public class ChunkSystem
 
         var localPosition = BlockToLocalPosition(blockPosition);
         chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, blockType);
+
+        if (!_modifiedBlocks.ContainsKey(chunkPosition))
+        {
+            _modifiedBlocks.Add(chunkPosition, new List<(Vector3D<int>, BlockType)>());
+        }
+
+        var modifiedBlocksList = _modifiedBlocks[chunkPosition];
+        var existing = false;
+        for (var i = 0; i < modifiedBlocksList.Count; i++)
+        {
+            var modifiedBlock = modifiedBlocksList[i];
+            if (modifiedBlock.Item1 == blockPosition)
+            {
+                modifiedBlock.Item2 = blockType;
+                modifiedBlocksList[i] = modifiedBlock;
+                existing = true;
+            }
+        }
+
+        if (!existing)
+        {
+            modifiedBlocksList.Add(new ValueTuple<Vector3D<int>, BlockType>(blockPosition, blockType));
+        }
     }
 
     public void UpdateChunkVisibility(Vector3 playerWorldPosition, int renderDistance)
@@ -130,6 +155,15 @@ public class ChunkSystem
     {
         var chunk = new Chunk(worldX, worldY);
         chunk.GenerateChunkData(_noise);
+        var chunkPosition = new Vector2D<int>(worldX, worldY);
+        if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
+        {
+            foreach (var modifiedBlock in modifiedBlockList)
+            {
+                var pos = BlockToLocalPosition(modifiedBlock.Item1);
+                chunk.SetBlock(pos.X, pos.Y, pos.Z, modifiedBlock.Item2, false);
+            }
+        }
         chunk.Initialize(_gl);
         return chunk;
     }
