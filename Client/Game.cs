@@ -59,10 +59,14 @@ public class Game
             "C:\\dev\\personal\\VoxelGame\\Client\\Shaders\\shader.frag");
 
         _textureArray = new TextureArrayBuilder(16, 16)
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\dirt.png")
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\cobblestone.png")
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_side.png")
-            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_top.png")
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\dirt.png") //0
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\cobblestone.png") // 1
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_side.png") // 2
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\grass_top.png") // 3
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\sand.png") // 4
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\log_top.png") // 5
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\log_side.png") // 6
+            .AddTexture("C:\\dev\\personal\\VoxelGame\\Client\\Textures\\leaves.png") // 7
             .Build(_gl);
 
         _frameBufferSize = window.Size;
@@ -73,7 +77,7 @@ public class Game
         _crosshairRenderer.Initialize(_gl, window.Size.X, window.Size.Y);
 
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
-        _player = new Player(new Vector3(0f, 100f, 0f), worldPos =>
+        _player = new Player(new Vector3(0f, 10f, 0f), worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);

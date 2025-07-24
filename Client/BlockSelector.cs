@@ -8,7 +8,10 @@ public class BlockSelector
     {
         BlockType.Dirt,
         BlockType.Grass,
-        BlockType.Cobblestone
+        BlockType.Cobblestone,
+        BlockType.Sand,
+        BlockType.Log,
+        BlockType.Leaves
     };
     
     private int _currentSelectedBlockIndex;

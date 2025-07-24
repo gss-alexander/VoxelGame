@@ -304,6 +304,14 @@ public class Chunk
                 BlockData.FaceDirection.Bottom => 0f,
                 _ => 2f
             },
+            BlockType.Sand => 4f,
+            BlockType.Log => faceDirection switch
+            {
+                BlockData.FaceDirection.Top => 5f,
+                BlockData.FaceDirection.Bottom => 5f,
+                _ => 6f
+            },
+            BlockType.Leaves => 7f,
             _ => throw new NotImplementedException()
         };
     }

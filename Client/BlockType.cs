@@ -6,4 +6,7 @@ public enum BlockType
     Dirt = 1,
     Cobblestone = 2,
     Grass = 3,
+    Sand = 4,
+    Log = 5,
+    Leaves = 6,
 }
