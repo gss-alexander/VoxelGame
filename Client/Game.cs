@@ -31,6 +31,7 @@ public class Game
 
     private VoxelRaycaster _voxelRaycaster;
     private Player _player;
+    private BlockSelector _blockSelector;
     
     public unsafe void Load(IWindow window)
     {
@@ -77,6 +78,8 @@ public class Game
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
         });
+
+        _blockSelector = new BlockSelector();
     }
 
     private float _mouseClickCooldownInSeconds = 0.1f;
@@ -103,7 +106,7 @@ public class Game
                 var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
                 if (raycastHit.HasValue)
                 {
-                    _chunkSystem.PlaceBlock(Block.GetFaceNeighbour(raycastHit.Value.Position, raycastHit.Value.Face), BlockType.Dirt);
+                    _chunkSystem.PlaceBlock(Block.GetFaceNeighbour(raycastHit.Value.Position, raycastHit.Value.Face), _blockSelector.CurrentBlock);
                     _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
                 }
             }
@@ -164,6 +167,7 @@ public class Game
             ImGuiNET.ImGui.Text($"Looking at block pos: NaN");
             ImGuiNET.ImGui.Text($"Looking at block face: NaN");
         }
+        ImGuiNET.ImGui.Text($"Selected block: {_blockSelector.CurrentBlock}");
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
@@ -286,5 +290,7 @@ public class Game
     
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
     {
+        var direction = scrollWheel.Y < 0 ? -1 : 1;
+        _blockSelector.Cycle(direction);
     }
 }
