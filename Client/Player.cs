@@ -5,11 +5,12 @@ namespace Client;
 
 public class Player
 {
+    public Vector3 Center => Position + Size / 2f;
     public Vector3 Position { get; set; }
     public Vector3 Velocity { get; set; }
     public Vector3 Size { get; set; } = new Vector3(0.6f, 1.8f, 0.6f);
 
-    private const float Gravity = 14f;
+    private const float Gravity = 16f;
     private const float JumpSpeed = 6f;
 
     private const float MovementSpeed = 5f;
@@ -88,8 +89,8 @@ public class Player
 
     private bool HasCollision(Vector3 position)
     {
-        var min = position;
-        var max = position + Size;
+        var min = position - Size / 2f;
+        var max = position + Size / 2f;
 
         var minX = (int)MathF.Floor(min.X);
         var maxX = (int)MathF.Floor(max.X);
@@ -98,15 +99,16 @@ public class Player
         var minZ = (int)MathF.Floor(min.Z);
         var maxZ = (int)MathF.Floor(max.Z);
 
-        for (var x = minX; x <= maxX; x++)
+        for (var x = minX - 1; x <= maxX + 1; x++)
         {
-            for (var y = minY; y <= maxY; y++)
+            for (var y = minY - 1; y <= maxY + 1; y++)
             {
-                for (var z = minZ; z <= maxZ; z++)
+                for (var z = minZ - 1; z <= maxZ + 1; z++)
                 {
                     if (_isBlockSolidFunc(new Vector3(x, y, z)))
                     {
-                        if (AABBOverlap(min, max, new Vector3(x, y, z), new Vector3(x + 1, y + 1, z + 1)))
+                        // Apply 0.5f offset because voxels span -0.5f - 0.5f in world space
+                        if (AABBOverlap(min, max, new Vector3(x - 0.5f, y - 0.5f, z - 0.5f), new Vector3(x + 0.5f, y + 0.5f, z + 0.5f)))
                         {
                             return true;
                         }

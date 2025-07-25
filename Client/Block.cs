@@ -14,6 +14,11 @@ public static class Block
         );
     }
 
+    public static Vector3 GetCenterPosition(Vector3D<int> blockPosition)
+    {
+        return new Vector3(blockPosition.X, blockPosition.Y, blockPosition.Z);
+    }
+
     public static Vector3D<int> GetFaceNeighbour(Vector3D<int> originBlockPosition,
         BlockData.FaceDirection faceDirection)
     {

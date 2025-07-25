@@ -35,7 +35,10 @@ public class Game
     private BlockSelector _blockSelector;
 
     private UiRenderer _uiRenderer;
-    private BlockModel _blockModel;
+    private BlockDrops _blockDrops;
+
+    private BoundingBoxRenderer _boundingBoxRenderer;
+    private Shader _lineShader;
     
     public unsafe void Load(IWindow window)
     {
@@ -95,7 +98,7 @@ public class Game
         var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
         _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _window.Size.X, _window.Size.Y);
 
-        _blockModel = new BlockModel(_gl, BlockType.Cobblestone, _shader, _textureArray, new Vector3(0f, 6.5f, 0f));
+        _blockDrops = new BlockDrops(_gl, _shader, _textureArray);
     }
 
     private static string GetTexturePath(string name)
@@ -122,7 +125,18 @@ public class Game
                 var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
                 if (raycastHit.HasValue)
                 {
-                    _chunkSystem.DestroyBlock(raycastHit.Value.Position);
+                    var hit = raycastHit.Value;
+                    
+                    // create a dropped block where the block is
+                    var blockType = _chunkSystem.GetBlock(hit.Position);
+                    _blockDrops.CreateDroppedBlock(Block.GetCenterPosition(hit.Position), blockType, worldPos =>
+                    {
+                        var blockPos = Block.WorldToBlockPosition(worldPos);
+                        return _chunkSystem.IsBlockSolid(blockPos);
+                    });
+                    
+                    // actually remove the block
+                    _chunkSystem.DestroyBlock(hit.Position);
                     _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
                 }
             }
@@ -145,11 +159,12 @@ public class Game
 
         var movementInput = GetMovementInputWithCamera();
         _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z), _primaryKeyboard.IsKeyPressed(Key.Space));
-        _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y / 2f, 0f);
+        _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
         
-
         var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
         _primaryMouse.Cursor.CursorMode = cursorMode;
+        
+        _blockDrops.Update((float)deltaTime);
     }
 
     public unsafe void Render(double deltaTime)
@@ -169,16 +184,23 @@ public class Game
 
         var model = Matrix4x4.Identity;
         var view = Matrix4x4.CreateLookAt(_camera.Position, _camera.Position + _camera.Front, _camera.Up);
-        var projection = Matrix4x4.CreatePerspectiveFieldOfView(DegreesToRadians(75.0f),
+        var projection = Matrix4x4.CreatePerspectiveFieldOfView(MathUtil.DegreesToRadians(75.0f),
             (float)_frameBufferSize.X / _frameBufferSize.Y, 0.1f, 1000.0f);
     
         _shader.SetUniform("uModel", model);
         _shader.SetUniform("uView", view);
         _shader.SetUniform("uProjection", projection);
 
-        _chunkSystem.RenderChunks();
+        // WORLD RENDERING - START
         
-        _blockModel.Render(view, projection);
+        _chunkSystem.RenderChunks();
+        _blockDrops.Render((float)deltaTime);
+        // _boundingBoxRenderer.RenderBoundingBox(_player.Position, _player.Size, view, projection,
+        //     new Vector3(1.0f, 0.0f, 0.0f));
+        
+        // WORLD RENDERING - END
+        
+        // UI RENDERING - START
         
         _gl.DepthMask(false);
         _chunkSystem.RenderTransparency(_camera.Position);
@@ -187,7 +209,7 @@ public class Game
         ImGuiNET.ImGui.Begin("Debug");
         ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");
         ImGuiNET.ImGui.Text($"Visible chunks: {_chunkSystem.VisibleChunkCount}");
-        ImGuiNET.ImGui.Text($"Player position: {_camera.Position}");
+        ImGuiNET.ImGui.Text($"Player position: {_player.Position}");
         ImGuiNET.ImGui.Text($"Player chunk position: {Chunk.WorldToChunkPosition(_camera.Position)}");
         var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
         if (raycastHit.HasValue)
@@ -208,12 +230,11 @@ public class Game
         _uiRenderer.Render(_window.Size.X, _window.Size.Y);
         
         _imGuiController.Render();
+        
+        // UI RENDERING - END
     }
 
-    private static float DegreesToRadians(float degrees)
-    {
-        return MathF.PI / 180f * degrees;
-    }
+
 
     private Vector3 GetMovementInputWithCamera()
     {
@@ -286,9 +307,9 @@ public class Game
             _camera.Pitch = Math.Clamp(_camera.Pitch, -89.0f, 89.0f);
 
             var direction = _camera.Direction;
-            direction.X = MathF.Cos(DegreesToRadians(_camera.Yaw)) * MathF.Cos(DegreesToRadians(_camera.Pitch));
-            direction.Y = MathF.Sin(DegreesToRadians(_camera.Pitch));
-            direction.Z = MathF.Sin(DegreesToRadians(_camera.Yaw)) * MathF.Cos(DegreesToRadians(_camera.Pitch));
+            direction.X = MathF.Cos(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
+            direction.Y = MathF.Sin(MathUtil.DegreesToRadians(_camera.Pitch));
+            direction.Z = MathF.Sin(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
             _camera.Direction = direction;
             _camera.Front = Vector3.Normalize(direction);
         }

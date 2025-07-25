@@ -46,7 +46,20 @@ public class ChunkSystem
         int localZ = ((blockPosition.Z % Chunk.Size) + Chunk.Size) % Chunk.Size;
     
         return new Vector3D<int>(localX, localY, localZ);
-    } 
+    }
+
+    public BlockType GetBlock(Vector3D<int> blockPosition)
+    {
+        var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
+        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
+        if (chunk == null)
+        {
+            return BlockType.Air;
+        }
+        
+        var localPosition = BlockToLocalPosition(blockPosition);
+        return chunk.GetBlock(localPosition.X, localPosition.Y, localPosition.Z);
+    }
 
     public void DestroyBlock(Vector3D<int> blockPosition)
     {
