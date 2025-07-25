@@ -35,6 +35,7 @@ public class Game
     private BlockSelector _blockSelector;
 
     private UiRenderer _uiRenderer;
+    private BlockModel _blockModel;
     
     public unsafe void Load(IWindow window)
     {
@@ -93,6 +94,8 @@ public class Game
         var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
         var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
         _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _window.Size.X, _window.Size.Y);
+
+        _blockModel = new BlockModel(_gl, BlockType.Cobblestone, _shader, _textureArray, new Vector3(0f, 6.5f, 0f));
     }
 
     private static string GetTexturePath(string name)
@@ -174,6 +177,9 @@ public class Game
         _shader.SetUniform("uProjection", projection);
 
         _chunkSystem.RenderChunks();
+        
+        _blockModel.Render(view, projection);
+        
         _gl.DepthMask(false);
         _chunkSystem.RenderTransparency(_camera.Position);
         _gl.DepthMask(true);
