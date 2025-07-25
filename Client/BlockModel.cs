@@ -5,6 +5,7 @@ namespace Client;
 
 public class BlockModel
 {
+    public BlockType BlockType { get; }
     public Vector3 Position { get; set; }
     public float Velocity { get; set; }
     public float Size { get; set; } = 0.15f;
@@ -32,6 +33,7 @@ public class BlockModel
         _textureArray = textureArray;
         Position = worldPos;
         _isBlockSolidFunc = isBlockSolidFunc;
+        BlockType = blockType;
 
         _vertices = new List<float>();
         // var indices = new List<uint>();

@@ -31,6 +31,30 @@ public class BlockDrops
         _blockModels.Add(blockModel);
     }
 
+    public List<BlockType> PickupDroppedBlocks(Vector3 origin, float range)
+    {
+        var pickedUpBlocks = new List<BlockModel>();
+        foreach (var block in _blockModels)
+        {
+            if (Vector3.Distance(block.Position, origin) <= range)
+            {
+                pickedUpBlocks.Add(block);
+            }
+        }
+
+        foreach (var pickedUpBlock in pickedUpBlocks)
+        {
+            _blockModels.Remove(pickedUpBlock);
+        }
+
+        if (pickedUpBlocks.Count > 0)
+        {
+            return pickedUpBlocks.Select(pub => pub.BlockType).ToList();
+        }
+
+        return [];
+    }
+
     public void Update(float deltaTime)
     {
         foreach (var block in _blockModels)

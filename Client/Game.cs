@@ -165,6 +165,12 @@ public class Game
         _primaryMouse.Cursor.CursorMode = cursorMode;
         
         _blockDrops.Update((float)deltaTime);
+
+        var pickedUpBlocks = _blockDrops.PickupDroppedBlocks(_player.Position, 1.5f);
+        foreach (var pickedUpBlock in pickedUpBlocks)
+        {
+            Console.WriteLine($"Picked up block of type: {pickedUpBlock}");
+        }
     }
 
     public unsafe void Render(double deltaTime)
