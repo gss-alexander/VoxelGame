@@ -119,14 +119,17 @@ public class Chunk
     public void RegenerateMesh()
     {
         if (!_isInitialized) return;
+        
     
         var meshes = GenerateMeshes();
         _opaqueMesh = meshes.opaque;
         _transparentMesh = meshes.transparent;
 
+        _opaqueVao.Bind();
         _opaqueVbo.UpdateData(_opaqueMesh.Vertices);
         _opaqueEbo.UpdateData(_opaqueMesh.Indices);
         
+        _transparentEbo.Bind();
         _transparentVbo.UpdateData(_transparentMesh.Vertices);
         _transparentEbo.UpdateData(_transparentMesh.Indices);
     }

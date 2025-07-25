@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Numerics;
+using Client.UI;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -32,6 +33,8 @@ public class Game
     private VoxelRaycaster _voxelRaycaster;
     private Player _player;
     private BlockSelector _blockSelector;
+
+    private UiRenderer _uiRenderer;
     
     public unsafe void Load(IWindow window)
     {
@@ -86,6 +89,10 @@ public class Game
         });
 
         _blockSelector = new BlockSelector();
+
+        var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
+        var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
+        _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _window.Size.X, _window.Size.Y);
     }
 
     private static string GetTexturePath(string name)
@@ -103,7 +110,7 @@ public class Game
 
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 6);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 1);
 
         if (_currentMouseClickCooldown <= 0f)
         {
@@ -192,6 +199,7 @@ public class Game
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
+        _uiRenderer.Render(_window.Size.X, _window.Size.Y);
         
         _imGuiController.Render();
     }
@@ -201,34 +209,6 @@ public class Game
         return MathF.PI / 180f * degrees;
     }
 
-    private Vector2 GetMovementInput()
-    {
-        var x = 0f;
-        var z = 0f;
-
-        if (_primaryKeyboard.IsKeyPressed(Key.W))
-        {
-            x += 1f;
-        }
-        
-        if (_primaryKeyboard.IsKeyPressed(Key.S))
-        {
-            x -= 1f;
-        }
-        
-        if (_primaryKeyboard.IsKeyPressed(Key.D))
-        {
-            z += 1f;
-        }
-        
-        if (_primaryKeyboard.IsKeyPressed(Key.A))
-        {
-            z -= 1f;
-        }
-
-        return new Vector2(x, z);
-    }
-    
     private Vector3 GetMovementInputWithCamera()
     {
         var inputVector = Vector2.Zero;

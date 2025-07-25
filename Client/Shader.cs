@@ -68,6 +68,16 @@ public class Shader
         _gl.Uniform1(location, value);
     }
 
+    public void SetUniform(string name, Vector3 value)
+    {
+        var location = _gl.GetUniformLocation(_handle, name);
+        if (location == -1)
+        {
+            throw new Exception($"{name} uniform not found on shader");
+        }
+        _gl.Uniform3(location, value);
+    }
+
     private uint LoadShader(ShaderType type, string source)
     {
         var shader = _gl.CreateShader(type);
