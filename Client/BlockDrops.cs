@@ -27,7 +27,7 @@ public class BlockDrops
             throw new InvalidOperationException($"Cannot drop air block");
         }
 
-        var blockModel = new BlockModel(_gl, type, _droppedBlockShader, _blockTextures, worldPosition, isDroppedFunc);
+        var blockModel = new BlockModel(_gl, type, _droppedBlockShader, _blockTextures, worldPosition, isDroppedFunc, 0.15f);
         _blockModels.Add(blockModel);
     }
 

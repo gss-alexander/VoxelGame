@@ -39,6 +39,9 @@ public class Game
 
     private BoundingBoxRenderer _boundingBoxRenderer;
     private Shader _lineShader;
+
+    private BlockSpriteRenderer _blockSpriteRenderer;
+    private Inventory _inventory;
     
     public unsafe void Load(IWindow window)
     {
@@ -94,9 +97,15 @@ public class Game
 
         _blockSelector = new BlockSelector();
 
+        _blockSpriteRenderer = new BlockSpriteRenderer(_gl, 512);
+
+        _inventory = new Inventory();
+        _inventory.Hotbar.Add(0, (BlockType.Cobblestone, 54));
+        _inventory.Hotbar.Add(1, (BlockType.Dirt, 25));
+
         var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
         var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
-        _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _window.Size.X, _window.Size.Y);
+        _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y);
 
         _blockDrops = new BlockDrops(_gl, _shader, _textureArray);
     }
@@ -170,6 +179,7 @@ public class Game
         foreach (var pickedUpBlock in pickedUpBlocks)
         {
             Console.WriteLine($"Picked up block of type: {pickedUpBlock}");
+            _inventory.AddBlock(pickedUpBlock);
         }
     }
 
@@ -233,7 +243,7 @@ public class Game
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
-        _uiRenderer.Render(_window.Size.X, _window.Size.Y);
+        _uiRenderer.Render(_window.Size.X, _window.Size.Y, _inventory, _shader, _textureArray);
         
         _imGuiController.Render();
         

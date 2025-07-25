@@ -26,7 +26,7 @@ public class BlockModel
 
     private float _rotation;
     
-    public BlockModel(GL gl, BlockType blockType, Shader shader, TextureArray textureArray, Vector3 worldPos, Func<Vector3, bool> isBlockSolidFunc)
+    public BlockModel(GL gl, BlockType blockType, Shader shader, TextureArray textureArray, Vector3 worldPos, Func<Vector3, bool> isBlockSolidFunc, float size)
     {
         _gl = gl;
         _shader = shader;
@@ -34,6 +34,7 @@ public class BlockModel
         Position = worldPos;
         _isBlockSolidFunc = isBlockSolidFunc;
         BlockType = blockType;
+        Size = size;
 
         _vertices = new List<float>();
         // var indices = new List<uint>();
@@ -49,6 +50,7 @@ public class BlockModel
                 var vZ = face.Vertices[vertexIndex + 2];
                 var vU = face.Vertices[vertexIndex + 3];
                 var vV = face.Vertices[vertexIndex + 4];
+                var brightness = face.Vertices[vertexIndex + 5];
         
                 _vertices.Add(vX);
                 _vertices.Add(vY);
@@ -56,7 +58,7 @@ public class BlockModel
                 _vertices.Add(vU);
                 _vertices.Add(vV);
                 _vertices.Add(textureIndex);
-                _vertices.Add(1.0f); // full brightness - todo: handle this better
+                _vertices.Add(brightness); // full brightness - todo: handle this better
             }
         }
 
