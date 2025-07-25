@@ -42,9 +42,9 @@ public class BlockModel
             var textureIndex = blockType.GetTextureIndex(face.Direction);
             for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
             {
-                var vX = face.Vertices[vertexIndex] + worldPos.X;
-                var vY = face.Vertices[vertexIndex + 1] + worldPos.Y;
-                var vZ = face.Vertices[vertexIndex + 2] + worldPos.Z;
+                var vX = face.Vertices[vertexIndex];
+                var vY = face.Vertices[vertexIndex + 1];
+                var vZ = face.Vertices[vertexIndex + 2];
                 var vU = face.Vertices[vertexIndex + 3];
                 var vV = face.Vertices[vertexIndex + 4];
         
@@ -73,7 +73,7 @@ public class BlockModel
     {
         _shader.Use();
         _shader.SetUniform("uTextureArray", 0);
-        var centeredModel = Matrix4x4.CreateTranslation(-Position) * 
+        var centeredModel = 
                             Matrix4x4.CreateScale(0.15f) * 
                             Matrix4x4.CreateRotationY(MathUtil.DegreesToRadians(_rotation)) * 
                             Matrix4x4.CreateTranslation(Position); 
@@ -112,8 +112,8 @@ public class BlockModel
     
     private bool HasCollision(Vector3 position)
     {
-        var min = position;
-        var max = position + (Vector3.One * Size);
+        var min = position - ((Vector3.One * Size) / 2f);
+        var max = position + ((Vector3.One * Size) / 2f);
 
         var minX = (int)MathF.Floor(min.X);
         var maxX = (int)MathF.Floor(max.X);
@@ -122,11 +122,11 @@ public class BlockModel
         var minZ = (int)MathF.Floor(min.Z);
         var maxZ = (int)MathF.Floor(max.Z);
 
-        for (var x = minX; x <= maxX; x++)
+        for (var x = minX - 1; x <= maxX + 1; x++)
         {
-            for (var y = minY; y <= maxY; y++)
+            for (var y = minY - 1; y <= maxY + 1; y++)
             {
-                for (var z = minZ; z <= maxZ; z++)
+                for (var z = minZ - 1; z <= maxZ + 1; z++)
                 {
                     if (_isBlockSolidFunc(new Vector3(x, y, z)))
                     {
