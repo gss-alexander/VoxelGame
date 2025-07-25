@@ -59,6 +59,7 @@ public class Chunk
         _transparentMesh = meshes.transparent;
         
         _gl = gl;
+        _gl.BindVertexArray(0); // Ensure that we are not binding the EBO and VBO to existing VAO
         
         // Create opaque buffers and VAO
         _opaqueEbo = new BufferObject<uint>(_gl, _opaqueMesh.Indices, BufferTargetARB.ElementArrayBuffer);
