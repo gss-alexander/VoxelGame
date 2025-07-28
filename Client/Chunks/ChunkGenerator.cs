@@ -115,4 +115,9 @@ public class ChunkGenerator
             return -MathF.Pow(-noiseValue, 1.2f) * 0.3f; // Scale down valleys
         }
     }
+
+    private void GenerateTrees(ref ChunkData chunkData)
+    {
+        
+    }
 }

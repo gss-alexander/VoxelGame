@@ -50,6 +50,8 @@ public class Game
     private BlockDatabase _blockDatabase;
 
     private TextRenderer _textRenderer;
+
+    private BlockBreaking _blockBreaking;
     
     public unsafe void Load(IWindow window)
     {
@@ -114,6 +116,9 @@ public class Game
 
         _blockDrops = new BlockDrops(_gl, _shader, _blockTextures);
 
+        var blockBreakingShader =
+            new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
+        _blockBreaking = new BlockBreaking(_gl, blockBreakingShader);
     }
 
     private static string GetTexturePath(string name)
@@ -133,17 +138,20 @@ public class Game
     {
         _chunkSystem.UpdateChunkVisibility(_camera.Position, 3);
 
-        if (_currentMouseClickCooldown <= 0f)
+        var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
+        _blockBreaking.UpdateDestruction((float)deltaTime, raycast?.Position, _primaryMouse.IsButtonPressed(MouseButton.Left));
+        if (_primaryMouse.IsButtonPressed(MouseButton.Left))
         {
-            if (_primaryMouse.IsButtonPressed(MouseButton.Left))
+            if (raycast.HasValue)
             {
-                var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
-                if (raycastHit.HasValue)
-                {
-                    var hit = raycastHit.Value;
+                var hit = raycast.Value;
                     
-                    // create a dropped block where the block is
-                    var blockType = _chunkSystem.GetBlock(hit.Position);
+                // create a dropped block where the block is
+                var blockType = _chunkSystem.GetBlock(hit.Position);
+                var block = _blockDatabase.GetById(blockType);
+
+                if (_blockBreaking.DestructionAmount >= block.Strength)
+                {
                     _blockDrops.CreateDroppedBlock(Block.GetCenterPosition(hit.Position), blockType, worldPos =>
                     {
                         var blockPos = Block.WorldToBlockPosition(worldPos);
@@ -152,10 +160,12 @@ public class Game
                     
                     // actually remove the block
                     _chunkSystem.DestroyBlock(hit.Position);
-                    _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
                 }
             }
-
+        }
+        
+        if (_currentMouseClickCooldown <= 0f)
+        {
             if (_primaryMouse.IsButtonPressed(MouseButton.Right))
             {
                 var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
@@ -249,7 +259,6 @@ public class Game
         
         _crosshairRenderer.Render();
         _uiRenderer.Render(_window.Size.X, _window.Size.Y, _inventory, _shader, _blockTextures);
-        
         
         _imGuiController.Render();
         
