@@ -16,7 +16,6 @@ public class Game
     private GL _gl;
 
     private Shader _shader;
-    private TextureArray _textureArray;
 
     private Camera _camera = new();
 
@@ -44,6 +43,10 @@ public class Game
 
     private BlockSpriteRenderer _blockSpriteRenderer;
     private Inventory _inventory;
+
+    private BlockData[] _blockData;
+    private BlockTextures _blockTextures;
+    private BlockDatabase _blockDatabase;
     
     public unsafe void Load(IWindow window)
     {
@@ -63,25 +66,18 @@ public class Game
         _primaryMouse = inputContext.Mice.First();
 
         _gl = window.CreateOpenGL();
+        
+        _blockData = BlockDataLoader.Load(Path.Combine("..", "..", "..", "Resources", "Data", "blocks.yaml"));
+        _blockDatabase = new BlockDatabase(_blockData);
+        _blockTextures = new BlockTextures(_gl, _blockDatabase);
 
-        _chunkSystem = new ChunkSystem(_gl);
+        _chunkSystem = new ChunkSystem(_gl, _blockTextures, _blockDatabase);
 
         _shader = new Shader(_gl,
             GetShaderPath("shader.vert"),
             GetShaderPath("shader.frag")
         );
 
-        _textureArray = new TextureArrayBuilder(16, 16)
-            .AddTexture(GetTexturePath("dirt.png")) //0
-            .AddTexture(GetTexturePath("cobblestone.png")) // 1
-            .AddTexture(GetTexturePath("grass_side.png")) // 2
-            .AddTexture(GetTexturePath("grass_top.png")) // 3
-            .AddTexture(GetTexturePath("sand.png")) // 4
-            .AddTexture(GetTexturePath("log_top.png")) // 5
-            .AddTexture(GetTexturePath("log_side.png")) // 6
-            .AddTexture(GetTexturePath("leaves.png")) // 7
-            .AddTexture(GetTexturePath("glass.png")) // 8
-            .Build(_gl);
 
         _frameBufferSize = window.Size;
 
@@ -97,29 +93,30 @@ public class Game
             return _chunkSystem.IsBlockSolid(blockPos);
         });
 
-        _blockSelector = new BlockSelector();
+        _blockSelector = new BlockSelector(_blockDatabase);
 
         _blockSpriteRenderer = new BlockSpriteRenderer(_gl, 512);
 
         _inventory = new Inventory();
-        _inventory.Hotbar.Add(0, (BlockType.Cobblestone, 54));
-        _inventory.Hotbar.Add(1, (BlockType.Dirt, 25));
+        _inventory.Hotbar.Add(0, (_blockDatabase.GetInternalId("cobblestone"), 54));
+        _inventory.Hotbar.Add(1, (_blockDatabase.GetInternalId("dirt"), 25));
 
         var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
         var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
         _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y);
 
-        _blockDrops = new BlockDrops(_gl, _shader, _textureArray);
+        _blockDrops = new BlockDrops(_gl, _shader, _blockTextures);
+
     }
 
     private static string GetTexturePath(string name)
     {
-        return Path.Combine("..", "..", "..", "Textures", name);
+        return Path.Combine("..", "..", "..", "Resources", "Textures", name);
     }
 
     private static string GetShaderPath(string name)
     {
-        return Path.Combine("..", "..", "..", "Shaders", name);
+        return Path.Combine("..", "..", "..", "Resources", "Shaders", name);
     }
 
     private float _mouseClickCooldownInSeconds = 0.1f;
@@ -196,7 +193,7 @@ public class Game
         _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
     
         
-        _textureArray.Bind(TextureUnit.Texture0);
+        _blockTextures.Textures.Bind(TextureUnit.Texture0);
         _shader.Use();
         _shader.SetUniform("uTextureArray", 0);
 
@@ -240,11 +237,11 @@ public class Game
             ImGuiNET.ImGui.Text($"Looking at block pos: NaN");
             ImGuiNET.ImGui.Text($"Looking at block face: NaN");
         }
-        ImGuiNET.ImGui.Text($"Selected block: {_blockSelector.CurrentBlock}");
+        ImGuiNET.ImGui.Text($"Selected block: {_blockDatabase.GetById(_blockSelector.CurrentBlock).DisplayName}");
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
-        _uiRenderer.Render(_window.Size.X, _window.Size.Y, _inventory, _shader, _textureArray);
+        _uiRenderer.Render(_window.Size.X, _window.Size.Y, _inventory, _shader, _blockTextures);
         
         _imGuiController.Render();
         

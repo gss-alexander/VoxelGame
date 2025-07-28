@@ -53,7 +53,7 @@ public class UiRenderer
         _blockVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 4, 2);
     }
 
-    public void Render(int screenWidth, int screenHeight, Inventory inventory, Shader blockShader, TextureArray textureArray)
+    public void Render(int screenWidth, int screenHeight, Inventory inventory, Shader blockShader, BlockTextures blockTextures)
     {
         var projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(0, screenWidth, screenHeight, 0, 0, 100);
         
@@ -70,13 +70,13 @@ public class UiRenderer
         _vao.Bind();
         _gl.DrawElements(PrimitiveType.Triangles, (uint)_indices.Length, DrawElementsType.UnsignedInt, ReadOnlySpan<uint>.Empty);
 
-        RenderBlockSprites(screenWidth, inventory, blockShader, textureArray);
+        RenderBlockSprites(screenWidth, inventory, blockShader, blockTextures);
 
         _gl.Enable(EnableCap.DepthTest);
         _gl.Disable(EnableCap.Blend);
     }
 
-    private void RenderBlockSprites(int screenWidth, Inventory inventory, Shader blockShader, TextureArray textureArray)
+    private void RenderBlockSprites(int screenWidth, Inventory inventory, Shader blockShader, BlockTextures blockTextures)
     {
         const int slotCount = 9;
         const float slotWidth = 75f;
@@ -102,7 +102,7 @@ public class UiRenderer
             var blockY = yPosition + (slotHeight - blockSize) / 2f;
 
             // Get the sprite texture for this block type
-            var spriteTexture = _blockSpriteRenderer.GetBlockTexture(slot.blockType, blockShader, textureArray);
+            var spriteTexture = _blockSpriteRenderer.GetBlockTexture(slot.blockId, blockShader, blockTextures);
             
             // Bind the sprite texture
             _gl.BindTexture(TextureTarget.Texture2D, spriteTexture);

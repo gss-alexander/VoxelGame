@@ -5,7 +5,7 @@ namespace Client.Blocks;
 
 public class BlockModel
 {
-    public BlockType BlockType { get; }
+    public int BlockId { get; }
     public Vector3 Position { get; set; }
     public float Velocity { get; set; }
     public float Size { get; set; } = 0.15f;
@@ -13,8 +13,8 @@ public class BlockModel
     private const float Gravity = 14f;
     
     private readonly GL _gl;
+    private readonly BlockTextures _blockTextures;
     private readonly Shader _shader;
-    private readonly TextureArray _textureArray;
 
     private readonly MeshRenderer _meshRenderer;
     private readonly Mesh _mesh;
@@ -23,18 +23,18 @@ public class BlockModel
 
     private float _rotation;
     
-    public BlockModel(GL gl, BlockType blockType, Shader shader, TextureArray textureArray, Vector3 worldPos, Func<Vector3, bool> isBlockSolidFunc, float size)
+    public BlockModel(GL gl, BlockTextures blockTextures, int blockId, Shader shader, Vector3 worldPos, Func<Vector3, bool> isBlockSolidFunc, float size)
     {
         _gl = gl;
+        _blockTextures = blockTextures;
         _shader = shader;
-        _textureArray = textureArray;
         Position = worldPos;
         _isBlockSolidFunc = isBlockSolidFunc;
-        BlockType = blockType;
+        BlockId = blockId;
         Size = size;
 
         _gl.BindVertexArray(0); // todo: maybe remove
-        _mesh = GenerateMesh(blockType);
+        _mesh = GenerateMesh(blockId);
         _meshRenderer = new MeshRenderer(_gl, _mesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
@@ -54,7 +54,7 @@ public class BlockModel
     
         _shader.SetUniform("uModel", centeredModel); 
         
-        _textureArray.Bind();
+        _blockTextures.Textures.Bind();
         _meshRenderer.Render();
     }
 
@@ -68,7 +68,7 @@ public class BlockModel
         MoveWithCollision(deltaTime);
     }
 
-    private static Mesh GenerateMesh(BlockType blockType)
+    private Mesh GenerateMesh(int blockId)
     {
         var vertices = new List<float>();
         var indices = new List<uint>();
@@ -77,7 +77,7 @@ public class BlockModel
         var indicesOffset = 0u;
         foreach (var face in faces)
         {
-            var textureIndex = blockType.GetTextureIndex(face.Direction);
+            var textureIndex = _blockTextures.GetBlockTextureIndex(blockId, face.Direction);
             for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
             {
                 var vX = face.Vertices[vertexIndex];

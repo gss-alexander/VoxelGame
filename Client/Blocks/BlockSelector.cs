@@ -3,30 +3,33 @@
 // only for debug
 public class BlockSelector
 {
-    public BlockType CurrentBlock => _availableBlocks[_currentSelectedBlockIndex];
+    private readonly BlockDatabase _blockDatabase;
+    public int CurrentBlock => _availableBlocks[_currentSelectedBlockIndex];
     
-    private static readonly BlockType[] _availableBlocks = new[]
-    {
-        BlockType.Dirt,
-        BlockType.Grass,
-        BlockType.Cobblestone,
-        BlockType.Sand,
-        BlockType.Log,
-        BlockType.Leaves,
-        BlockType.Glass
-    };
+    private readonly List<int> _availableBlocks;
     
     private int _currentSelectedBlockIndex;
+    
+    public BlockSelector(BlockDatabase blockDatabase)
+    {
+        _blockDatabase = blockDatabase;
+        _availableBlocks = new List<int>();
+        foreach (var block in _blockDatabase.GetAll())
+        {
+            if (block.data.ExternalId == "air") continue;
+            _availableBlocks.Add(block.id);
+        }
+    }
 
     public void Cycle(int direction)
     {
         _currentSelectedBlockIndex += direction;
         if (_currentSelectedBlockIndex < 0)
         {
-            _currentSelectedBlockIndex = _availableBlocks.Length - 1;
+            _currentSelectedBlockIndex = _availableBlocks.Count - 1;
         }
 
-        if (_currentSelectedBlockIndex > _availableBlocks.Length - 1)
+        if (_currentSelectedBlockIndex > _availableBlocks.Count - 1)
         {
             _currentSelectedBlockIndex = 0;
         }

@@ -1,0 +1,61 @@
+blocks:
+  dirt:
+    display_name: "Dirt"
+    textures:
+      default: "dirt.png"
+    is_transparent: false
+    is_solid: true
+    strength: 10.0
+  grass:
+    display_name: "Grass"
+    textures:
+      default: "grass_side.png"
+      top: "grass_top.png"
+      bottom: "dirt.png"
+    is_transparent: false
+    is_solid: true
+    strength: 10.0
+  cobblestone:
+    display_name: "Cobblestone"
+    textures:
+      default: "cobblestone.png"
+    is_transparent: false
+    is_solid: true
+    strength: 150.0
+  log:
+    display_name: "Log"
+    textures:
+      default: "log_side.png"
+      top: "log_top.png"
+      bottom: "log_top.png"
+    is_transparent: false
+    is_solid: true
+    strength: 50.0
+  glass:
+    display_name: "Glass"
+    textures:
+      default: "glass.png"
+    is_transparent: true
+    is_solid: true
+    strength: 5.0
+  leaves:
+    display_name: "Leaves"
+    textures:
+      default: "leaves.png"
+    is_transparent: false
+    is_solid: true
+    strength: 5.0
+  sand:
+    display_name: "Sand"
+    textures:
+      default: "sand.png"
+    is_transparent: false
+    is_solid: true
+    strength: 5.0
+  plank:
+    display_name: "Plank"
+    textures:
+      default: "plank.png"
+    is_transparent: false
+    is_solid: true
+    strength: 5.0

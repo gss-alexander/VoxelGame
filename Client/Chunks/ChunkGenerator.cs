@@ -8,15 +8,17 @@ namespace Client.Chunks;
 public class ChunkGenerator
 {
     private readonly FastNoiseLite _noise;
+    private readonly BlockDatabase _blockDatabase;
 
-    public ChunkGenerator(FastNoiseLite noise)
+    public ChunkGenerator(FastNoiseLite noise, BlockDatabase blockDatabase)
     {
         _noise = noise;
+        _blockDatabase = blockDatabase;
     }
 
     public ChunkData Generate(Vector2D<int> chunkPosition)
     {
-        var chunkData = new ChunkData(chunkPosition);
+        var chunkData = new ChunkData(chunkPosition, _blockDatabase.GetInternalId("air"));
 
         var heightMap = GenerateHeightMap(chunkPosition);
         
@@ -36,16 +38,16 @@ public class ChunkGenerator
                 // set the bottom blocks to be cobblestone
                 for (var y = 0; y < height - 4; y++)
                 {
-                    chunkData.SetBlock(new Vector3D<int>(x, y, z), BlockType.Cobblestone);
+                    chunkData.SetBlock(new Vector3D<int>(x, y, z), _blockDatabase.GetInternalId("cobblestone"));
                 }
                 
                 // set the next 4 blocks to be dirt
                 for (var y = height - 4; y < height; y++)
                 {
-                    chunkData.SetBlock(new Vector3D<int>(x, y, z), BlockType.Dirt);
+                    chunkData.SetBlock(new Vector3D<int>(x, y, z), _blockDatabase.GetInternalId("dirt"));
                 }
-                
-                chunkData.SetBlock(new Vector3D<int>(x, height, z), BlockType.Grass);
+
+                chunkData.SetBlock(new Vector3D<int>(x, height, z), _blockDatabase.GetInternalId("grass"));
             }
         }
     }

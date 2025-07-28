@@ -6,7 +6,7 @@ namespace Client.Blocks;
 public class BlockSpriteRenderer
 {
     private readonly GL _gl;
-    private readonly Dictionary<BlockType, uint> _blockTextures;
+    private readonly Dictionary<int, uint> _blockTextures;
     private readonly int _spriteSize;
 
     private uint _framebuffer;
@@ -20,25 +20,25 @@ public class BlockSpriteRenderer
     {
         _gl = gl;
         _spriteSize = spriteSize;
-        _blockTextures = new Dictionary<BlockType, uint>();
+        _blockTextures = new Dictionary<int, uint>();
 
         CreateFramebuffer();
         SetupCamera();
     }
 
-    public uint GetBlockTexture(BlockType blockType, Shader blockShader, TextureArray textureArray)
+    public uint GetBlockTexture(int blockId, Shader blockShader, BlockTextures blockTextures)
     {
-        if (_blockTextures.TryGetValue(blockType, out var existingTexture))
+        if (_blockTextures.TryGetValue(blockId, out var existingTexture))
         {
             return existingTexture;
         }
 
-        var textureId = RenderBlockToTexture(blockType, blockShader, textureArray);
-        _blockTextures[blockType] = textureId;
+        var textureId = RenderBlockToTexture(blockId, blockShader, blockTextures);
+        _blockTextures[blockId] = textureId;
         return textureId;
     }
 
-    private uint RenderBlockToTexture(BlockType blockType, Shader blockShader, TextureArray textureArray)
+    private uint RenderBlockToTexture(int blockId, Shader blockShader, BlockTextures blockTextures)
     {
         // save the current opengl state
         var oldViewport = new int[4];
@@ -54,7 +54,7 @@ public class BlockSpriteRenderer
         _gl.Enable(EnableCap.DepthTest);
         
         // Create and render a temporary block model
-        var tempBlock = new BlockModel(_gl, blockType, blockShader, textureArray, Vector3.Zero, _ => false, 1f);
+        var tempBlock = new BlockModel(_gl, blockTextures, blockId, blockShader, Vector3.Zero, _ => false, 1f);
         blockShader.Use();
         blockShader.SetUniform("uView", _viewMatrix);
         blockShader.SetUniform("uProjection", _projectionMatrix);

@@ -10,13 +10,17 @@ public class ChunkRenderer
     public bool HasTransparentBlocks { get; private set; }
     
     private readonly GL _gl;
-    
+    private readonly BlockTextures _blockTextures;
+    private readonly BlockDatabase _blockDatabase;
+
     private readonly MeshRenderer _opaqueMeshRenderer;
     private readonly MeshRenderer _transparentMeshRenderer;
 
-    public ChunkRenderer(GL gl)
+    public ChunkRenderer(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _gl = gl;
+        _blockTextures = blockTextures;
+        _blockDatabase = blockDatabase;
 
         _opaqueMeshRenderer = CreateMeshRenderer();
         _transparentMeshRenderer = CreateMeshRenderer();
@@ -62,13 +66,14 @@ public class ChunkRenderer
                 for (var z = 0; z < Chunk.Size; z++)
                 {
                     var blockPos = new Vector3D<int>(x, y, z);
-                    var blockType = chunkData.GetBlock(blockPos);
-                    if (blockType == BlockType.Air)
+                    var blockId = chunkData.GetBlock(blockPos);
+                    var blockData = _blockDatabase.GetById(blockId);
+                    if (!blockData.IsSolid)
                     {
                         continue;
                     }
 
-                    var isTransparent = blockType.IsTransparent();
+                    var isTransparent = blockData.IsTransparent;
                     var vertices = isTransparent ? transparentVertices : opaqueVertices;
                     var indices = isTransparent ? transparentIndices : opaqueIndices;
 
@@ -79,7 +84,7 @@ public class ChunkRenderer
                             continue;
                         }
 
-                        var textureIndex = blockType.GetTextureIndex(face.Direction);
+                        var textureIndex = _blockTextures.GetBlockTextureIndex(blockId, face.Direction);
                         
                         for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
                         {
@@ -123,7 +128,7 @@ public class ChunkRenderer
         HasTransparentBlocks = _transparentMeshRenderer.VertexCount > 0;
     }
     
-    private static bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData)
+    private bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData)
     {
         var facePositionOffset = face switch
         {
@@ -143,7 +148,8 @@ public class ChunkRenderer
         var neighbourIsTransparent = false;
         if (!IsPositionOutOfBounds(faceBlockPosition))
         {
-            neighbourIsTransparent = chunkData.GetBlock(faceBlockPosition).IsTransparent();
+            var block = chunkData.GetBlock(faceBlockPosition);
+            neighbourIsTransparent = _blockDatabase.GetById(block).IsTransparent;
         }
 
         return neighbourBlockSolid && !neighbourIsTransparent;
@@ -156,7 +162,7 @@ public class ChunkRenderer
                position.Z >= Chunk.Size || position.Z < 0;
     }
     
-    private static bool IsBlockSolid(Vector3D<int> position, ChunkData chunkData)
+    private bool IsBlockSolid(Vector3D<int> position, ChunkData chunkData)
     {
         if (IsPositionOutOfBounds(position))
         {
@@ -164,6 +170,6 @@ public class ChunkRenderer
         }
 
         var block = chunkData.GetBlock(position);
-        return block != BlockType.Air;
+        return _blockDatabase.GetById(block).IsSolid;
     }
 }

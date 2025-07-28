@@ -7,29 +7,24 @@ public class BlockDrops
 {
     private readonly GL _gl;
     private readonly Shader _droppedBlockShader;
-    private readonly TextureArray _blockTextures;
+    private readonly BlockTextures _blockTextures;
 
     private readonly List<BlockModel> _blockModels = new();
 
-    public BlockDrops(GL gl, Shader droppedBlockShader, TextureArray blockTextures)
+    public BlockDrops(GL gl, Shader droppedBlockShader, BlockTextures blockTextures)
     {
         _gl = gl;
         _droppedBlockShader = droppedBlockShader;
         _blockTextures = blockTextures;
     }
     
-    public void CreateDroppedBlock(Vector3 worldPosition, BlockType type, Func<Vector3, bool> isDroppedFunc)
+    public void CreateDroppedBlock(Vector3 worldPosition, int blockId, Func<Vector3, bool> isDroppedFunc)
     {
-        if (type == BlockType.Air)
-        {
-            throw new InvalidOperationException($"Cannot drop air block");
-        }
-
-        var blockModel = new BlockModel(_gl, type, _droppedBlockShader, _blockTextures, worldPosition, isDroppedFunc, 0.15f);
+        var blockModel = new BlockModel(_gl, _blockTextures, blockId, _droppedBlockShader, worldPosition, isDroppedFunc, 0.15f);
         _blockModels.Add(blockModel);
     }
 
-    public List<BlockType> PickupDroppedBlocks(Vector3 origin, float range)
+    public List<int> PickupDroppedBlocks(Vector3 origin, float range)
     {
         var pickedUpBlocks = new List<BlockModel>();
         foreach (var block in _blockModels)
@@ -47,7 +42,7 @@ public class BlockDrops
 
         if (pickedUpBlocks.Count > 0)
         {
-            return pickedUpBlocks.Select(pub => pub.BlockType).ToList();
+            return pickedUpBlocks.Select(pub => pub.BlockId).ToList();
         }
 
         return [];

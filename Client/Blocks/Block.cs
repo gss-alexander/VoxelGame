@@ -3,7 +3,7 @@ using Silk.NET.Maths;
 
 namespace Client.Blocks;
 
-public static class Block
+public class Block
 {
     public static Vector3D<int> WorldToBlockPosition(Vector3 worldPosition)
     {

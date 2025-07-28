@@ -10,7 +10,9 @@ public class ChunkSystem
     public int VisibleChunkCount => _visibleChunks.Count;
     
     private readonly GL _gl;
-    
+    private readonly BlockTextures _blockTextures;
+    private readonly BlockDatabase _blockDatabase;
+
     private readonly List<Chunk> _visibleChunks = new();
     
     // Will be updated by chunk visibility checks
@@ -19,14 +21,16 @@ public class ChunkSystem
     private FastNoiseLite _noise;
     private readonly ChunkGenerator _chunkGenerator;
 
-    private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, BlockType>>> _modifiedBlocks = new();
+    private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, int>>> _modifiedBlocks = new();
     
-    public ChunkSystem(GL gl)
+    public ChunkSystem(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _gl = gl;
+        _blockTextures = blockTextures;
+        _blockDatabase = blockDatabase;
         _noise = new FastNoiseLite(DateTime.Now.Millisecond);
         _noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-        _chunkGenerator = new ChunkGenerator(_noise);
+        _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase);
     }
 
     public bool IsBlockSolid(Vector3D<int> blockPosition)
@@ -52,13 +56,13 @@ public class ChunkSystem
         return new Vector3D<int>(localX, localY, localZ);
     }
 
-    public BlockType GetBlock(Vector3D<int> blockPosition)
+    public int GetBlock(Vector3D<int> blockPosition)
     {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
         var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
         if (chunk == null)
         {
-            return BlockType.Air;
+            return _blockDatabase.GetInternalId("air");
         }
         
         var localPosition = BlockToLocalPosition(blockPosition);
@@ -67,15 +71,15 @@ public class ChunkSystem
 
     public void DestroyBlock(Vector3D<int> blockPosition)
     {
-        SetBlock(blockPosition, BlockType.Air);
+        SetBlock(blockPosition, _blockDatabase.GetInternalId("air"));
     }
 
-    public void PlaceBlock(Vector3D<int> blockPosition, BlockType block)
+    public void PlaceBlock(Vector3D<int> blockPosition, int blockId)
     {
-        SetBlock(blockPosition, block);
+        SetBlock(blockPosition, blockId);
     }
 
-    private void SetBlock(Vector3D<int> blockPosition, BlockType blockType)
+    private void SetBlock(Vector3D<int> blockPosition, int blockId)
     {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
         var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
@@ -85,11 +89,11 @@ public class ChunkSystem
         }
 
         var localPosition = BlockToLocalPosition(blockPosition);
-        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, blockType);
+        chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, blockId);
 
         if (!_modifiedBlocks.ContainsKey(chunkPosition))
         {
-            _modifiedBlocks.Add(chunkPosition, new List<(Vector3D<int>, BlockType)>());
+            _modifiedBlocks.Add(chunkPosition, new List<(Vector3D<int>, int)>());
         }
 
         var modifiedBlocksList = _modifiedBlocks[chunkPosition];
@@ -99,7 +103,7 @@ public class ChunkSystem
             var modifiedBlock = modifiedBlocksList[i];
             if (modifiedBlock.Item1 == blockPosition)
             {
-                modifiedBlock.Item2 = blockType;
+                modifiedBlock.Item2 = blockId;
                 modifiedBlocksList[i] = modifiedBlock;
                 existing = true;
             }
@@ -107,7 +111,7 @@ public class ChunkSystem
 
         if (!existing)
         {
-            modifiedBlocksList.Add(new ValueTuple<Vector3D<int>, BlockType>(blockPosition, blockType));
+            modifiedBlocksList.Add(new ValueTuple<Vector3D<int>, int>(blockPosition, blockId));
         }
     }
 
@@ -122,13 +126,11 @@ public class ChunkSystem
             var distance = CalculateChunkPositionDistance(playerChunkPosition, chunk.Position);
             if (CalculateChunkPositionDistance(playerChunkPosition, chunk.Position) > renderDistance)
             {
-                Console.WriteLine(distance);
                 _chunksToHide.Add(chunk);
             }
         }
         foreach (var chunk in _chunksToHide)
         {
-            Console.WriteLine($"Removing chunk outside of render distance ({chunk.Position.X},{chunk.Position.Y})");
             _visibleChunks.Remove(chunk);
         }
         
@@ -148,7 +150,6 @@ public class ChunkSystem
         }
         foreach (var chunkPosition in chunksInRange)
         {
-            Console.WriteLine($"Creating new chunk at ({chunkPosition.X},{chunkPosition.Y})");
             var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
             _visibleChunks.Add(newChunk);
         }
@@ -199,7 +200,7 @@ public class ChunkSystem
                 chunkData.SetBlock(pos, modifiedBlock.Item2);
             }
         }
-        var chunk = new Chunk(_gl, chunkData);
+        var chunk = new Chunk(_gl, chunkData, _blockTextures, _blockDatabase);
         return chunk;
     }
 }

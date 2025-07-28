@@ -7,21 +7,31 @@ namespace Client.Chunks;
 public class ChunkData
 {
     public Vector2D<int> Position { get; }
-    private readonly BlockType[] _blocks;
+    private readonly int[] _blocks;
 
-    public ChunkData(Vector2D<int> position)
+    public ChunkData(Vector2D<int> position, int fillBlockId)
     {
         Position = position;
-        _blocks = new BlockType[Chunk.Size * Chunk.Height * Chunk.Size];
+        _blocks = new int[Chunk.Size * Chunk.Height * Chunk.Size];
+        for (var x = 0; x < Chunk.Size; x++)
+        {
+            for (var y = 0; y < Chunk.Height; y++)
+            {
+                for (var z = 0; z < Chunk.Size; z++)
+                {
+                    SetBlock(new Vector3D<int>(x, y, z), fillBlockId);
+                }
+            }
+        }
     }
 
-    public void SetBlock(Vector3D<int> position, BlockType blockType)
+    public void SetBlock(Vector3D<int> position, int blockType)
     {
         var localPosition = PositionToBlockIndex(position.X, position.Y, position.Z);
         _blocks[localPosition] = blockType;
     }
 
-    public BlockType GetBlock(Vector3D<int> position)
+    public int GetBlock(Vector3D<int> position)
     {
         var localPosition = PositionToBlockIndex(position.X, position.Y, position.Z);
         return _blocks[localPosition];

@@ -14,6 +14,7 @@ public class Chunk
     public const int Height = 256;
 
     private readonly ChunkData _data;
+    private readonly BlockDatabase _blockDatabase;
     private readonly ChunkRenderer _chunkRenderer;
 
     public static Vector2D<int> WorldToChunkPosition(Vector3 worldPosition)
@@ -31,10 +32,11 @@ public class Chunk
         );
     }
 
-    public Chunk(GL gl, ChunkData data)
+    public Chunk(GL gl, ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _data = data;
-        _chunkRenderer = new ChunkRenderer(gl);
+        _blockDatabase = blockDatabase;
+        _chunkRenderer = new ChunkRenderer(gl, blockTextures, blockDatabase);
         _chunkRenderer.RegenerateMeshes(_data);
     }
 
@@ -62,16 +64,16 @@ public class Chunk
             {
                 for (var y = 0; y < height - 2; y++)
                 {
-                    SetBlock(x, y, z, BlockType.Cobblestone, false);
+                    SetBlock(x, y, z, _blockDatabase.GetInternalId("cobblestone"), false);
                 }
                 
-                SetBlock(x, height - 2, z, BlockType.Dirt, false);
-                SetBlock(x, height - 1, z, BlockType.Grass, false);
+                SetBlock(x, height - 2, z, _blockDatabase.GetInternalId("dirt"), false);
+                SetBlock(x, height - 1, z, _blockDatabase.GetInternalId("grass"), false);
             }
         }
     }
 
-    public void SetBlock(int x, int y, int z, BlockType block, bool regenerateMesh = true)
+    public void SetBlock(int x, int y, int z, int block, bool regenerateMesh = true)
     {
         _data.SetBlock(new Vector3D<int>(x, y, z), block);
         if (regenerateMesh)
@@ -80,7 +82,7 @@ public class Chunk
         }
     }
 
-    public BlockType GetBlock(int x, int y, int z)
+    public int GetBlock(int x, int y, int z)
     {
         return _data.GetBlock(new Vector3D<int>(x, y, z));
     }
@@ -92,7 +94,7 @@ public class Chunk
             return false;
         }
         
-        var block = GetBlock(x, y, z);
-        return block != BlockType.Air;
+        var block = _blockDatabase.GetById(GetBlock(x, y, z));
+        return block.IsSolid;
     }
 }
