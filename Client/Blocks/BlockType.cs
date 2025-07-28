@@ -1,4 +1,4 @@
-﻿namespace Client;
+﻿namespace Client.Blocks;
 
 public enum BlockType
 {
@@ -23,7 +23,7 @@ public static class BlockTypeExtensions
         };
     }
 
-    public static float GetTextureIndex(this BlockType blockType, BlockData.FaceDirection faceDirection)
+    public static float GetTextureIndex(this BlockType blockType, BlockGeometry.FaceDirection faceDirection)
     {
         return blockType switch
         {
@@ -33,15 +33,15 @@ public static class BlockTypeExtensions
             BlockType.Cobblestone => 1f,
             BlockType.Grass => faceDirection switch
             {
-                BlockData.FaceDirection.Top => 3f,
-                BlockData.FaceDirection.Bottom => 0f,
+                BlockGeometry.FaceDirection.Top => 3f,
+                BlockGeometry.FaceDirection.Bottom => 0f,
                 _ => 2f
             },
             BlockType.Sand => 4f,
             BlockType.Log => faceDirection switch
             {
-                BlockData.FaceDirection.Top => 5f,
-                BlockData.FaceDirection.Bottom => 5f,
+                BlockGeometry.FaceDirection.Top => 5f,
+                BlockGeometry.FaceDirection.Bottom => 5f,
                 _ => 6f
             },
             BlockType.Leaves => 7f,

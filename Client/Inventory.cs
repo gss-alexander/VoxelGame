@@ -1,4 +1,6 @@
-﻿namespace Client;
+﻿using Client.Blocks;
+
+namespace Client;
 
 public class Inventory
 {

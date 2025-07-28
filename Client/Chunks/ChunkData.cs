@@ -1,4 +1,5 @@
-﻿using Silk.NET.Maths;
+﻿using Client.Blocks;
+using Silk.NET.Maths;
 
 namespace Client.Chunks;
 

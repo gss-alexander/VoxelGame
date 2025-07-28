@@ -1,6 +1,6 @@
-﻿namespace Client;
+﻿namespace Client.Blocks;
 
-public static class BlockData
+public static class BlockGeometry
 {
     public enum FaceDirection
     {

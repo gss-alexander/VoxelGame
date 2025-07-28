@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Silk.NET.Maths;
 
-namespace Client;
+namespace Client.Blocks;
 
 public static class Block
 {
@@ -20,16 +20,16 @@ public static class Block
     }
 
     public static Vector3D<int> GetFaceNeighbour(Vector3D<int> originBlockPosition,
-        BlockData.FaceDirection faceDirection)
+        BlockGeometry.FaceDirection faceDirection)
     {
         var offset = faceDirection switch
         {
-            BlockData.FaceDirection.Top => new Vector3D<int>(0, 1, 0),
-            BlockData.FaceDirection.Bottom => new Vector3D<int>(0, -1, 0),
-            BlockData.FaceDirection.Right => new Vector3D<int>(1, 0, 0),
-            BlockData.FaceDirection.Left => new Vector3D<int>(-1, 0, 0),
-            BlockData.FaceDirection.Front => new Vector3D<int>(0, 0, 1),
-            BlockData.FaceDirection.Back => new Vector3D<int>(0, 0, -1),
+            BlockGeometry.FaceDirection.Top => new Vector3D<int>(0, 1, 0),
+            BlockGeometry.FaceDirection.Bottom => new Vector3D<int>(0, -1, 0),
+            BlockGeometry.FaceDirection.Right => new Vector3D<int>(1, 0, 0),
+            BlockGeometry.FaceDirection.Left => new Vector3D<int>(-1, 0, 0),
+            BlockGeometry.FaceDirection.Front => new Vector3D<int>(0, 0, 1),
+            BlockGeometry.FaceDirection.Back => new Vector3D<int>(0, 0, -1),
             _ => throw new NotImplementedException()
         };
 

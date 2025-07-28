@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Silk.NET.OpenGL;
 
-namespace Client;
+namespace Client.Blocks;
 
 public class BlockModel
 {
@@ -73,7 +73,7 @@ public class BlockModel
         var vertices = new List<float>();
         var indices = new List<uint>();
         
-        var faces = BlockData.Faces;
+        var faces = BlockGeometry.Faces;
         var indicesOffset = 0u;
         foreach (var face in faces)
         {

@@ -1,9 +1,7 @@
-﻿using System.Diagnostics;
-using System.Numerics;
-using Silk.NET.Maths;
+﻿using System.Numerics;
 using Silk.NET.OpenGL;
 
-namespace Client;
+namespace Client.Blocks;
 
 public class BlockDrops
 {

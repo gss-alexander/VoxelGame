@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Silk.NET.OpenGL;
 
-namespace Client;
+namespace Client.Blocks;
 
 public class BlockSpriteRenderer
 {

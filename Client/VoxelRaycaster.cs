@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Client.Blocks;
 using Silk.NET.Maths;
 
 namespace Client;
@@ -10,9 +11,9 @@ public class VoxelRaycaster
     public readonly struct Hit
     {
         public Vector3D<int> Position { get; }
-        public BlockData.FaceDirection Face { get; }
+        public BlockGeometry.FaceDirection Face { get; }
         
-        public Hit(Vector3D<int> position,BlockData.FaceDirection face)
+        public Hit(Vector3D<int> position,BlockGeometry.FaceDirection face)
         {
             Position = position;
             Face = face;
@@ -109,7 +110,7 @@ public class VoxelRaycaster
             if (_isVoxelSolidFunc(currentPos))
             {
                 // For starting voxel hits, we can't determine face from step direction. Default to top
-                return new Hit(currentPos, BlockData.FaceDirection.Top);
+                return new Hit(currentPos, BlockGeometry.FaceDirection.Top);
             }
             
             // Determine which axis has the nearest boundary crossing
@@ -128,7 +129,7 @@ public class VoxelRaycaster
                     // Check for hit after stepping - face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
-                        var face = -stepX > 0 ? BlockData.FaceDirection.Right : BlockData.FaceDirection.Left;
+                        var face = -stepX > 0 ? BlockGeometry.FaceDirection.Right : BlockGeometry.FaceDirection.Left;
                         return new Hit(new Vector3D<int>(x, y, z), face);
                     }
                 }
@@ -143,7 +144,7 @@ public class VoxelRaycaster
                     // Check for hit after stepping - face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
-                        var face = -stepZ > 0 ? BlockData.FaceDirection.Front : BlockData.FaceDirection.Back;
+                        var face = -stepZ > 0 ? BlockGeometry.FaceDirection.Front : BlockGeometry.FaceDirection.Back;
                         return new Hit(new Vector3D<int>(x, y, z), face);
                     }
                 }
@@ -161,7 +162,7 @@ public class VoxelRaycaster
                     // Check for hit after stepping - face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
-                        var face = -stepY > 0 ? BlockData.FaceDirection.Top : BlockData.FaceDirection.Bottom;
+                        var face = -stepY > 0 ? BlockGeometry.FaceDirection.Top : BlockGeometry.FaceDirection.Bottom;
                         return new Hit(new Vector3D<int>(x, y, z), face);
                     }
                 }
@@ -176,7 +177,7 @@ public class VoxelRaycaster
                     // Check for hit after stepping - face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
-                        var face = -stepZ > 0 ? BlockData.FaceDirection.Front : BlockData.FaceDirection.Back;
+                        var face = -stepZ > 0 ? BlockGeometry.FaceDirection.Front : BlockGeometry.FaceDirection.Back;
                         return new Hit(new Vector3D<int>(x, y, z), face);
                     }
                 }

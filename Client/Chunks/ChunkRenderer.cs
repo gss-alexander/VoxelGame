@@ -1,4 +1,5 @@
-﻿using Silk.NET.Maths;
+﻿using Client.Blocks;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 namespace Client.Chunks;
@@ -71,7 +72,7 @@ public class ChunkRenderer
                     var vertices = isTransparent ? transparentVertices : opaqueVertices;
                     var indices = isTransparent ? transparentIndices : opaqueIndices;
 
-                    foreach (var face in BlockData.Faces)
+                    foreach (var face in BlockGeometry.Faces)
                     {
                         if (IsFaceBlockSolid(x, y, z, face.Direction, chunkData))
                         {
@@ -122,16 +123,16 @@ public class ChunkRenderer
         HasTransparentBlocks = _transparentMeshRenderer.VertexCount > 0;
     }
     
-    private static bool IsFaceBlockSolid(int x, int y, int z, BlockData.FaceDirection face, ChunkData chunkData)
+    private static bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData)
     {
         var facePositionOffset = face switch
         {
-            BlockData.FaceDirection.Back => new Vector3D<int>(0, 0, -1),
-            BlockData.FaceDirection.Front => new Vector3D<int>(0, 0, 1),
-            BlockData.FaceDirection.Left => new Vector3D<int>(-1, 0, 0),
-            BlockData.FaceDirection.Right => new Vector3D<int>(1, 0, 0),
-            BlockData.FaceDirection.Top => new Vector3D<int>(0, 1, 0),
-            BlockData.FaceDirection.Bottom => new Vector3D<int>(0, -1, 0),
+            BlockGeometry.FaceDirection.Back => new Vector3D<int>(0, 0, -1),
+            BlockGeometry.FaceDirection.Front => new Vector3D<int>(0, 0, 1),
+            BlockGeometry.FaceDirection.Left => new Vector3D<int>(-1, 0, 0),
+            BlockGeometry.FaceDirection.Right => new Vector3D<int>(1, 0, 0),
+            BlockGeometry.FaceDirection.Top => new Vector3D<int>(0, 1, 0),
+            BlockGeometry.FaceDirection.Bottom => new Vector3D<int>(0, -1, 0),
             _ => throw new Exception($"No offset defined for face {face}")
         };
 

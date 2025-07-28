@@ -1,5 +1,6 @@
-﻿namespace Client;
+﻿namespace Client.Blocks;
 
+// only for debug
 public class BlockSelector
 {
     public BlockType CurrentBlock => _availableBlocks[_currentSelectedBlockIndex];
