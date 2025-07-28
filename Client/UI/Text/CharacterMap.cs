@@ -20,7 +20,7 @@ public class CharacterMap
 
     private void Initialize()
     {
-        FontLoader.LoadFace("C:\\dev\\personal\\VoxelGame\\Client\\Resources\\Fonts\\Roboto-VariableFont_wdth,wght.ttf");
+        FontLoader.LoadFace(Path.Combine("..", "..", "..", "Resources", "Fonts", "Roboto-VariableFont_wdth,wght.ttf"));
         
         // Loads the first 128 characters as opengl textures
         for (int characterIndex = 0; characterIndex < 128; characterIndex++)
