@@ -210,16 +210,15 @@ public class Game
         // WORLD RENDERING - START
         
         _chunkSystem.RenderChunks();
+        _chunkSystem.RenderTransparency(_camera.Position);
+        
         _blockDrops.Render((float)deltaTime);
-        // _boundingBoxRenderer.RenderBoundingBox(_player.Position, _player.Size, view, projection,
-        //     new Vector3(1.0f, 0.0f, 0.0f));
         
         // WORLD RENDERING - END
         
         // UI RENDERING - START
         
         _gl.DepthMask(false);
-        _chunkSystem.RenderTransparency(_camera.Position);
         _gl.DepthMask(true);
         
         ImGuiNET.ImGui.Begin("Debug");
@@ -249,8 +248,6 @@ public class Game
         
         // UI RENDERING - END
     }
-
-
 
     private Vector3 GetMovementInputWithCamera()
     {
