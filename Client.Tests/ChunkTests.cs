@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using Client.Chunks;
+using FluentAssertions;
 using Silk.NET.Maths;
 
 namespace Client.Tests;

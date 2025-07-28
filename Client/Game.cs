@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Numerics;
+using Client.Chunks;
 using Client.UI;
 using Silk.NET.Input;
 using Silk.NET.Maths;

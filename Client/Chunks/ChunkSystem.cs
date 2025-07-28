@@ -1,9 +1,8 @@
 ﻿using System.Numerics;
-using Client.Chunks;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
-namespace Client;
+namespace Client.Chunks;
 
 public class ChunkSystem
 {
@@ -190,19 +189,16 @@ public class ChunkSystem
     private Chunk CreateChunk(int worldX, int worldY)
     {
         var chunkData = _chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
-        var chunk = new Chunk(chunkData, new Vector2D<int>(worldX, worldY));
-        // chunk.GenerateChunkData(_noise);
-        // chunk.GenerateFlatWorld();
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
         {
             foreach (var modifiedBlock in modifiedBlockList)
             {
                 var pos = BlockToLocalPosition(modifiedBlock.Item1);
-                chunk.SetBlock(pos.X, pos.Y, pos.Z, modifiedBlock.Item2, false);
+                chunkData.SetBlock(pos, modifiedBlock.Item2);
             }
         }
-        chunk.Initialize(_gl);
+        var chunk = new Chunk(_gl, chunkData);
         return chunk;
     }
 }

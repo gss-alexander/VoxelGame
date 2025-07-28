@@ -15,7 +15,7 @@ public class ChunkGenerator
 
     public ChunkData Generate(Vector2D<int> chunkPosition)
     {
-        var chunkData = new ChunkData();
+        var chunkData = new ChunkData(chunkPosition);
 
         var heightMap = GenerateHeightMap(chunkPosition);
         

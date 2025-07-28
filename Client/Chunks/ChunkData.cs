@@ -3,12 +3,14 @@
 namespace Client.Chunks;
 
 // Stores all data for a chunk
-public struct ChunkData
+public class ChunkData
 {
+    public Vector2D<int> Position { get; }
     private readonly BlockType[] _blocks;
 
-    public ChunkData()
+    public ChunkData(Vector2D<int> position)
     {
+        Position = position;
         _blocks = new BlockType[Chunk.Size * Chunk.Height * Chunk.Size];
     }
 
