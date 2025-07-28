@@ -2,7 +2,7 @@
 
 namespace Client;
 
-public class BufferObject<TDataType> where TDataType : unmanaged
+public class BufferObject<TDataType> : IDisposable where TDataType : unmanaged
 {
     private readonly GL _gl;
     private readonly uint _handle;
@@ -33,5 +33,10 @@ public class BufferObject<TDataType> where TDataType : unmanaged
     public void Bind()
     {
         _gl.BindBuffer(_target, _handle);
+    }
+
+    public void Dispose()
+    {
+        _gl.DeleteBuffer(_handle);
     }
 }

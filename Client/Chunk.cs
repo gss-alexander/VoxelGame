@@ -17,15 +17,11 @@ public class Chunk
 
     // Opaque rendering
     private Mesh _opaqueMesh;
-    private VertexArrayObject<float, uint> _opaqueVao;
-    private BufferObject<float> _opaqueVbo;
-    private BufferObject<uint> _opaqueEbo;
+    private MeshRenderer _opaqueMeshRenderer;
 
     // Transparent rendering
     private Mesh _transparentMesh;
-    private VertexArrayObject<float, uint> _transparentVao;
-    private BufferObject<float> _transparentVbo;
-    private BufferObject<uint> _transparentEbo;
+    private MeshRenderer _transparentMeshRenderer;
 
     private GL _gl;
     private bool _isInitialized;
@@ -61,29 +57,19 @@ public class Chunk
         _gl = gl;
         _gl.BindVertexArray(0); // Ensure that we are not binding the EBO and VBO to existing VAO
         
-        // Create opaque buffers and VAO
-        _opaqueEbo = new BufferObject<uint>(_gl, _opaqueMesh.Indices, BufferTargetARB.ElementArrayBuffer);
-        _opaqueVbo = new BufferObject<float>(_gl, _opaqueMesh.Vertices, BufferTargetARB.ArrayBuffer);
-        _opaqueVao = new VertexArrayObject<float, uint>(_gl, _opaqueVbo, _opaqueEbo);
-        
-        // Set up opaque vertex attributes
-        _opaqueVao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
-        _opaqueVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
-        _opaqueVao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
-        _opaqueVao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
-        
-        _gl.BindVertexArray(0); // Ensure that we are not binding the EBO and VBO to existing VAO
+        _opaqueMeshRenderer = new MeshRenderer(_gl, _opaqueMesh);
+        _opaqueMeshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
+        _opaqueMeshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
+        _opaqueMeshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
+        _opaqueMeshRenderer.SetVertexAttribute(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
+        _opaqueMeshRenderer.Unbind();
 
-        // Create transparent buffers and VAO
-        _transparentEbo = new BufferObject<uint>(_gl, _transparentMesh.Indices, BufferTargetARB.ElementArrayBuffer);
-        _transparentVbo = new BufferObject<float>(_gl, _transparentMesh.Vertices, BufferTargetARB.ArrayBuffer);
-        _transparentVao = new VertexArrayObject<float, uint>(_gl, _transparentVbo, _transparentEbo);
-        
-        // Set up transparent vertex attributes
-        _transparentVao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
-        _transparentVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
-        _transparentVao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
-        _transparentVao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
+        _transparentMeshRenderer = new MeshRenderer(_gl, _transparentMesh);
+        _transparentMeshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
+        _transparentMeshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
+        _transparentMeshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
+        _transparentMeshRenderer.SetVertexAttribute(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
+        _transparentMeshRenderer.Unbind();
         
         _isInitialized = true;
     }
@@ -92,18 +78,14 @@ public class Chunk
     {
         if (!_isInitialized || _opaqueMesh.Vertices.Length == 0) return;
         
-        _opaqueVao.Bind();
-        _gl.DrawElements(PrimitiveType.Triangles, (uint)_opaqueMesh.Indices.Length, DrawElementsType.UnsignedInt,
-            ReadOnlySpan<uint>.Empty);
+        _opaqueMeshRenderer.Render();
     }
 
     public void RenderTransparent()
     {
         if (!_isInitialized || _transparentMesh.Vertices.Length == 0) return;
         
-        _transparentVao.Bind();
-        _gl.DrawElements(PrimitiveType.Triangles, (uint)_transparentMesh.Indices.Length, DrawElementsType.UnsignedInt,
-            ReadOnlySpan<uint>.Empty);
+        _transparentMeshRenderer.Render();
     }
 
     public bool HasTransparentBlocks()
@@ -123,19 +105,13 @@ public class Chunk
     public void RegenerateMesh()
     {
         if (!_isInitialized) return;
-        
     
         var meshes = GenerateMeshes();
         _opaqueMesh = meshes.opaque;
         _transparentMesh = meshes.transparent;
 
-        _opaqueVao.Bind();
-        _opaqueVbo.UpdateData(_opaqueMesh.Vertices);
-        _opaqueEbo.UpdateData(_opaqueMesh.Indices);
-        
-        _transparentVao.Bind();
-        _transparentVbo.UpdateData(_transparentMesh.Vertices);
-        _transparentEbo.UpdateData(_transparentMesh.Indices);
+        _opaqueMeshRenderer.UpdateMesh(_opaqueMesh);
+        _transparentMeshRenderer.UpdateMesh(_transparentMesh);
     }
 
     public void GenerateFlatWorld()

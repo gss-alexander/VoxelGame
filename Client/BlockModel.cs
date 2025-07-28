@@ -16,13 +16,9 @@ public class BlockModel
     private readonly Shader _shader;
     private readonly TextureArray _textureArray;
 
-    private readonly BufferObject<float> _vbo;
-    private readonly BufferObject<uint> _ebo;
-    private readonly VertexArrayObject<float, uint> _vao;
+    private readonly MeshRenderer _meshRenderer;
+    private readonly Mesh _mesh;
 
-    private readonly List<float> _vertices;
-    private readonly List<uint> _indices;
-    
     private readonly Func<Vector3, bool> _isBlockSolidFunc;
 
     private float _rotation;
@@ -37,8 +33,45 @@ public class BlockModel
         BlockType = blockType;
         Size = size;
 
-        _vertices = new List<float>();
-        _indices = new List<uint>();
+        _gl.BindVertexArray(0); // todo: maybe remove
+        _mesh = GenerateMesh(blockType);
+        _meshRenderer = new MeshRenderer(_gl, _mesh);
+        _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
+        _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
+        _meshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
+        _meshRenderer.SetVertexAttribute(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
+        _meshRenderer.Unbind();
+    }
+
+    public void Render()
+    {
+        _shader.Use();
+        _shader.SetUniform("uTextureArray", 0);
+        var centeredModel = 
+                            Matrix4x4.CreateScale(0.15f) * 
+                            Matrix4x4.CreateRotationY(MathUtil.DegreesToRadians(_rotation)) * 
+                            Matrix4x4.CreateTranslation(Position); 
+    
+        _shader.SetUniform("uModel", centeredModel); 
+        
+        _textureArray.Bind();
+        _meshRenderer.Render();
+    }
+
+    public void Update(float deltaTime)
+    {
+        const float rotationSpeed = 15f;
+        _rotation += rotationSpeed * deltaTime;
+
+        Velocity -= Gravity * deltaTime;
+        
+        MoveWithCollision(deltaTime);
+    }
+
+    private static Mesh GenerateMesh(BlockType blockType)
+    {
+        var vertices = new List<float>();
+        var indices = new List<uint>();
         
         var faces = BlockData.Faces;
         var indicesOffset = 0u;
@@ -54,59 +87,24 @@ public class BlockModel
                 var vV = face.Vertices[vertexIndex + 4];
                 var brightness = face.Vertices[vertexIndex + 5];
         
-                _vertices.Add(vX);
-                _vertices.Add(vY);
-                _vertices.Add(vZ);
-                _vertices.Add(vU);
-                _vertices.Add(vV);
-                _vertices.Add(textureIndex);
-                _vertices.Add(brightness); // full brightness - todo: handle this better
+                vertices.Add(vX);
+                vertices.Add(vY);
+                vertices.Add(vZ);
+                vertices.Add(vU);
+                vertices.Add(vV);
+                vertices.Add(textureIndex);
+                vertices.Add(brightness); // full brightness - todo: handle this better
             }
 
             foreach (var index in face.Indices)
             {
-                _indices.Add(index + indicesOffset);
+                indices.Add(index + indicesOffset);
             }
 
             indicesOffset += 4;
         }
 
-        _gl.BindVertexArray(0);
-        _vbo = new BufferObject<float>(_gl, _vertices.ToArray(), BufferTargetARB.ArrayBuffer);
-        _ebo = new BufferObject<uint>(_gl, _indices.ToArray(), BufferTargetARB.ElementArrayBuffer);
-        _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
-        
-        _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
-        _vao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
-        _vao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
-        _vao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
-    }
-
-    public void Render()
-    {
-        _shader.Use();
-        _shader.SetUniform("uTextureArray", 0);
-        var centeredModel = 
-                            Matrix4x4.CreateScale(0.15f) * 
-                            Matrix4x4.CreateRotationY(MathUtil.DegreesToRadians(_rotation)) * 
-                            Matrix4x4.CreateTranslation(Position); 
-    
-        _shader.SetUniform("uModel", centeredModel); 
-        
-        _textureArray.Bind();
-        _vao.Bind();
-        _gl.DrawElements(PrimitiveType.Triangles, (uint)_indices.Count, DrawElementsType.UnsignedInt,
-            ReadOnlySpan<float>.Empty);
-    }
-
-    public void Update(float deltaTime)
-    {
-        const float rotationSpeed = 15f;
-        _rotation += rotationSpeed * deltaTime;
-
-        Velocity -= Gravity * deltaTime;
-        
-        MoveWithCollision(deltaTime);
+        return new Mesh(vertices.ToArray(), indices.ToArray());
     }
     
     private void MoveWithCollision(float deltaTime)

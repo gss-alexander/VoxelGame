@@ -2,7 +2,7 @@
 
 namespace Client;
 
-public class VertexArrayObject<TVertexType, TIndexType> 
+public class VertexArrayObject<TVertexType, TIndexType> : IDisposable 
     where TVertexType : unmanaged
     where TIndexType : unmanaged
 {
@@ -30,5 +30,10 @@ public class VertexArrayObject<TVertexType, TIndexType>
     public void Bind()
     {
         _gl.BindVertexArray(_handle);
+    }
+
+    public void Dispose()
+    {
+        _gl.DeleteVertexArray(_handle);
     }
 }
