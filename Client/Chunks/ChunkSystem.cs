@@ -13,15 +13,16 @@ public class ChunkSystem
     private readonly BlockTextures _blockTextures;
     private readonly BlockDatabase _blockDatabase;
 
-    private readonly List<Chunk> _visibleChunks = new();
+    private readonly Dictionary<Vector2D<int>, Chunk> _visibleChunks = new();
     
     // Will be updated by chunk visibility checks
-    private readonly List<Chunk> _chunksToHide = new();
+    private readonly List<Vector2D<int>> _chunksToHide = new();
 
     private FastNoiseLite _noise;
     private readonly ChunkGenerator _chunkGenerator;
 
     private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, int>>> _modifiedBlocks = new();
+    private readonly ObjectPool<ChunkRenderer> _chunkRendererPool;
     
     public ChunkSystem(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
@@ -31,13 +32,14 @@ public class ChunkSystem
         _noise = new FastNoiseLite(DateTime.Now.Millisecond);
         _noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase);
+        _chunkRendererPool =
+            new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase));
     }
 
     public bool IsBlockSolid(Vector3D<int> blockPosition)
     {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
-        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
-        if (chunk == null)
+        if (!_visibleChunks.TryGetValue(chunkPosition, out var chunk))
         {
             return false;
         }
@@ -59,8 +61,7 @@ public class ChunkSystem
     public int GetBlock(Vector3D<int> blockPosition)
     {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
-        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
-        if (chunk == null)
+        if (!_visibleChunks.TryGetValue(chunkPosition, out var chunk))
         {
             return _blockDatabase.GetInternalId("air");
         }
@@ -82,8 +83,7 @@ public class ChunkSystem
     private void SetBlock(Vector3D<int> blockPosition, int blockId)
     {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
-        var chunk = _visibleChunks.FirstOrDefault(c => c.Position == chunkPosition);
-        if (chunk == null)
+        if (!_visibleChunks.TryGetValue(chunkPosition, out var chunk))
         {
             return;
         }
@@ -121,17 +121,18 @@ public class ChunkSystem
         
         // Hide all chunks that are outside of the render distance of the player
         _chunksToHide.Clear();
-        foreach (var chunk in _visibleChunks)
+        foreach (var (chunkPos, chunk) in _visibleChunks)
         {
             var distance = CalculateChunkPositionDistance(playerChunkPosition, chunk.Position);
             if (CalculateChunkPositionDistance(playerChunkPosition, chunk.Position) > renderDistance)
             {
-                _chunksToHide.Add(chunk);
+                _chunksToHide.Add(chunkPos);
             }
         }
-        foreach (var chunk in _chunksToHide)
+        foreach (var chunkPos in _chunksToHide)
         {
-            _visibleChunks.Remove(chunk);
+            _chunkRendererPool.Release(_visibleChunks[chunkPos].Renderer);
+            _visibleChunks.Remove(chunkPos);
         }
         
         // Find chunks that are within the render distance of the player and is not currently visible
@@ -142,7 +143,7 @@ public class ChunkSystem
             {
                 var playerX = x + playerChunkPosition.X;
                 var playerY = y + playerChunkPosition.Y;
-                if (_visibleChunks.All(chunk => chunk.Position.X != playerX || chunk.Position.Y != playerY))
+                if (_visibleChunks.All(kvp => kvp.Value.Position.X != playerX || kvp.Value.Position.Y != playerY))
                 {
                     chunksInRange.Add(new Vector2D<int>(playerX, playerY));
                 }
@@ -151,13 +152,13 @@ public class ChunkSystem
         foreach (var chunkPosition in chunksInRange)
         {
             var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
-            _visibleChunks.Add(newChunk);
+            _visibleChunks.Add(chunkPosition, newChunk);
         }
     }
     
     public void RenderChunks()
     {
-        foreach (var chunk in _visibleChunks)
+        foreach (var (_, chunk) in _visibleChunks)
         {
             chunk.RenderOpaque();
         }
@@ -166,7 +167,7 @@ public class ChunkSystem
     public void RenderTransparency(Vector3 playerPosition)
     {
         var chunksWithTransparency = new List<Chunk>();
-        foreach (var chunk in _visibleChunks)
+        foreach (var (_, chunk) in _visibleChunks)
         {
             if (chunk.HasTransparentBlocks())
             {
@@ -200,7 +201,7 @@ public class ChunkSystem
                 chunkData.SetBlock(pos, modifiedBlock.Item2);
             }
         }
-        var chunk = new Chunk(_gl, chunkData, _blockTextures, _blockDatabase);
+        var chunk = new Chunk(_gl, chunkData, _blockTextures, _blockDatabase, _chunkRendererPool.Get());
         return chunk;
     }
 }

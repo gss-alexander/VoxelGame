@@ -7,6 +7,8 @@ namespace Client.Chunks;
 
 public class Chunk
 {
+    public ChunkRenderer Renderer { get; }
+
     public Vector2 ChunkWorldCenter => new Vector2(Position.X, Position.Y) * Size;
     public Vector2D<int> Position => _data.Position;
     
@@ -15,7 +17,6 @@ public class Chunk
 
     private readonly ChunkData _data;
     private readonly BlockDatabase _blockDatabase;
-    private readonly ChunkRenderer _chunkRenderer;
 
     public static Vector2D<int> WorldToChunkPosition(Vector3 worldPosition)
     {
@@ -32,27 +33,27 @@ public class Chunk
         );
     }
 
-    public Chunk(GL gl, ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase)
+    public Chunk(GL gl, ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase, ChunkRenderer chunkRenderer)
     {
         _data = data;
         _blockDatabase = blockDatabase;
-        _chunkRenderer = new ChunkRenderer(gl, blockTextures, blockDatabase);
-        _chunkRenderer.RegenerateMeshes(_data);
+        Renderer = chunkRenderer;
+        Renderer.RegenerateMeshes(_data);
     }
 
     public void RenderOpaque()
     {
-        _chunkRenderer.RenderOpaque();
+        Renderer.RenderOpaque();
     }
 
     public void RenderTransparent()
     {
-        _chunkRenderer.RenderTransparent();
+        Renderer.RenderTransparent();
     }
 
     public bool HasTransparentBlocks()
     {
-        return _chunkRenderer.HasTransparentBlocks;
+        return Renderer.HasTransparentBlocks;
     }
 
     public void GenerateFlatWorld()
@@ -78,7 +79,7 @@ public class Chunk
         _data.SetBlock(new Vector3D<int>(x, y, z), block);
         if (regenerateMesh)
         {
-            _chunkRenderer.RegenerateMeshes(_data);
+            Renderer.RegenerateMeshes(_data);
         }
     }
 

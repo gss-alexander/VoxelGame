@@ -16,6 +16,11 @@ public class ChunkRenderer
     private readonly MeshRenderer _opaqueMeshRenderer;
     private readonly MeshRenderer _transparentMeshRenderer;
 
+    private readonly List<float> _opaqueVerticesBuffer = new();
+    private readonly List<uint> _opaqueIndicesBuffer = new();
+    private readonly List<float> _transparentVerticesBuffer = new();
+    private readonly List<uint> _transparentIndicesBuffer = new();
+    
     public ChunkRenderer(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _gl = gl;
@@ -24,6 +29,12 @@ public class ChunkRenderer
 
         _opaqueMeshRenderer = CreateMeshRenderer();
         _transparentMeshRenderer = CreateMeshRenderer();
+
+        const int maxFaces = Chunk.Size * Chunk.Height * Chunk.Size * 6;
+        _opaqueVerticesBuffer.EnsureCapacity(maxFaces * 28);
+        _opaqueIndicesBuffer.EnsureCapacity(maxFaces * 6);
+        _transparentVerticesBuffer.EnsureCapacity(maxFaces * 28);
+        _transparentIndicesBuffer.EnsureCapacity(maxFaces * 6);
     }
     
     public void RenderOpaque()
@@ -52,10 +63,10 @@ public class ChunkRenderer
 
     public void RegenerateMeshes(ChunkData chunkData)
     {
-        var opaqueVertices = new List<float>();
-        var opaqueIndices = new List<uint>();
-        var transparentVertices = new List<float>();
-        var transparentIndices = new List<uint>();
+        _opaqueVerticesBuffer.Clear();
+        _opaqueIndicesBuffer.Clear();
+        _transparentIndicesBuffer.Clear();
+        _transparentVerticesBuffer.Clear();
 
         var transparentIndicesOffset = 0u;
         var opaqueIndicesOffset = 0u;
@@ -74,8 +85,8 @@ public class ChunkRenderer
                     }
 
                     var isTransparent = blockData.IsTransparent;
-                    var vertices = isTransparent ? transparentVertices : opaqueVertices;
-                    var indices = isTransparent ? transparentIndices : opaqueIndices;
+                    var vertices = isTransparent ? _transparentVerticesBuffer : _opaqueVerticesBuffer;
+                    var indices = isTransparent ? _transparentIndicesBuffer : _opaqueIndicesBuffer;
 
                     foreach (var face in BlockGeometry.Faces)
                     {
@@ -123,8 +134,8 @@ public class ChunkRenderer
             }
         }
 
-        _opaqueMeshRenderer.UpdateMesh(new Mesh(opaqueVertices.ToArray(), opaqueIndices.ToArray()));
-        _transparentMeshRenderer.UpdateMesh(new Mesh(transparentVertices.ToArray(), transparentIndices.ToArray()));
+        _opaqueMeshRenderer.UpdateMesh(new Mesh(_opaqueVerticesBuffer.ToArray(), _opaqueIndicesBuffer.ToArray()));
+        _transparentMeshRenderer.UpdateMesh(new Mesh(_transparentVerticesBuffer.ToArray(), _transparentIndicesBuffer.ToArray()));
         HasTransparentBlocks = _transparentMeshRenderer.VertexCount > 0;
     }
     
