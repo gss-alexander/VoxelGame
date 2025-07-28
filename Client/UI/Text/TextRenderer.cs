@@ -36,9 +36,8 @@ public class TextRenderer
         _shader.Use();
         _shader.SetUniform("text", 0);  // <- Add this line
         _shader.SetUniform("textColor", color);
-        var projection = Matrix4x4.CreateOrthographic(screenWidth, screenHeight, 0, 100);
-        var projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(0, screenWidth, screenHeight, 0, 0, 100);
-        _shader.SetUniform("projection", projection);
+        var projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(0, screenWidth, 0, screenHeight, 0, 100);
+        _shader.SetUniform("projection", projectionMatrix);
         _vao.Bind();
 
         foreach (var c in text)
