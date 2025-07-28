@@ -33,6 +33,25 @@ public class Texture
         SetParameters();
     }
 
+    public unsafe Texture(GL gl, uint width, uint height, byte* data)
+    {
+        _gl = gl;
+        _handle = _gl.GenTexture();
+        Bind();
+
+        _gl.TexImage2D(
+            TextureTarget.Texture2D,
+            0,
+            InternalFormat.Red,
+            width,
+            height,
+            0,
+            GLEnum.Red,
+            PixelType.UnsignedByte,
+            data
+        );
+    }
+
     public void Bind(TextureUnit textureSlot = TextureUnit.Texture0)
     {
         _gl.ActiveTexture(textureSlot);

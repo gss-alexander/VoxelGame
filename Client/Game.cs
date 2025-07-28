@@ -3,6 +3,7 @@ using System.Numerics;
 using Client.Blocks;
 using Client.Chunks;
 using Client.UI;
+using Client.UI.Text;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -47,6 +48,8 @@ public class Game
     private BlockData[] _blockData;
     private BlockTextures _blockTextures;
     private BlockDatabase _blockDatabase;
+
+    private TextRenderer _textRenderer;
     
     public unsafe void Load(IWindow window)
     {
@@ -78,7 +81,6 @@ public class Game
             GetShaderPath("shader.frag")
         );
 
-
         _frameBufferSize = window.Size;
 
         _imGuiController = new ImGuiController(_gl, window, inputContext);
@@ -100,10 +102,15 @@ public class Game
         _inventory = new Inventory();
         _inventory.Hotbar.Add(0, (_blockDatabase.GetInternalId("cobblestone"), 54));
         _inventory.Hotbar.Add(1, (_blockDatabase.GetInternalId("dirt"), 25));
+        
+        var characterMap = new CharacterMap(_gl);
+        var textShader = new Shader(_gl, GetShaderPath("text.vert"), GetShaderPath("text.frag"));
+        _textRenderer = new TextRenderer(_gl, textShader, characterMap);
 
         var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
         var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
-        _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y);
+        _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y,
+            _textRenderer);
 
         _blockDrops = new BlockDrops(_gl, _shader, _blockTextures);
 
@@ -242,6 +249,7 @@ public class Game
         
         _crosshairRenderer.Render();
         _uiRenderer.Render(_window.Size.X, _window.Size.Y, _inventory, _shader, _blockTextures);
+        
         
         _imGuiController.Render();
         

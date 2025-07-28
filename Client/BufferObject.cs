@@ -8,7 +8,7 @@ public class BufferObject<TDataType> : IDisposable where TDataType : unmanaged
     private readonly uint _handle;
     private readonly BufferTargetARB _target;
 
-    public unsafe BufferObject(GL gl, TDataType[] data, BufferTargetARB target)
+    public unsafe BufferObject(GL gl, TDataType[] data, BufferTargetARB target, BufferUsageARB usage = BufferUsageARB.StaticDraw)
     {
         _gl = gl;
         _target = target;
@@ -18,7 +18,8 @@ public class BufferObject<TDataType> : IDisposable where TDataType : unmanaged
         _gl.BufferData(target,
             (nuint)(data.Length * sizeof(TDataType)),
             new ReadOnlySpan<TDataType>(data),
-            BufferUsageARB.StaticDraw);
+            usage
+        );
     }
 
     public unsafe void UpdateData(TDataType[] data, BufferUsageARB usage = BufferUsageARB.DynamicDraw)
@@ -29,7 +30,7 @@ public class BufferObject<TDataType> : IDisposable where TDataType : unmanaged
             new ReadOnlySpan<TDataType>(data),
             usage);
     }
-
+    
     public void Bind()
     {
         _gl.BindBuffer(_target, _handle);

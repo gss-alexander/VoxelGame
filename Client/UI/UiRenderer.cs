@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Client.Blocks;
+using Client.UI.Text;
 using Silk.NET.OpenGL;
 
 namespace Client.UI;
@@ -23,7 +24,9 @@ public class UiRenderer
     private readonly float[] _vertices;
     private readonly uint[] _indices;
 
-    public UiRenderer(GL gl, Shader shader, Texture texture, BlockSpriteRenderer blockSpriteRenderer, int screenWidth, int screenHeight)
+    private readonly TextRenderer _textRenderer;
+
+    public UiRenderer(GL gl, Shader shader, Texture texture, BlockSpriteRenderer blockSpriteRenderer, int screenWidth, int screenHeight, TextRenderer textRenderer)
     {
         _gl = gl;
         _shader = shader;
@@ -31,6 +34,7 @@ public class UiRenderer
         _blockSpriteRenderer = blockSpriteRenderer;
         _screenWidth = screenWidth;
         _screenHeight = screenHeight;
+        _textRenderer = textRenderer;
 
         (_vertices, _indices) = CreateHotbarMeshData();
         _vbo = new BufferObject<float>(_gl, _vertices, BufferTargetARB.ArrayBuffer);
@@ -70,13 +74,13 @@ public class UiRenderer
         _vao.Bind();
         _gl.DrawElements(PrimitiveType.Triangles, (uint)_indices.Length, DrawElementsType.UnsignedInt, ReadOnlySpan<uint>.Empty);
 
-        RenderBlockSprites(screenWidth, inventory, blockShader, blockTextures);
+        RenderBlockSprites(screenWidth, screenHeight, inventory, blockShader, blockTextures);
 
         _gl.Enable(EnableCap.DepthTest);
         _gl.Disable(EnableCap.Blend);
     }
 
-    private void RenderBlockSprites(int screenWidth, Inventory inventory, Shader blockShader, BlockTextures blockTextures)
+    private void RenderBlockSprites(int screenWidth, int screenHeight, Inventory inventory, Shader blockShader, BlockTextures blockTextures)
     {
         const int slotCount = 9;
         const float slotWidth = 75f;
@@ -113,6 +117,17 @@ public class UiRenderer
             
             // Draw the block sprite
             _gl.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, ReadOnlySpan<uint>.Empty);
+        } 
+        
+        for (var i = 0; i < slotCount; i++)
+        {
+            if (!inventory.Hotbar.TryGetValue(i, out var slot) || slot.count <= 0)
+                continue;
+
+            // Calculate position (center the block sprite in the slot)
+            var slotX = baseX + i * (slotWidth + spacing);
+            var blockX = slotX + (slotWidth - blockSize) / 2f;
+            _textRenderer.RenderText(slot.count.ToString(), blockX - 680f, -450, 0.5f, new Vector3(1.0f, 1.0f, 1.0f), screenWidth, screenHeight);
         } 
     }
 
