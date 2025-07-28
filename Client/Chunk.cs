@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Client.Chunks;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
@@ -12,8 +13,8 @@ public class Chunk
     public const int Size = 16;
     public const int Height = 256;
 
-    private readonly BlockType[] _blocks;
     private Vector2D<int> _position;
+    private ChunkData _data;
 
     // Opaque rendering
     private Mesh _opaqueMesh;
@@ -41,10 +42,10 @@ public class Chunk
         );
     }
 
-    public Chunk(int chunkX, int chunkY)
+    public Chunk(ChunkData data, Vector2D<int> position)
     {
-        _position = new Vector2D<int>(chunkX, chunkY);
-        _blocks = new BlockType[Size * Height * Size];
+        _data = data;
+        _position = position;
     }
 
 
@@ -132,107 +133,9 @@ public class Chunk
         }
     }
 
-    public void GenerateChunkData(FastNoiseLite noise)
-    {
-        noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-
-        for (var x = 0; x < Size; x++)
-        {
-            for (var z = 0; z < Size; z++)
-            {
-                var worldX = x + (_position.X * Size);
-                var worldZ = z + (_position.Y * Size);
-
-                // Generate multiple octaves of noise for natural variation
-                var heightNoise = GenerateHeightNoise(noise, worldX, worldZ);
-            
-                // Add ridged noise for mountain features
-                var ridgedNoise = GenerateRidgedNoise(noise, worldX, worldZ);
-            
-                // Combine noises with different influences
-                var combinedNoise = (heightNoise * 0.7f) + (ridgedNoise * 0.3f);
-            
-                // Apply exponential scaling for dramatic terrain variation
-                var heightValue = ApplyHeightCurve(combinedNoise);
-            
-                // Calculate final height
-                var seaLevel = 64;
-                var maxMountainHeight = 200;
-                var height = (int)Math.Clamp(seaLevel + (heightValue * maxMountainHeight), 1, Height - 1);
-
-                // Generate terrain layers
-                for (var y = 0; y < height - 1; y++)
-                {
-                    SetBlock(x, y, z, BlockType.Cobblestone, false);
-                }
-                
-                // Make top block dirt
-                SetBlock(x, height - 1, z, BlockType.Grass, false);
-            }
-        }
-    }
-
-    private float GenerateHeightNoise(FastNoiseLite noise, int worldX, int worldZ)
-    {
-        var noiseValue = 0f;
-        var amplitude = 1f;
-        var frequency = 0.008f; // Base frequency for large landforms
-        var maxValue = 0f;
-
-        // Generate 6 octaves for detailed terrain
-        for (int octave = 0; octave < 6; octave++)
-        {
-            noise.SetFrequency(frequency);
-            noiseValue += noise.GetNoise(worldX, worldZ) * amplitude;
-            maxValue += amplitude;
-
-            amplitude *= 0.5f; // Each octave contributes half as much
-            frequency *= 2.1f; // Slightly irregular frequency multiplication for more organic feel
-        }
-
-        // Normalize to [-1, 1] range
-        return noiseValue / maxValue;
-    }
-
-    private float GenerateRidgedNoise(FastNoiseLite noise, int worldX, int worldZ)
-    {
-        noise.SetFrequency(0.004f); // Lower frequency for large mountain ridges
-        var ridgeNoise = noise.GetNoise(worldX, worldZ);
-    
-        // Create ridged effect by inverting and sharpening
-        ridgeNoise = 1f - MathF.Abs(ridgeNoise);
-        ridgeNoise = MathF.Pow(ridgeNoise, 1.5f); // Sharpen the ridges
-    
-        // Add some detail ridges
-        noise.SetFrequency(0.015f);
-        var detailRidges = 1f - MathF.Abs(noise.GetNoise(worldX, worldZ));
-        detailRidges = MathF.Pow(detailRidges, 2f) * 0.3f;
-    
-        return (ridgeNoise * 0.8f + detailRidges * 0.2f) * 2f - 1f; // Scale to [-1, 1]
-    }
-
-    private float ApplyHeightCurve(float noiseValue)
-    {
-        // Clamp noise to prevent extreme values
-        noiseValue = Math.Clamp(noiseValue, -1f, 1f);
-    
-        if (noiseValue >= 0)
-        {
-            // Positive values: exponential curve for dramatic mountains
-            // Using power of 1.8 creates good balance between flat areas and mountains
-            return MathF.Pow(noiseValue, 1.9f);
-        }
-        else
-        {
-            // Negative values: gentler curve for valleys and low areas
-            return -MathF.Pow(-noiseValue, 1.2f) * 0.3f; // Scale down valleys
-        }
-    }
-
     public void SetBlock(int x, int y, int z, BlockType block, bool regenerateMesh = true)
     {
-        var position = PositionToBlockIndex(x, y, z);
-        _blocks[position] = block;
+        _data.SetBlock(new Vector3D<int>(x, y, z), block);
         if (regenerateMesh)
         {
             RegenerateMesh();
@@ -241,8 +144,7 @@ public class Chunk
 
     public BlockType GetBlock(int x, int y, int z)
     {
-        var position = PositionToBlockIndex(x, y, z);
-        return _blocks[position];
+        return _data.GetBlock(new Vector3D<int>(x, y, z));
     }
 
     public bool IsBlockSolid(int x, int y, int z)
@@ -361,10 +263,5 @@ public class Chunk
     private static bool IsPositionOutOfBounds(int x, int y, int z)
     {
         return x >= Size || x < 0 || y >= Height || y < 0 || z >= Size || z < 0;
-    }
-
-    private static int PositionToBlockIndex(int x, int y, int z)
-    {
-        return (x + (y * Size)) + (z * Size * Height);
     }
 }

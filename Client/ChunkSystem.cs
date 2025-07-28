@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Client.Chunks;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
@@ -16,13 +17,16 @@ public class ChunkSystem
     private readonly List<Chunk> _chunksToHide = new();
 
     private FastNoiseLite _noise;
+    private readonly ChunkGenerator _chunkGenerator;
 
     private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, BlockType>>> _modifiedBlocks = new();
     
     public ChunkSystem(GL gl)
     {
         _gl = gl;
-        _noise = new FastNoiseLite(123);
+        _noise = new FastNoiseLite(DateTime.Now.Millisecond);
+        _noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
+        _chunkGenerator = new ChunkGenerator(_noise);
     }
 
     public bool IsBlockSolid(Vector3D<int> blockPosition)
@@ -185,9 +189,10 @@ public class ChunkSystem
 
     private Chunk CreateChunk(int worldX, int worldY)
     {
-        var chunk = new Chunk(worldX, worldY);
+        var chunkData = _chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
+        var chunk = new Chunk(chunkData, new Vector2D<int>(worldX, worldY));
         // chunk.GenerateChunkData(_noise);
-        chunk.GenerateFlatWorld();
+        // chunk.GenerateFlatWorld();
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
         {

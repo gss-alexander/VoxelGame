@@ -89,7 +89,7 @@ public class Game
         _crosshairRenderer.Initialize(_gl, window.Size.X, window.Size.Y);
 
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
-        _player = new Player(new Vector3(0f, 10f, 0f), worldPos =>
+        _player = new Player(new Vector3(0f, 100f, 0f), worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
@@ -125,7 +125,7 @@ public class Game
 
     public void Update(double deltaTime)
     {
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 1);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 3);
 
         if (_currentMouseClickCooldown <= 0f)
         {
