@@ -71,6 +71,8 @@ public class Chunk
         _opaqueVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
         _opaqueVao.VertexAttributePointer(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index
         _opaqueVao.VertexAttributePointer(3, 1, VertexAttribPointerType.Float, 7, 6); // Brightness
+        
+        _gl.BindVertexArray(0); // Ensure that we are not binding the EBO and VBO to existing VAO
 
         // Create transparent buffers and VAO
         _transparentEbo = new BufferObject<uint>(_gl, _transparentMesh.Indices, BufferTargetARB.ElementArrayBuffer);
@@ -91,7 +93,8 @@ public class Chunk
         if (!_isInitialized || _opaqueMesh.Vertices.Length == 0) return;
         
         _opaqueVao.Bind();
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_opaqueMesh.Vertices.Length / 7));
+        _gl.DrawElements(PrimitiveType.Triangles, (uint)_opaqueMesh.Indices.Length, DrawElementsType.UnsignedInt,
+            ReadOnlySpan<uint>.Empty);
     }
 
     public void RenderTransparent()
@@ -99,7 +102,8 @@ public class Chunk
         if (!_isInitialized || _transparentMesh.Vertices.Length == 0) return;
         
         _transparentVao.Bind();
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_transparentMesh.Vertices.Length / 7));
+        _gl.DrawElements(PrimitiveType.Triangles, (uint)_transparentMesh.Indices.Length, DrawElementsType.UnsignedInt,
+            ReadOnlySpan<uint>.Empty);
     }
 
     public bool HasTransparentBlocks()
@@ -129,7 +133,7 @@ public class Chunk
         _opaqueVbo.UpdateData(_opaqueMesh.Vertices);
         _opaqueEbo.UpdateData(_opaqueMesh.Indices);
         
-        _transparentEbo.Bind();
+        _transparentVao.Bind();
         _transparentVbo.UpdateData(_transparentMesh.Vertices);
         _transparentEbo.UpdateData(_transparentMesh.Indices);
     }
@@ -283,6 +287,8 @@ public class Chunk
         var transparentVertices = new List<float>();
         var transparentIndices = new List<uint>();
 
+        var transparentIndicesOffset = 0u;
+        var opaqueIndicesOffset = 0u;
         for (var x = 0; x < Size; x++)
         {
             for (var y = 0; y < Height; y++)
@@ -324,6 +330,21 @@ public class Chunk
                             vertices.Add(vV);
                             vertices.Add(textureIndex);
                             vertices.Add(brightness); 
+                        }
+
+                        foreach (var index in face.Indices)
+                        {
+                            var indicesOffset = isTransparent ? transparentIndicesOffset : opaqueIndicesOffset;
+                            indices.Add(index + indicesOffset);
+                        }
+
+                        if (isTransparent)
+                        {
+                            transparentIndicesOffset += 4;
+                        }
+                        else
+                        {
+                            opaqueIndicesOffset += 4;
                         }
                     }
                 }

@@ -21,6 +21,7 @@ public class BlockModel
     private readonly VertexArrayObject<float, uint> _vao;
 
     private readonly List<float> _vertices;
+    private readonly List<uint> _indices;
     
     private readonly Func<Vector3, bool> _isBlockSolidFunc;
 
@@ -37,9 +38,10 @@ public class BlockModel
         Size = size;
 
         _vertices = new List<float>();
-        // var indices = new List<uint>();
+        _indices = new List<uint>();
         
         var faces = BlockData.Faces;
+        var indicesOffset = 0u;
         foreach (var face in faces)
         {
             var textureIndex = blockType.GetTextureIndex(face.Direction);
@@ -60,11 +62,18 @@ public class BlockModel
                 _vertices.Add(textureIndex);
                 _vertices.Add(brightness); // full brightness - todo: handle this better
             }
+
+            foreach (var index in face.Indices)
+            {
+                _indices.Add(index + indicesOffset);
+            }
+
+            indicesOffset += 4;
         }
 
         _gl.BindVertexArray(0);
         _vbo = new BufferObject<float>(_gl, _vertices.ToArray(), BufferTargetARB.ArrayBuffer);
-        _ebo = new BufferObject<uint>(_gl, [], BufferTargetARB.ElementArrayBuffer);
+        _ebo = new BufferObject<uint>(_gl, _indices.ToArray(), BufferTargetARB.ElementArrayBuffer);
         _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
         
         _vao.VertexAttributePointer(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
@@ -86,7 +95,8 @@ public class BlockModel
         
         _textureArray.Bind();
         _vao.Bind();
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, (uint)(_vertices.Count / 7));
+        _gl.DrawElements(PrimitiveType.Triangles, (uint)_indices.Count, DrawElementsType.UnsignedInt,
+            ReadOnlySpan<float>.Empty);
     }
 
     public void Update(float deltaTime)
