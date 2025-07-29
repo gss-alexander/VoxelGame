@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Client.Blocks;
+using Client.Items;
 using Client.UI.Text;
 using Silk.NET.OpenGL;
 
@@ -25,8 +26,9 @@ public class UiRenderer
     private readonly uint[] _indices;
 
     private readonly TextRenderer _textRenderer;
+    private readonly PlayerInventory _inventory;
 
-    public UiRenderer(GL gl, Shader shader, Texture texture, BlockSpriteRenderer blockSpriteRenderer, int screenWidth, int screenHeight, TextRenderer textRenderer)
+    public UiRenderer(GL gl, Shader shader, Texture texture, BlockSpriteRenderer blockSpriteRenderer, int screenWidth, int screenHeight, TextRenderer textRenderer, PlayerInventory inventory)
     {
         _gl = gl;
         _shader = shader;
@@ -35,6 +37,7 @@ public class UiRenderer
         _screenWidth = screenWidth;
         _screenHeight = screenHeight;
         _textRenderer = textRenderer;
+        _inventory = inventory;
 
         (_vertices, _indices) = CreateHotbarMeshData();
         _vbo = new BufferObject<float>(_gl, _vertices, BufferTargetARB.ArrayBuffer);
@@ -57,7 +60,7 @@ public class UiRenderer
         _blockVao.VertexAttributePointer(1, 2, VertexAttribPointerType.Float, 4, 2);
     }
 
-    public void Render(int screenWidth, int screenHeight, Inventory inventory, Shader blockShader, BlockTextures blockTextures)
+    public void Render(int screenWidth, int screenHeight, Shader blockShader, ItemTextures itemTextures)
     {
         var projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(0, screenWidth, screenHeight, 0, 0, 100);
         
@@ -74,15 +77,16 @@ public class UiRenderer
         _vao.Bind();
         _gl.DrawElements(PrimitiveType.Triangles, (uint)_indices.Length, DrawElementsType.UnsignedInt, ReadOnlySpan<uint>.Empty);
 
-        RenderBlockSprites(screenWidth, screenHeight, inventory, blockShader, blockTextures);
+        RenderItems(screenWidth, screenHeight, itemTextures);
 
         _gl.Enable(EnableCap.DepthTest);
         _gl.Disable(EnableCap.Blend);
     }
 
-    private void RenderBlockSprites(int screenWidth, int screenHeight, Inventory inventory, Shader blockShader, BlockTextures blockTextures)
+    private void RenderItems(int screenWidth, int screenHeight, ItemTextures itemTextures)
     {
-        const int slotCount = 9;
+        var slotCount = _inventory.Hotbar.SlotCount;
+        
         const float slotWidth = 75f;
         const float slotHeight = 75f;
         const float spacing = 20f;
@@ -97,8 +101,8 @@ public class UiRenderer
 
         for (var i = 0; i < slotCount; i++)
         {
-            if (!inventory.Hotbar.TryGetValue(i, out var slot) || slot.count <= 0)
-                continue;
+            var slot = _inventory.Hotbar.GetSlot(i);
+            if (slot == null) continue; // empty slot
 
             // Calculate position (center the block sprite in the slot)
             var slotX = baseX + i * (slotWidth + spacing);
@@ -106,7 +110,7 @@ public class UiRenderer
             var blockY = yPosition + (slotHeight - blockSize) / 2f;
 
             // Get the sprite texture for this block type
-            var spriteTexture = _blockSpriteRenderer.GetBlockTexture(slot.blockId, blockShader, blockTextures);
+            var spriteTexture = itemTextures.GetTextureIndexForItem(slot.ItemId);
             
             // Bind the sprite texture
             _gl.BindTexture(TextureTarget.Texture2D, spriteTexture);
@@ -121,22 +125,24 @@ public class UiRenderer
         
         for (var i = 0; i < slotCount; i++)
         {
-            if (!inventory.Hotbar.TryGetValue(i, out var slot) || slot.count <= 0)
-                continue;
+            var slot = _inventory.Hotbar.GetSlot(i);
+            if (slot == null) continue; // empty slot
         
             // Calculate position (center the block sprite in the slot)
             var slotX = baseX + i * (slotWidth + spacing);
             var blockX = slotX + (slotWidth - blockSize) / 2f;
-            _textRenderer.RenderText(slot.count.ToString(), blockX + 280, yPosition - 615, 0.5f, new Vector3(1.0f, 1.0f, 1.0f), screenWidth, screenHeight);
+            _textRenderer.RenderText(slot.Count.ToString(), blockX + 280, yPosition - 615, 0.5f, new Vector3(1.0f, 1.0f, 1.0f), screenWidth, screenHeight);
         } 
     }
+
 
     private Tuple<float[], uint[]> CreateHotbarMeshData()
     {
         var vertices = new List<float>();
         var indices = new List<uint>();
 
-        const int slotCount = 9;
+        var slotCount = _inventory.Hotbar.SlotCount;
+        
         const float yPosition = 950f;
         const float baseXPosition = 500f;
         const float spacing = 20f;
@@ -146,6 +152,7 @@ public class UiRenderer
         var screenCenter = _screenWidth / 2f;
         var totalHotbarWidth = (slotCount * slotWidth) + (spacing * (slotCount - 1));
         var baseX = screenCenter - totalHotbarWidth / 2f;
+
 
         var indicesOffset = 0u;
         for (var i = 0; i < slotCount; i++)

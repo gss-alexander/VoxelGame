@@ -33,11 +33,12 @@ public class BoundingBoxRenderer
         0, 4, 1, 5, 2, 6, 3, 7
     };
 
-    public BoundingBoxRenderer(GL gl, Shader shader)
+    public BoundingBoxRenderer(GL gl)
     {
         _gl = gl;
-        _shader = shader;
+        _shader = Shaders.GetShader(_gl, "line");
 
+        _gl.BindVertexArray(0);
         _vbo = new BufferObject<float>(_gl, LineVertices, BufferTargetARB.ArrayBuffer);
         _ebo = new BufferObject<uint>(_gl, LineIndices, BufferTargetARB.ElementArrayBuffer);
         _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);

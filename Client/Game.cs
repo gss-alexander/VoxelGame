@@ -59,6 +59,9 @@ public class Game
     private ItemDropRenderer _itemDropRenderer;
 
     private ItemDroppingSystem _itemDroppingSystem;
+    private ItemTextures _itemTextures;
+
+    private HotbarRenderer _hotbarRenderer;
 
     public unsafe void Load(IWindow window)
     {
@@ -107,8 +110,9 @@ public class Game
 
         _blockSelector = new BlockSelector(_blockDatabase);
 
-        _blockSpriteRenderer = new BlockSpriteRenderer(_gl, 512);
+        _blockSpriteRenderer = new BlockSpriteRenderer(_gl, _blockTextures, 512);
 
+        _playerInventory = new PlayerInventory();
         _inventory = new Inventory();
         _inventory.Hotbar.Add(0, (_blockDatabase.GetInternalId("cobblestone"), 54));
         _inventory.Hotbar.Add(1, (_blockDatabase.GetInternalId("dirt"), 25));
@@ -120,7 +124,7 @@ public class Game
         var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
         var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
         _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y,
-            _textRenderer);
+            _textRenderer, _playerInventory);
 
 
         var blockBreakingShader =
@@ -134,20 +138,22 @@ public class Game
             .Build(_gl);
         _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray);
 
-        _playerInventory = new PlayerInventory();
 
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
-        var itemTextures = new ItemTextures(_gl, itemDatabase);
+        _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
         var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
         // _itemDropRenderer = new ItemDropRenderer(_gl, stickMesh, itemDropShader, itemTextures);
-        _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, itemTextures, itemDropShader, worldPos =>
+        _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
-        _itemDroppingSystem.DropItem(new Vector3(0f, 10f, 0f), "coal");
+        _itemDroppingSystem.DropItem(new Vector3(0f, 10f, 0f), "dirt");
+
+        _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory.Hotbar, window.Size.AsFloatVector(), _itemTextures,
+            uiTexture);
     }
 
     private static string GetTexturePath(string name)
@@ -178,7 +184,7 @@ public class Game
             {
                 if (!_chunkSystem.IsBlockSolid(new Vector3D<int>(0, y, 0)))
                 {
-                    _player.Position = new Vector3(0f, y + 1f, 0f);
+                    _player.Position = new Vector3(0f, y + 1.5f, 0f);
                     break;
                 }
             }
@@ -314,7 +320,8 @@ public class Game
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
-        _uiRenderer.Render(_window.Size.X, _window.Size.Y, _inventory, _shader, _blockTextures);
+        // _uiRenderer.Render(_window.Size.X, _window.Size.Y, _shader, _itemTextures);
+        _hotbarRenderer.Render();
         
         _imGuiController.Render();
         

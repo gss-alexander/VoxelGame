@@ -2,6 +2,8 @@
 
 public class ItemStorage
 {
+    public int SlotCount => _slots.Length;
+    
     private readonly int _slotCapacity;
 
     public class Slot
@@ -22,7 +24,18 @@ public class ItemStorage
         }
     }
 
-    public Slot Get(int slotIndex)
+    public Slot? GetSlot(int slotIndex)
+    {
+        var slot = GetSlotInternal(slotIndex);
+        if (slot.ItemId == "null")
+        {
+            return null;
+        }
+
+        return slot;
+    }
+
+    private Slot GetSlotInternal(int slotIndex)
     {
         return _slots[slotIndex];
     }
@@ -53,7 +66,11 @@ public class ItemStorage
         {
             throw new InvalidOperationException($"Cannot add items to storage as it exceeds capacity or has no slots");
         }
-        
+
+        if (slot.ItemId == "null")
+        {
+            slot.ItemId = itemId;
+        }
         slot.Count += count;
     }
 
@@ -68,7 +85,7 @@ public class ItemStorage
         var firstEmptySlotIndex = -1;
         for (var i = 0; i < _slots.Length; i++)
         {
-            var slot = Get(i);
+            var slot = GetSlotInternal(i);
             
             // Store the first empty slot if found. If no other slot with item and capacity is found, use it.
             if (slot.ItemId == "null" && firstEmptySlotIndex == -1)

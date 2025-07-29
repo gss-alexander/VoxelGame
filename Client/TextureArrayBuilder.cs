@@ -23,6 +23,12 @@ public class TextureArrayBuilder
         return this;
     }
 
+    public TextureArrayBuilder AddTextureFromMemory(byte[] data)
+    {
+        _textureData.Add(data);
+        return this;
+    }
+
     public TextureArray Build(GL gl)
     {
         if (_textureData.Count == 0)
@@ -60,8 +66,5 @@ public class TextureArrayBuilder
         gl.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)GLEnum.Nearest);
         gl.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureBaseLevel, 0);
         gl.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMaxLevel, 8);
-        
-        // Removed for pixel art
-        // gl.GenerateMipmap(TextureTarget.Texture2DArray); 
     }
 }

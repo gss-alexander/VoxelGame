@@ -6,7 +6,8 @@ namespace Client.Blocks;
 public class BlockSpriteRenderer
 {
     private readonly GL _gl;
-    private readonly Dictionary<int, uint> _blockTextures;
+    private readonly BlockTextures _blockTextures;
+    private readonly Dictionary<int, uint> _blockTextureHandles;
     private readonly int _spriteSize;
 
     private uint _framebuffer;
@@ -16,11 +17,12 @@ public class BlockSpriteRenderer
     private Matrix4x4 _viewMatrix;
     private Matrix4x4 _projectionMatrix;
 
-    public BlockSpriteRenderer(GL gl, int spriteSize = 128)
+    public BlockSpriteRenderer(GL gl, BlockTextures blockTextures, int spriteSize = 128)
     {
         _gl = gl;
+        _blockTextures = blockTextures;
         _spriteSize = spriteSize;
-        _blockTextures = new Dictionary<int, uint>();
+        _blockTextureHandles = new Dictionary<int, uint>();
 
         CreateFramebuffer();
         SetupCamera();
@@ -28,14 +30,21 @@ public class BlockSpriteRenderer
 
     public uint GetBlockTexture(int blockId, Shader blockShader, BlockTextures blockTextures)
     {
-        if (_blockTextures.TryGetValue(blockId, out var existingTexture))
+        if (_blockTextureHandles.TryGetValue(blockId, out var existingTexture))
         {
             return existingTexture;
         }
 
         var textureId = RenderBlockToTexture(blockId, blockShader, blockTextures);
-        _blockTextures[blockId] = textureId;
+        _blockTextureHandles[blockId] = textureId;
         return textureId;
+    }
+
+    public byte[] GetBlockTextureData(int blockId)
+    {
+        var blockShader = Shaders.GetShader(_gl, "shader");
+        var data = RenderBlockToData(blockId, blockShader, _blockTextures);
+        return data;
     }
 
     private uint RenderBlockToTexture(int blockId, Shader blockShader, BlockTextures blockTextures)
@@ -75,6 +84,44 @@ public class BlockSpriteRenderer
         _gl.Viewport(oldViewport[0], oldViewport[1], (uint)oldViewport[2], (uint)oldViewport[3]);
 
         return resultTexture;
+    }
+
+    public byte[] RenderBlockToData(int blockId, Shader blockShader, BlockTextures blockTextures)
+    {
+        // save the current opengl state
+        var oldViewport = new int[4];
+        _gl.GetInteger(GetPName.Viewport, oldViewport);
+        
+        // switch to the new framebuffer for the off-screen rendering
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
+        _gl.Viewport(0, 0, (uint)_spriteSize, (uint)_spriteSize);
+        
+        // Clear it with a transparent background
+        _gl.ClearColor(0f, 0f, 0f, 0f);
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _gl.Enable(EnableCap.DepthTest);
+        
+        // Create and render a temporary block model
+        var tempBlock = new BlockModel(_gl, blockTextures, blockId, blockShader, Vector3.Zero, _ => false, 1f);
+        blockShader.Use();
+        blockShader.SetUniform("uView", _viewMatrix);
+        blockShader.SetUniform("uProjection", _projectionMatrix);
+        tempBlock.Render();
+
+        var pixelData = new byte[_spriteSize * _spriteSize * 4]; // RGBA = 4 bytes per pixel
+        unsafe
+        {
+            fixed (byte* ptr = pixelData)
+            {
+                _gl.ReadPixels(0, 0, (uint)_spriteSize, (uint)_spriteSize, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
+            }
+        }
+    
+        // restore the previous opengl state
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.Viewport(oldViewport[0], oldViewport[1], (uint)oldViewport[2], (uint)oldViewport[3]);
+
+        return pixelData;
     }
 
     private void SetupCamera()

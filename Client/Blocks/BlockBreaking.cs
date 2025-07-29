@@ -32,6 +32,7 @@ public class BlockBreaking
         _shader = shader;
         _breakingTextureArray = breakingTextureArray;
 
+        _gl.BindVertexArray(0);
         _vbo = new BufferObject<float>(gl, [], BufferTargetARB.ArrayBuffer);
         _ebo = new BufferObject<uint>(gl, [], BufferTargetARB.ElementArrayBuffer);
         _vao = new VertexArrayObject<float, uint>(gl, _vbo, _ebo);

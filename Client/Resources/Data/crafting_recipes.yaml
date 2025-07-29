@@ -1,0 +1,22 @@
+﻿recipes:
+    crafting_table:
+        result: crafting_table
+        amount: 1
+        components:
+            - [plank, plank]
+            - [plank, plank]
+
+    stick:
+        result: stick
+        amount: 4
+        components:
+            - [plank]
+            - [plank]
+
+    wooden_pickaxe:
+        result: wooden_pickaxe
+        amount: 1
+        components:
+            - [plank, plank, plank]
+            - [null, stick, null]
+            - [null, stick, null]

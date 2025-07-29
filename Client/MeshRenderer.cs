@@ -16,13 +16,13 @@ public class MeshRenderer : IDisposable
 
     public static MeshRenderer Empty(GL gl) => new(gl, Mesh.Empty);
     
-    public MeshRenderer(GL gl, Mesh mesh)
+    public MeshRenderer(GL gl, Mesh mesh, BufferUsageARB usage = BufferUsageARB.StaticDraw)
     {
         _gl = gl;
         _mesh = mesh;
         
-        _vbo = new BufferObject<float>(_gl, mesh.Vertices, BufferTargetARB.ArrayBuffer);
-        _ebo = new BufferObject<uint>(_gl, mesh.Indices, BufferTargetARB.ElementArrayBuffer);
+        _vbo = new BufferObject<float>(_gl, mesh.Vertices, BufferTargetARB.ArrayBuffer, usage);
+        _ebo = new BufferObject<uint>(_gl, mesh.Indices, BufferTargetARB.ElementArrayBuffer, usage);
         _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
     }
 
