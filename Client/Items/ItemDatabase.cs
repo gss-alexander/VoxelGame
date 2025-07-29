@@ -4,6 +4,8 @@ namespace Client.Items;
 
 public class ItemDatabase
 {
+    public ItemData[] All => _items.Values.ToArray();
+    
     private readonly Dictionary<string, ItemData> _items = new();
     
     public ItemDatabase(ItemData[] items)

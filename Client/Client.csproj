@@ -19,7 +19,6 @@
 
     <ItemGroup>
       <Folder Include="Resources\Fonts\" />
-      <Folder Include="Resources\Textures\Items\" />
       <Folder Include="Resources\Textures\Misc\BlockBreaking\" />
       <Folder Include="UI\Elements\" />
     </ItemGroup>
