@@ -1,0 +1,31 @@
+﻿items:
+    stick:
+        display_name: "Stick"
+        texture: "stick.png"
+        type: "material"
+        
+    wooden_pickaxe:
+        display_name: "Wooden Pickaxe"
+        texture: "wood_pickaxe.png"
+        type: "tool"
+        durability: 65
+        mining_level: 1
+        mining_speed: 2
+        
+    coal:
+        display_name: "Coal"
+        texture: "coal.png"
+        type: "fuel"
+        burn_time: 80
+        
+    charcoal:
+        display_name: "Charcoal"
+        texture: "charcoal.png"
+        type: "fuel"
+        burn_time: 40
+        
+    bread:
+        display_name: "Bread"
+        texture: "bread.png"
+        type: "food"
+        hunger_restore: 5

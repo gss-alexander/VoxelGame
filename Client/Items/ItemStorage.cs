@@ -1,0 +1,104 @@
+﻿namespace Client.Items;
+
+public class ItemStorage
+{
+    private readonly int _slotCapacity;
+
+    public class Slot
+    {
+        public string ItemId { get; set; } = "null";
+        public int Count { get; set; }
+    }
+
+    private readonly Slot[] _slots;
+
+    public ItemStorage(int slotCount, int slotCapacity)
+    {
+        _slotCapacity = slotCapacity;
+        _slots = new Slot[slotCount];
+    }
+
+    public Slot Get(int slotIndex)
+    {
+        return _slots[slotIndex];
+    }
+
+    public bool HasItem(string itemId)
+    {
+        for (var i = 0; i < _slots.Length; i++)
+        {
+            var slot = _slots[i];
+            if (slot.ItemId == itemId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public void AddItem(string itemId, int count)
+    {
+        if (count <= 0)
+        {
+            throw new InvalidOperationException($"Cannot add 0 or negative amount to storage");
+        }
+
+        var slot = GetSlotForAdding(itemId, count);
+        if (slot == null)
+        {
+            throw new InvalidOperationException($"Cannot add items to storage as it exceeds capacity or has no slots");
+        }
+        
+        slot.Count += count;
+    }
+
+    public bool CanAdd(string itemId, int count)
+    {
+        return GetSlotForAdding(itemId, count) != null;
+    }
+
+    private Slot? GetSlotForAdding(string itemId, int count)
+    {
+        var existingSlotWithItemIndex = -1;
+        var firstEmptySlotIndex = -1;
+        for (var i = 0; i < _slots.Length; i++)
+        {
+            var slot = Get(i);
+            
+            // Store the first empty slot if found. If no other slot with item and capacity is found, use it.
+            if (slot.ItemId == "null" && firstEmptySlotIndex == -1)
+            {
+                firstEmptySlotIndex = i;
+                continue;
+            }
+            
+            // Found another slot with the same item type
+            if (slot.ItemId == itemId)
+            {
+                // Check that adding to it won't exceed capacity
+                var newCount = slot.Count + count;
+                if (newCount > _slotCapacity)
+                {
+                    continue;
+                }
+
+                // Use this slot for filling up
+                existingSlotWithItemIndex = i;
+                break;
+            }
+        }
+
+        if (existingSlotWithItemIndex >= 0)
+        {
+            return _slots[existingSlotWithItemIndex];
+        }
+
+        if (firstEmptySlotIndex >= 0)
+        {
+            return _slots[firstEmptySlotIndex];
+        }
+
+        return null;
+    }
+}
