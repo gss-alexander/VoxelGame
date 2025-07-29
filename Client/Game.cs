@@ -39,7 +39,6 @@ public class Game
     private BlockSelector _blockSelector;
 
     private UiRenderer _uiRenderer;
-    private BlockDrops _blockDrops;
 
     private BoundingBoxRenderer _boundingBoxRenderer;
     private Shader _lineShader;
@@ -60,9 +59,10 @@ public class Game
     private ItemDropRenderer _itemDropRenderer;
 
     private ItemDroppingSystem _itemDroppingSystem;
-    
+
     public unsafe void Load(IWindow window)
     {
+        
         _window = window;
         
         var inputContext = window.CreateInput();
@@ -122,7 +122,6 @@ public class Game
         _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y,
             _textRenderer);
 
-        _blockDrops = new BlockDrops(_gl, _shader, _blockTextures);
 
         var blockBreakingShader =
             new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -139,16 +138,15 @@ public class Game
 
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
+        itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
         var itemTextures = new ItemTextures(_gl, itemDatabase);
-        var stick = itemDatabase.Get("bread");
-        var stickMesh = ItemMeshGenerator.Generate(stick, itemTextures);
         var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
         // _itemDropRenderer = new ItemDropRenderer(_gl, stickMesh, itemDropShader, itemTextures);
         _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, itemTextures, itemDropShader, worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
-        });
+        }, _blockDatabase, _blockTextures);
         _itemDroppingSystem.DropItem(new Vector3(0f, 10f, 0f), "coal");
     }
 
@@ -201,12 +199,21 @@ public class Game
         if (_blockBreaking.ShouldBreak)
         {
             var hit = raycast.Value;
-            var blockType = _chunkSystem.GetBlock(hit.Position);
-            _blockDrops.CreateDroppedBlock(Block.GetCenterPosition(hit.Position), blockType, worldPos =>
+            var blockId = _chunkSystem.GetBlock(hit.Position);
+            var block = _blockDatabase.GetById(blockId);
+            if (block.Drops != null)
             {
-                var blockPos = Block.WorldToBlockPosition(worldPos);
-                return _chunkSystem.IsBlockSolid(blockPos);
-            });
+                foreach (var drop in block.Drops)
+                {
+                    var randomRoll = Random.Range(0f, 1.0f);
+                    if (randomRoll <= drop.Probability)
+                    {
+                        var randomOffset = new Vector3(Random.Range(-0.1f, 0.1f), 0f, Random.Range(-0.1f, 0.1f));
+                        _itemDroppingSystem.DropItem(Block.GetCenterPosition(hit.Position) + randomOffset, drop.Item);
+                    }
+                }
+            }
+            
             _chunkSystem.DestroyBlock(hit.Position);
         }
         
@@ -235,13 +242,11 @@ public class Game
         var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
         _primaryMouse.Cursor.CursorMode = cursorMode;
         
-        _blockDrops.Update((float)deltaTime);
-
-        var pickedUpBlocks = _blockDrops.PickupDroppedBlocks(_player.Position, 1.5f);
-        foreach (var pickedUpBlock in pickedUpBlocks)
+        var pickedUpItems = _itemDroppingSystem.PickUpItems(_player.Position, 1.5f);
+        foreach (var pickedUpItem in pickedUpItems)
         {
-            Console.WriteLine($"Picked up block of type: {pickedUpBlock}");
-            _inventory.AddBlock(pickedUpBlock);
+            Console.WriteLine($"[Item Pickup]: Picked up {pickedUpItem}");
+            _playerInventory.TryAddItem(pickedUpItem, 1);
         }
         
         _itemDroppingSystem.Update((float)deltaTime);
@@ -276,7 +281,6 @@ public class Game
         _chunkSystem.RenderChunks();
         _chunkSystem.RenderTransparency(_camera.Position);
         
-        _blockDrops.Render((float)deltaTime);
         _itemDroppingSystem.RenderDroppedItems(view, projection);
         
         _blockBreaking.Render(view, projection);

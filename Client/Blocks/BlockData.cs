@@ -26,6 +26,13 @@ public class BlockData
             };
         }
     }
+
+    public class BlockDrop
+    {
+        public string Item { get; set; } = string.Empty;
+        public float Probability { get; set; }
+        public int Count { get; set; }
+    }
     
     public string ExternalId { get; set; } = string.Empty;
     public string DisplayName { get; set; }
@@ -33,4 +40,5 @@ public class BlockData
     public float Strength { get; set; }
     public bool IsTransparent { get; set; }
     public bool IsSolid { get; set; }
+    public BlockDrop[]? Drops { get; set; }
 }

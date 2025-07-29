@@ -16,6 +16,10 @@ public class ItemStorage
     {
         _slotCapacity = slotCapacity;
         _slots = new Slot[slotCount];
+        for (var i = 0; i < slotCount; i++)
+        {
+            _slots[i] = new Slot();
+        }
     }
 
     public Slot Get(int slotIndex)

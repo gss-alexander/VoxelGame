@@ -1,21 +1,21 @@
-﻿using System.Drawing;
-using StbImageSharp;
+﻿using StbImageSharp;
 
 namespace Client.Items;
-public static class ItemMeshGenerator
+
+public static class SpriteMeshGenerator
 {
-    private static readonly Dictionary<string, Mesh> _meshCache = new();
+    private static readonly Dictionary<string, Mesh> MeshCache = new();
     
     public static Mesh Generate(ItemData item, ItemTextures itemTextures)
     {
-        if (_meshCache.TryGetValue(item.ExternalId, out var cachedMesh))
+        if (MeshCache.TryGetValue(item.ExternalId, out var cachedMesh))
         {
             return cachedMesh;
         }
         
         var solidMap = LoadImageDataForItem(item.Texture);
         var mesh = CreateGeometry(solidMap, item.ExternalId, itemTextures);
-        _meshCache.Add(item.ExternalId, mesh);
+        MeshCache.Add(item.ExternalId, mesh);
         return mesh;
     }
 

@@ -6,6 +6,13 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 10.0
+    drops:
+      - item: "dirt"
+        probability: 1.0
+        count: 1
+      - item: "coal"
+        probability: 0.5
+        count: 1
     
   grass:
     display_name: "Grass"

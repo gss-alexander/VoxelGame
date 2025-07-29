@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 
 namespace Client.Items;
 
-public class ItemDropRenderer
+public class ItemDropRenderer : IWorldRenderable
 {
     private readonly GL _gl;
     private readonly Shader _shader;
@@ -17,14 +17,14 @@ public class ItemDropRenderer
         _shader = shader;
         _itemTextures = itemTextures;
 
-        var mesh = ItemMeshGenerator.Generate(itemData, itemTextures);
+        var mesh = SpriteMeshGenerator.Generate(itemData, itemTextures);
         _meshRenderer = new MeshRenderer(_gl, mesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 6, 0);
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 6, 3);
         _meshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 6, 5);
     }
 
-    public void Render(Matrix4x4 view, Matrix4x4 projection, Vector3 worldPosition, float scale, float rotation)
+    public void Render(Matrix4x4 view, Matrix4x4 projection, Vector3 position, float scale, float rotation = 0f)
     {
         _itemTextures.Use();
         
@@ -35,7 +35,7 @@ public class ItemDropRenderer
         _shader.SetUniform("uModel",
             Matrix4x4.CreateScale(scale) *
             Matrix4x4.CreateRotationY(rotation) *
-            Matrix4x4.CreateTranslation(worldPosition)
+            Matrix4x4.CreateTranslation(position)
         );
         
         _meshRenderer.Render();

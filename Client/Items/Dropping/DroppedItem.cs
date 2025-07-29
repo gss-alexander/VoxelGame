@@ -5,20 +5,25 @@ namespace Client.Items.Dropping;
 
 public class DroppedItem
 {
+    public string ItemId { get; }
+    public Vector3 Position => _entity.Position;
+    
     private const float Scale = 0.25f;
     private const float RotationSpeed = 45f;
     private const float BobSpeed = 1.5f;
     private const float BobStrength = 0.05f;
     
-    private readonly ItemDropRenderer _renderer;
     private readonly Entity _entity;
+
+    private readonly IWorldRenderable _renderer;
 
     private float _time;
 
-    public DroppedItem(GL gl, Shader shader, ItemTextures textures, ItemData itemData, Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc)
+    public DroppedItem(IWorldRenderable renderer, ItemData itemData, Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc)
     {
-        _renderer = new ItemDropRenderer(gl, shader, textures, itemData);
+        _renderer = renderer;
         _entity = new Entity(startingPosition, new Vector3(Scale, Scale, Scale), isBlockSolidFunc);
+        ItemId = itemData.ExternalId;
     }
 
     public void Update(float deltaTime)
