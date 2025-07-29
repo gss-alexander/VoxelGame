@@ -2,19 +2,45 @@
 using StbImageSharp;
 
 namespace Client.Items;
-
 public static class ItemMeshGenerator
 {
+    private static readonly Dictionary<string, Mesh> _meshCache = new();
+    
     public static Mesh Generate(ItemData item, ItemTextures itemTextures)
     {
+        if (_meshCache.TryGetValue(item.ExternalId, out var cachedMesh))
+        {
+            return cachedMesh;
+        }
+        
         var solidMap = LoadImageDataForItem(item.Texture);
-        return CreateGeometry(solidMap, item.ExternalId, itemTextures);
+        var mesh = CreateGeometry(solidMap, item.ExternalId, itemTextures);
+        _meshCache.Add(item.ExternalId, mesh);
+        return mesh;
     }
 
     private static Mesh CreateGeometry(SpriteSolidMap solidMap, string itemId, ItemTextures itemTextures)
     {
         var vertices = new List<float>();
         var indices = new List<uint>();
+
+        var bounds = CalculateSpriteBounds(solidMap);
+        if (!bounds.HasValue)
+        {
+            return new Mesh(Array.Empty<float>(), Array.Empty<uint>());
+        }
+
+        var (minX, minY, maxX, maxY) = bounds.Value;
+        
+        // Calculate center offset to center the sprite
+        var centerX = (minX + maxX) / 2.0f;
+        var centerY = (minY + maxY) / 2.0f;
+        
+        // Calculate scaling factor to normalize to 1 unit max
+        var spriteWidth = maxX - minX + 1; // +1 because bounds are inclusive
+        var spriteHeight = maxY - minY + 1;
+        var maxDimension = Math.Max(spriteWidth, spriteHeight);
+        var scale = 1.0f / maxDimension;
 
         var indicesOffset = 0u;
         for (var x = 0; x < solidMap.Width; x++)
@@ -26,52 +52,83 @@ public static class ItemMeshGenerator
 
                 var textureIndex = itemTextures.GetTextureIndexForItem(itemId);
                 var u = x / 16.0f;
-                var v = (solidMap.Height - 1 - y) / (float)solidMap.Height; 
-                AddMeshData(x, y, u, v, textureIndex, vertices, indices, ref indicesOffset);
+                var v = (solidMap.Height - 1 - y) / (float)solidMap.Height;
+                
+                // Adjust position to center and scale the sprite
+                var adjustedX = (x - centerX) * scale;
+                var adjustedY = (y - centerY) * scale;
+                
+                AddMeshData(adjustedX, adjustedY, u, v, textureIndex, vertices, indices, ref indicesOffset, scale);
             }
         }
 
         return new Mesh(vertices.ToArray(), indices.ToArray());
     }
 
-    private static void AddMeshData(int x, int y, float u, float v, float ti, List<float> vertices, List<uint> indices, ref uint indicesOffset)
+    private static (int minX, int minY, int maxX, int maxY)? CalculateSpriteBounds(SpriteSolidMap solidMap)
     {
+        int minX = int.MaxValue, minY = int.MaxValue;
+        int maxX = int.MinValue, maxY = int.MinValue;
+        bool foundSolidPixel = false;
+
+        for (var x = 0; x < solidMap.Width; x++)
+        {
+            for (var y = 0; y < solidMap.Height; y++)
+            {
+                if (solidMap.IsSolid(x, y))
+                {
+                    foundSolidPixel = true;
+                    minX = Math.Min(minX, x);
+                    minY = Math.Min(minY, y);
+                    maxX = Math.Max(maxX, x);
+                    maxY = Math.Max(maxY, y);
+                }
+            }
+        }
+
+        return foundSolidPixel ? (minX, minY, maxX, maxY) : null;
+    }
+
+    private static void AddMeshData(float x, float y, float u, float v, float ti, List<float> vertices, List<uint> indices, ref uint indicesOffset, float scale)
+    {
+        var halfScale = scale * 0.5f;
+        
         vertices.AddRange([
             // BACK
-            -0.5f + x, -0.5f + y, -0.5f, u, v, ti,   // Bottom-left
-             0.5f + x, -0.5f + y, -0.5f, u, v, ti,   // Bottom-right
-             0.5f + x,  0.5f + y, -0.5f, u, v, ti,   // Top-right
-            -0.5f + x,  0.5f + y, -0.5f, u, v, ti,   // Top-left
+            -halfScale + x, -halfScale + y, -halfScale, u, v, ti,   // Bottom-left
+             halfScale + x, -halfScale + y, -halfScale, u, v, ti,   // Bottom-right
+             halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Top-right
+            -halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Top-left
             
             // FRONT
-            -0.5f + x, -0.5f + y,  0.5f, u, v, ti,  // Bottom-left
-             0.5f + x, -0.5f + y,  0.5f, u, v, ti,  // Bottom-right
-             0.5f + x,  0.5f + y,  0.5f, u, v, ti,  // Top-right
-            -0.5f + x,  0.5f + y,  0.5f, u, v, ti,  // Top-left
+            -halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Bottom-left
+             halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Bottom-right
+             halfScale + x,  halfScale + y,  halfScale, u, v, ti,  // Top-right
+            -halfScale + x,  halfScale + y,  halfScale, u, v, ti,  // Top-left
             
             // LEFT
-            -0.5f + x,  0.5f + y,  0.5f, u, v, ti, // Top-front
-            -0.5f + x,  0.5f + y, -0.5f, u, v, ti, // Top-back
-            -0.5f + x, -0.5f + y, -0.5f, u, v, ti,// Bottom-back
-            -0.5f + x, -0.5f + y,  0.5f, u, v, ti,// Bottom-front
+            -halfScale + x,  halfScale + y,  halfScale, u, v, ti, // Top-front
+            -halfScale + x,  halfScale + y, -halfScale, u, v, ti, // Top-back
+            -halfScale + x, -halfScale + y, -halfScale, u, v, ti,// Bottom-back
+            -halfScale + x, -halfScale + y,  halfScale, u, v, ti,// Bottom-front
             
             // RIGHT
-             0.5f + x,  0.5f + y,  0.5f, u, v, ti, // Top-front
-             0.5f + x,  0.5f + y, -0.5f, u, v, ti,  // Top-back
-             0.5f + x, -0.5f + y, -0.5f, u, v, ti, // Bottom-back
-             0.5f + x, -0.5f + y,  0.5f, u, v, ti,  // Bottom-front
+             halfScale + x,  halfScale + y,  halfScale, u, v, ti, // Top-front
+             halfScale + x,  halfScale + y, -halfScale, u, v, ti,  // Top-back
+             halfScale + x, -halfScale + y, -halfScale, u, v, ti, // Bottom-back
+             halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Bottom-front
             
             // BOTTOM
-            -0.5f + x, -0.5f + y, -0.5f, u, v, ti, // Back-left
-             0.5f + x, -0.5f + y, -0.5f, u, v, ti,  // Back-right
-             0.5f + x, -0.5f + y,  0.5f, u, v, ti,  // Front-right
-            -0.5f + x, -0.5f + y,  0.5f, u, v, ti,  // Front-left
+            -halfScale + x, -halfScale + y, -halfScale, u, v, ti, // Back-left
+             halfScale + x, -halfScale + y, -halfScale, u, v, ti,  // Back-right
+             halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Front-right
+            -halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Front-left
             
             // TOP
-            -0.5f + x,  0.5f + y, -0.5f, u, v, ti,   // Back-left
-             0.5f + x,  0.5f + y, -0.5f, u, v, ti,    // Back-right
-             0.5f + x,  0.5f + y,  0.5f, u, v, ti,   // Front-right
-            -0.5f + x,  0.5f + y,  0.5f, u, v, ti,   // Front-left
+            -halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Back-left
+             halfScale + x,  halfScale + y, -halfScale, u, v, ti,    // Back-right
+             halfScale + x,  halfScale + y,  halfScale, u, v, ti,   // Front-right
+            -halfScale + x,  halfScale + y,  halfScale, u, v, ti,   // Front-left
         ]);
 
         uint[] standardIndices =

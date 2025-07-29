@@ -2,6 +2,8 @@
 using System.Numerics;
 using Client.Blocks;
 using Client.Chunks;
+using Client.Items;
+using Client.Items.Dropping;
 using Client.UI;
 using Client.UI.Text;
 using Silk.NET.Input;
@@ -52,6 +54,12 @@ public class Game
     private TextRenderer _textRenderer;
 
     private BlockBreaking _blockBreaking;
+
+    private PlayerInventory _playerInventory;
+
+    private ItemDropRenderer _itemDropRenderer;
+
+    private ItemDroppingSystem _itemDroppingSystem;
     
     public unsafe void Load(IWindow window)
     {
@@ -126,6 +134,22 @@ public class Game
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
             .Build(_gl);
         _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray);
+
+        _playerInventory = new PlayerInventory();
+
+        var items = ItemLoader.Load();
+        var itemDatabase = new ItemDatabase(items);
+        var itemTextures = new ItemTextures(_gl, itemDatabase);
+        var stick = itemDatabase.Get("bread");
+        var stickMesh = ItemMeshGenerator.Generate(stick, itemTextures);
+        var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
+        // _itemDropRenderer = new ItemDropRenderer(_gl, stickMesh, itemDropShader, itemTextures);
+        _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, itemTextures, itemDropShader, worldPos =>
+        {
+            var blockPos = Block.WorldToBlockPosition(worldPos);
+            return _chunkSystem.IsBlockSolid(blockPos);
+        });
+        _itemDroppingSystem.DropItem(new Vector3(0f, 10f, 0f), "coal");
     }
 
     private static string GetTexturePath(string name)
@@ -141,9 +165,26 @@ public class Game
     private float _mouseClickCooldownInSeconds = 0.1f;
     private float _currentMouseClickCooldown;
 
+    private bool _isFirstUpdate = true;
+
     public void Update(double deltaTime)
     {
         _chunkSystem.UpdateChunkVisibility(_camera.Position, 3);
+
+        if (_isFirstUpdate)
+        {
+            _isFirstUpdate = false;
+            
+            // set player position to the top of the chunk.
+            for (var y = 0; y < Chunk.Height; y++)
+            {
+                if (!_chunkSystem.IsBlockSolid(new Vector3D<int>(0, y, 0)))
+                {
+                    _player.Position = new Vector3(0f, y + 1f, 0f);
+                    break;
+                }
+            }
+        }
 
         var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
         if (raycast.HasValue)
@@ -202,6 +243,8 @@ public class Game
             Console.WriteLine($"Picked up block of type: {pickedUpBlock}");
             _inventory.AddBlock(pickedUpBlock);
         }
+        
+        _itemDroppingSystem.Update((float)deltaTime);
     }
 
     public unsafe void Render(double deltaTime)
@@ -234,8 +277,10 @@ public class Game
         _chunkSystem.RenderTransparency(_camera.Position);
         
         _blockDrops.Render((float)deltaTime);
+        _itemDroppingSystem.RenderDroppedItems(view, projection);
         
         _blockBreaking.Render(view, projection);
+        // _itemDropRenderer.Render(view, projection);
         
         // WORLD RENDERING - END
         
