@@ -16,6 +16,20 @@ public class ChunkGenerator
         _blockDatabase = blockDatabase;
     }
 
+    public ChunkData GenerateFlatWorld(Vector2D<int> chunkPosition)
+    {
+        var chunkData = new ChunkData(chunkPosition, _blockDatabase.GetInternalId("air"));
+        for (var x = 0; x < Chunk.Size; x++)
+        {
+            for (var z = 0; z < Chunk.Size; z++)
+            {
+                chunkData.SetBlock(new Vector3D<int>(x, 0, z), _blockDatabase.GetInternalId("grass"));
+            }
+        }
+
+        return chunkData;
+    }
+
     public ChunkData Generate(Vector2D<int> chunkPosition)
     {
         var chunkData = new ChunkData(chunkPosition, _blockDatabase.GetInternalId("air"));

@@ -191,7 +191,7 @@ public class ChunkSystem
 
     private Chunk CreateChunk(int worldX, int worldY)
     {
-        var chunkData = _chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
+        var chunkData = _chunkGenerator.GenerateFlatWorld(new Vector2D<int>(worldX, worldY));
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
         {
