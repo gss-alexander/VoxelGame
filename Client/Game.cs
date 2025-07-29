@@ -118,7 +118,14 @@ public class Game
 
         var blockBreakingShader =
             new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
-        _blockBreaking = new BlockBreaking(_gl, blockBreakingShader);
+        var blockBreakingTextureArray = new TextureArrayBuilder(16, 16)
+            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "1.png"))
+            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "2.png"))
+            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "3.png"))
+            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "4.png"))
+            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
+            .Build(_gl);
+        _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray);
     }
 
     private static string GetTexturePath(string name)
@@ -139,29 +146,27 @@ public class Game
         _chunkSystem.UpdateChunkVisibility(_camera.Position, 3);
 
         var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
-        _blockBreaking.UpdateDestruction((float)deltaTime, raycast?.Position, _primaryMouse.IsButtonPressed(MouseButton.Left));
-        if (_primaryMouse.IsButtonPressed(MouseButton.Left))
+        if (raycast.HasValue)
         {
-            if (raycast.HasValue)
+            var blockType = _chunkSystem.GetBlock(raycast.Value.Position);
+            var block = _blockDatabase.GetById(blockType);
+            _blockBreaking.SetLookingAtBlock(block, raycast.Value.Position);
+        }
+        else
+        {
+            _blockBreaking.ClearLookingAtBlock();
+        }
+        _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left));
+        if (_blockBreaking.ShouldBreak)
+        {
+            var hit = raycast.Value;
+            var blockType = _chunkSystem.GetBlock(hit.Position);
+            _blockDrops.CreateDroppedBlock(Block.GetCenterPosition(hit.Position), blockType, worldPos =>
             {
-                var hit = raycast.Value;
-                    
-                // create a dropped block where the block is
-                var blockType = _chunkSystem.GetBlock(hit.Position);
-                var block = _blockDatabase.GetById(blockType);
-
-                if (_blockBreaking.DestructionAmount >= block.Strength)
-                {
-                    _blockDrops.CreateDroppedBlock(Block.GetCenterPosition(hit.Position), blockType, worldPos =>
-                    {
-                        var blockPos = Block.WorldToBlockPosition(worldPos);
-                        return _chunkSystem.IsBlockSolid(blockPos);
-                    });
-                    
-                    // actually remove the block
-                    _chunkSystem.DestroyBlock(hit.Position);
-                }
-            }
+                var blockPos = Block.WorldToBlockPosition(worldPos);
+                return _chunkSystem.IsBlockSolid(blockPos);
+            });
+            _chunkSystem.DestroyBlock(hit.Position);
         }
         
         if (_currentMouseClickCooldown <= 0f)
@@ -229,6 +234,8 @@ public class Game
         _chunkSystem.RenderTransparency(_camera.Position);
         
         _blockDrops.Render((float)deltaTime);
+        
+        _blockBreaking.Render(view, projection);
         
         // WORLD RENDERING - END
         

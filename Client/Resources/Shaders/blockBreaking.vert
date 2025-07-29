@@ -13,6 +13,7 @@ flat out int fTextureIndex;
 void main()
 {
     gl_Position = uProjection * uView * uModel * vec4(vPos, 1.0);
+    gl_Position.z -= 0.0001;
     fUv = vUv;
     fTextureIndex = int(vTextureIndex);
 }
