@@ -123,11 +123,11 @@ public class UiRenderer
         {
             if (!inventory.Hotbar.TryGetValue(i, out var slot) || slot.count <= 0)
                 continue;
-
+        
             // Calculate position (center the block sprite in the slot)
             var slotX = baseX + i * (slotWidth + spacing);
             var blockX = slotX + (slotWidth - blockSize) / 2f;
-            _textRenderer.RenderText(slot.count.ToString(), blockX - 680f, -450, 0.5f, new Vector3(1.0f, 1.0f, 1.0f), screenWidth, screenHeight);
+            _textRenderer.RenderText(slot.count.ToString(), blockX + 280, yPosition - 615, 0.5f, new Vector3(1.0f, 1.0f, 1.0f), screenWidth, screenHeight);
         } 
     }
 
