@@ -39,6 +39,7 @@ public class HotbarRenderer
         _itemSpritesRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 5, 0);
         _itemSpritesRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 5, 2);
         _itemSpritesRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
+        _itemSpritesRenderer.Unbind();
         
         _uiSpriteShader = Shaders.GetShader(gl, "itemUiSprite");
         _uiShader = Shaders.GetShader(gl, "ui");

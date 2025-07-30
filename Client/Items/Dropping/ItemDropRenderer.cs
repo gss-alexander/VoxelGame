@@ -22,6 +22,7 @@ public class ItemDropRenderer : IWorldRenderable
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 6, 0);
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 6, 3);
         _meshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 6, 5);
+        _meshRenderer.Unbind();
     }
 
     public void Render(Matrix4x4 view, Matrix4x4 projection, Vector3 position, float scale, float rotation = 0f)
