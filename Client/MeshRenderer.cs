@@ -5,7 +5,7 @@ namespace Client;
 public class MeshRenderer : IDisposable
 {
     public int VertexCount => _mesh.Vertices.Length;
-    
+
     private readonly GL _gl;
     
     private readonly BufferObject<float> _vbo;

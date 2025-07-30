@@ -27,7 +27,7 @@ public class ItemDropRenderer : IWorldRenderable
 
     public void Render(Matrix4x4 view, Matrix4x4 projection, Vector3 position, float scale, float rotation = 0f)
     {
-        _itemTextures.Use();
+        _itemTextures.Use(ItemTextures.ItemTextureType.Item);
         
         _shader.Use();
         _shader.SetUniform("uTextureArray", 0);

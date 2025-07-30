@@ -81,36 +81,49 @@ public class HotbarRenderer
 
     private void RenderItems(Matrix4x4 projection)
     {
-        _itemTextures.Use();
-        
-        _uiSpriteShader.Use();
-        _uiSpriteShader.SetUniform("uProjection", projection);
-        _uiSpriteShader.SetUniform("uTextureArray", 0);
-        
-        _itemSpritesRenderer.UpdateMesh(GenerateItemsMesh());
-        _itemSpritesRenderer.Render();
-        _itemSpritesRenderer.Unbind();
-    }
-
-    private Mesh GenerateItemsMesh()
-    {
-        var vertices = new List<float>();
-        var indices = new List<uint>();
-        
-        var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_hotbar.SlotCount - 1));
-        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
-        
-        var indicesOffset = 0u;
+        var itemGroups = new Dictionary<ItemTextures.ItemTextureType, List<(int slot, string itemId)>>();
+    
         for (var i = 0; i < _hotbar.SlotCount; i++)
         {
             var slot = _hotbar.GetSlot(i);
             if (slot == null) continue;
-            
-            var xOffset = i * (SlotWidth + SlotXSpacing);
+        
+            var textureType = _itemTextures.GetTextureTypeForItem(slot.ItemId);
+            if (!itemGroups.ContainsKey(textureType))
+                itemGroups[textureType] = new List<(int, string)>();
+            itemGroups[textureType].Add((i, slot.ItemId));
+        }
+    
+        foreach (var (textureType, items) in itemGroups)
+        {
+            _itemTextures.Use(textureType);
+            _uiSpriteShader.Use();
+            _uiSpriteShader.SetUniform("uProjection", projection);
+            _uiSpriteShader.SetUniform("uTextureArray", 0);
+        
+            _itemSpritesRenderer.UpdateMesh(GenerateItemsMeshForGroup(items));
+            _itemSpritesRenderer.Render();
+        }
+    
+        _itemSpritesRenderer.Unbind();
+    }
+    
+    private Mesh GenerateItemsMeshForGroup(List<(int slotIndex, string itemId)> items)
+    {
+        var vertices = new List<float>();
+        var indices = new List<uint>();
+   
+        var screenCenter = _screenSize.X / 2f;
+        var totalHotbarWidth = (_hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_hotbar.SlotCount - 1));
+        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
+   
+        var indicesOffset = 0u;
+        foreach (var (slotIndex, itemId) in items)
+        {
+            var xOffset = slotIndex * (SlotWidth + SlotXSpacing);
             var xPosition = baseXPosition + xOffset;
 
-            var textureIndex = _itemTextures.GetTextureIndexForItem(slot.ItemId);
+            var textureIndex = _itemTextures.GetTextureIndexForItem(itemId);
 
             vertices.AddRange(CreateQuad(xPosition, BarYPosition, textureIndex));
             indices.AddRange([
@@ -121,7 +134,7 @@ public class HotbarRenderer
         }
 
         return new Mesh(vertices.ToArray(), indices.ToArray());
-        
+   
         float[] CreateQuad(float x, float y, uint textureIndex)
         {
             return
@@ -132,7 +145,7 @@ public class HotbarRenderer
                 x, y + SlotHeight, 0.0f, 1.0f, textureIndex,
             ];
         }
-    }
+    } 
 
     private Mesh GenerateBackgroundMesh()
     {

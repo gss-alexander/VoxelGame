@@ -110,7 +110,7 @@ public class Game
 
         _blockSelector = new BlockSelector(_blockDatabase);
 
-        _blockSpriteRenderer = new BlockSpriteRenderer(_gl, _blockTextures, 512);
+        _blockSpriteRenderer = new BlockSpriteRenderer(_gl, _blockTextures);
 
         _playerInventory = new PlayerInventory();
         _inventory = new Inventory();
@@ -150,8 +150,9 @@ public class Game
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
-        _itemDroppingSystem.DropItem(new Vector3(0f, 10f, 0f), "dirt");
 
+        _itemDroppingSystem.DropItem(new Vector3(2f, 10f, 0f), "bread");
+        _itemDroppingSystem.DropItem(new Vector3(-2f, 10f, 0f), "glass");
         _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory.Hotbar, window.Size.AsFloatVector(), _itemTextures,
             uiTexture);
     }

@@ -23,6 +23,10 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 10.0
+    drops:
+      - item: "grass" 
+        probability: 1.0
+        count: 1
     
   cobblestone:
     display_name: "Cobblestone"
@@ -41,6 +45,10 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 50.0
+    drops:
+    - item: "log"
+      probability: 1.0
+      count: 1
     
   glass:
     display_name: "Glass"
@@ -49,6 +57,10 @@ blocks:
     is_transparent: true
     is_solid: true
     strength: 2.0
+    drops:
+    - item: "glass"
+      probability: 1.0
+      count: 1
     
   leaves:
     display_name: "Leaves"
@@ -65,6 +77,10 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 5.0
+    drops:
+    - item: "sand"
+      probability: 1.0
+      count: 1
     
   plank:
     display_name: "Plank"
@@ -73,3 +89,7 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 5.0
+    drops:
+    - item: "plank"
+      probability: 1.0
+      count: 1

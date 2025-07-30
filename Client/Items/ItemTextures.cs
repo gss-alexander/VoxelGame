@@ -5,43 +5,81 @@ namespace Client.Items;
 
 public class ItemTextures
 {
-    private readonly TextureArray _textures;
+    public enum ItemTextureType
+    {
+        Item,
+        Block
+    }
+    
     private readonly Dictionary<string, uint> _textureIndexMap = new();
+    private readonly Dictionary<string, ItemTextureType> _textureTypeMap = new(); 
+
+    private readonly TextureArray _itemSpriteTextures;
+    private readonly TextureArray _blockSpriteTextures;
 
     public ItemTextures(GL gl, ItemDatabase itemDatabase, BlockDatabase blockDatabase, BlockSpriteRenderer blockSpriteRenderer)
     {
-        _textures = LoadTextures(itemDatabase.All, gl, blockDatabase, blockSpriteRenderer);
+        var items = new List<ItemData>();
+        var blocks = new List<ItemData>();
+        foreach (var itemData in itemDatabase.All)
+        {
+            if (itemData.GetType() == typeof(BlockItemData))
+            {
+                blocks.Add(itemData);
+            }
+            else
+            {
+                items.Add(itemData);
+            }
+        }
+        
+        _itemSpriteTextures = LoadItemSprites(gl, items);
+        _blockSpriteTextures = LoadBlockSprites(gl, blocks, blockDatabase, blockSpriteRenderer);
     }
+    
+    public ItemTextureType GetTextureTypeForItem(string itemId)
+    {
+        return _textureTypeMap[itemId]; 
+    } 
 
-    private TextureArray LoadTextures(ItemData[] items, GL gl, BlockDatabase blockDatabase, BlockSpriteRenderer blockSpriteRenderer)
+    private TextureArray LoadItemSprites(GL gl, List<ItemData> items)
     {
         var basePath = Path.Combine("..", "..", "..", "Resources", "Textures", "Items");
         var builder = new TextureArrayBuilder(16, 16);
-        for (var i = 0; i < items.Length; i++)
+        for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
-            if (item.GetType() == typeof(BlockItemData))
+            var texturePath = Path.Combine(basePath, item.Texture);
+            if (!File.Exists(texturePath))
             {
-                var blockId = blockDatabase.GetInternalId(item.ExternalId);
-                var data = blockSpriteRenderer.GetBlockTextureData(blockId);
-                builder = builder.AddTextureFromMemory(data);
+                texturePath = Path.Combine(basePath, "missing.png");
+                Console.WriteLine($"[Item Textures]: MISSING TEXTURE FOR ITEM {item.ExternalId}");
             }
-
-            else
-            {
-                var texturePath = Path.Combine(basePath, item.Texture);
-                if (!File.Exists(texturePath))
-                {
-                    texturePath = Path.Combine(basePath, "missing.png");
-                    Console.WriteLine($"[Item Textures]: MISSING TEXTURE FOR ITEM {item.ExternalId}");
-                }
-                builder = builder.AddTexture(texturePath);
-            }
+            builder = builder.AddTexture(texturePath);
+            Console.WriteLine($"[Item Textures]: Loaded item texture {item.ExternalId}");
             
             _textureIndexMap.Add(item.ExternalId, (uint)i);
+            _textureTypeMap.Add(item.ExternalId, ItemTextureType.Item); 
         }
 
-        Console.WriteLine($"[Item Textures]: Loaded {items.Length} item textures");
+        Console.WriteLine($"[Item Textures]: Loaded {items.Count} item textures");
+        return builder.Build(gl);
+    }
+
+    private TextureArray LoadBlockSprites(GL gl, List<ItemData> blocks, BlockDatabase blockDatabase, BlockSpriteRenderer blockSpriteRenderer)
+    {
+        var builder = new TextureArrayBuilder(BlockSpriteRenderer.SpriteSize, BlockSpriteRenderer.SpriteSize);
+        
+        for (var i = 0; i < blocks.Count; i++)
+        {
+            var block = blocks[i];
+            var blockId = blockDatabase.GetInternalId(block.ExternalId);
+            var blockSpriteData = blockSpriteRenderer.GetBlockTextureData(blockId);
+            builder = builder.AddTextureFromMemory(blockSpriteData);
+            _textureIndexMap.Add(block.ExternalId, (uint)i);
+            _textureTypeMap.Add(block.ExternalId, ItemTextureType.Block); 
+        }
+
         return builder.Build(gl);
     }
     
@@ -50,8 +88,8 @@ public class ItemTextures
         return _textureIndexMap[itemId];
     }
 
-    public void Use()
+    public void Use(ItemTextureType itemType)
     {
-        _textures.Bind();
+        (itemType == ItemTextureType.Block ? _blockSpriteTextures : _itemSpriteTextures).Bind();
     }
 }
