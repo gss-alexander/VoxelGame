@@ -1,6 +1,6 @@
 ﻿using Client.Blocks;
 
-namespace Client.Items;
+namespace Client.Items.MeshGeneration;
 
 public static class ItemMeshGeneration
 {

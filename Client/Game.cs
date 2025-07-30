@@ -149,15 +149,12 @@ public class Game
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
         _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
         var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
-        // _itemDropRenderer = new ItemDropRenderer(_gl, stickMesh, itemDropShader, itemTextures);
         _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
 
-        _itemDroppingSystem.DropItem(new Vector3(2f, 10f, 0f), "bread");
-        _itemDroppingSystem.DropItem(new Vector3(-2f, 10f, 0f), "glass");
         _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
             uiTexture, _textRenderer);
     }

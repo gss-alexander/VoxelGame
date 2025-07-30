@@ -24,7 +24,7 @@ blocks:
     is_solid: true
     strength: 10.0
     drops:
-      - item: "grass" 
+      - item: "coal" 
         probability: 1.0
         count: 1
     

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using Client.UI.Text;
+﻿using System.Runtime.InteropServices;
 using FreeTypeSharp;
 using static FreeTypeSharp.FT;
 using static FreeTypeSharp.FT_LOAD;
 using static FreeTypeSharp.FT_Render_Mode_;
+
+namespace Client.UI.Text;
 
 public static class FontLoader
 {

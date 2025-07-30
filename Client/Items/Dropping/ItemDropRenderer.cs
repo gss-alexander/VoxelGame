@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
+using Client.Items.MeshGeneration;
 using Silk.NET.OpenGL;
 
-namespace Client.Items;
+namespace Client.Items.Dropping;
 
 public class ItemDropRenderer : IWorldRenderable
 {

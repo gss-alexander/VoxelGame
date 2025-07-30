@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Client.Items;
+using Client.Items.MeshGeneration;
 using Silk.NET.OpenGL;
 
 namespace Client.Blocks;
