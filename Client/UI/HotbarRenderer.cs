@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Client.Items;
+using Client.UI.Text;
 using Silk.NET.OpenGL;
 
 namespace Client.UI;
@@ -16,20 +17,23 @@ public class HotbarRenderer
     private readonly Vector2 _screenSize;
     private readonly ItemTextures _itemTextures;
     private readonly Texture _slotBackgroundTexture;
+    private readonly TextRenderer _textRenderer;
     private readonly MeshRenderer _slotBackgroundRenderer;
     private readonly MeshRenderer _itemSpritesRenderer;
 
     private readonly Shader _uiSpriteShader;
     private readonly Shader _uiShader;
 
-    public HotbarRenderer(GL gl, PlayerInventory inventory, Vector2 screenSize, ItemTextures itemTextures, Texture slotBackgroundTexture)
+    public HotbarRenderer(GL gl, PlayerInventory inventory, Vector2 screenSize, ItemTextures itemTextures,
+        Texture slotBackgroundTexture, TextRenderer textRenderer)
     {
         _gl = gl;
         _inventory = inventory;
         _screenSize = screenSize;
         _itemTextures = itemTextures;
         _slotBackgroundTexture = slotBackgroundTexture;
-        
+        _textRenderer = textRenderer;
+
         _slotBackgroundRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
         _slotBackgroundRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 7, 0);
         _slotBackgroundRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 2);
@@ -63,6 +67,7 @@ public class HotbarRenderer
         
         RenderBackground(projectionMatrix);
         RenderItems(projectionMatrix);
+        RenderItemAmountText();
         
         _gl.Enable(EnableCap.DepthTest);
         _gl.Disable(EnableCap.Blend);
@@ -108,6 +113,32 @@ public class HotbarRenderer
         }
     
         _itemSpritesRenderer.Unbind();
+    }
+
+    private void RenderItemAmountText()
+    {
+        var screenCenter = _screenSize.X / 2f;
+        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
+        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
+
+        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
+        {
+            var slot = _inventory.Hotbar.GetSlot(i);
+            if (slot == null) continue;
+            
+            var xOffset = i * (SlotWidth + SlotXSpacing) + (SlotWidth / 1.3f);
+            var xPosition = baseXPosition + xOffset;
+            _textRenderer.RenderText(
+                slot.Count.ToString(),
+                xPosition,
+                BarYPosition + 10f,
+                0.5f,
+                new Vector3(1.0f, 1.0f, 1.0f),
+                (int)_screenSize.X,
+                (int)_screenSize.Y,
+                TextAlignment.Center
+            );
+        }
     }
     
     private Mesh GenerateItemsMeshForGroup(List<(int slotIndex, string itemId)> items)

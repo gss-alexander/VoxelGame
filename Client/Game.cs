@@ -159,7 +159,7 @@ public class Game
         _itemDroppingSystem.DropItem(new Vector3(2f, 10f, 0f), "bread");
         _itemDroppingSystem.DropItem(new Vector3(-2f, 10f, 0f), "glass");
         _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            uiTexture);
+            uiTexture, _textRenderer);
     }
 
     private static string GetTexturePath(string name)
