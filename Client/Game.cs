@@ -53,6 +53,7 @@ public class Game
     private TextRenderer _textRenderer;
 
     private BlockBreaking _blockBreaking;
+    private BlockPlacement _blockPlacement;
 
     private PlayerInventory _playerInventory;
 
@@ -126,6 +127,8 @@ public class Game
         _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y,
             _textRenderer, _playerInventory);
 
+        var items = ItemLoader.Load();
+        var itemDatabase = new ItemDatabase(items);
 
         var blockBreakingShader =
             new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -137,10 +140,12 @@ public class Game
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
             .Build(_gl);
         _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray);
+        _blockPlacement = new BlockPlacement(_playerInventory, itemDatabase, _blockDatabase, (blockPos, blockId) =>
+        {
+            _chunkSystem.PlaceBlock(blockPos, blockId);
+        });
 
 
-        var items = ItemLoader.Load();
-        var itemDatabase = new ItemDatabase(items);
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
         _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
         var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
@@ -153,7 +158,7 @@ public class Game
 
         _itemDroppingSystem.DropItem(new Vector3(2f, 10f, 0f), "bread");
         _itemDroppingSystem.DropItem(new Vector3(-2f, 10f, 0f), "glass");
-        _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory.Hotbar, window.Size.AsFloatVector(), _itemTextures,
+        _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
             uiTexture);
     }
 
@@ -226,14 +231,9 @@ public class Game
         
         if (_currentMouseClickCooldown <= 0f)
         {
-            if (_primaryMouse.IsButtonPressed(MouseButton.Right))
+            if (_blockPlacement.Update(raycast, _primaryMouse.IsButtonPressed(MouseButton.Right)))
             {
-                var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
-                if (raycastHit.HasValue)
-                {
-                    _chunkSystem.PlaceBlock(Block.GetFaceNeighbour(raycastHit.Value.Position, raycastHit.Value.Face), _blockSelector.CurrentBlock);
-                    _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
-                }
+                _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
             }
         }
 
@@ -411,7 +411,7 @@ public class Game
     
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
     {
-        var direction = scrollWheel.Y < 0 ? -1 : 1;
-        _blockSelector.Cycle(direction);
+        var direction = scrollWheel.Y > 0 ? 1 : -1;
+        _playerInventory.CycleSelectedHotbarSlot(direction);
     }
 }

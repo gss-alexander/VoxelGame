@@ -18,12 +18,19 @@ public class ChunkGenerator
 
     public ChunkData GenerateFlatWorld(Vector2D<int> chunkPosition)
     {
+        const int height = 4;
         var chunkData = new ChunkData(chunkPosition, _blockDatabase.GetInternalId("air"));
         for (var x = 0; x < Chunk.Size; x++)
         {
             for (var z = 0; z < Chunk.Size; z++)
             {
-                chunkData.SetBlock(new Vector3D<int>(x, 0, z), _blockDatabase.GetInternalId("grass"));
+                for (var y = 0; y < height - 2; y++)
+                {
+                    var pos = new Vector3D<int>(x, y, z);
+                    chunkData.SetBlock(pos, _blockDatabase.GetInternalId("cobblestone"));
+                }
+                chunkData.SetBlock(new Vector3D<int>(x, height - 2, z), _blockDatabase.GetInternalId("dirt"));
+                chunkData.SetBlock(new Vector3D<int>(x, height - 1, z), _blockDatabase.GetInternalId("grass"));
             }
         }
 

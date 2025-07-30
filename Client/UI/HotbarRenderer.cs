@@ -12,7 +12,7 @@ public class HotbarRenderer
     private const float SlotHeight = 75f;
 
     private readonly GL _gl;
-    private readonly ItemStorage _hotbar;
+    private readonly PlayerInventory _inventory;
     private readonly Vector2 _screenSize;
     private readonly ItemTextures _itemTextures;
     private readonly Texture _slotBackgroundTexture;
@@ -22,17 +22,18 @@ public class HotbarRenderer
     private readonly Shader _uiSpriteShader;
     private readonly Shader _uiShader;
 
-    public HotbarRenderer(GL gl, ItemStorage hotbar, Vector2 screenSize, ItemTextures itemTextures, Texture slotBackgroundTexture)
+    public HotbarRenderer(GL gl, PlayerInventory inventory, Vector2 screenSize, ItemTextures itemTextures, Texture slotBackgroundTexture)
     {
         _gl = gl;
-        _hotbar = hotbar;
+        _inventory = inventory;
         _screenSize = screenSize;
         _itemTextures = itemTextures;
         _slotBackgroundTexture = slotBackgroundTexture;
         
-        _slotBackgroundRenderer = new MeshRenderer(gl, GenerateBackgroundMesh());
-        _slotBackgroundRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 4, 0);
-        _slotBackgroundRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 4, 2);
+        _slotBackgroundRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
+        _slotBackgroundRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 7, 0);
+        _slotBackgroundRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 2);
+        _slotBackgroundRenderer.SetVertexAttribute(2, 3, VertexAttribPointerType.Float, 7, 4);
         _slotBackgroundRenderer.Unbind();
 
         _itemSpritesRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
@@ -75,6 +76,7 @@ public class HotbarRenderer
         _uiShader.SetUniform("uProjection", projection);
         _uiShader.SetUniform("uTexture", 0);
         
+        _slotBackgroundRenderer.UpdateMesh(GenerateBackgroundMesh());
         _slotBackgroundRenderer.Render();
         _slotBackgroundRenderer.Unbind();
     }
@@ -83,9 +85,9 @@ public class HotbarRenderer
     {
         var itemGroups = new Dictionary<ItemTextures.ItemTextureType, List<(int slot, string itemId)>>();
     
-        for (var i = 0; i < _hotbar.SlotCount; i++)
+        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
         {
-            var slot = _hotbar.GetSlot(i);
+            var slot = _inventory.Hotbar.GetSlot(i);
             if (slot == null) continue;
         
             var textureType = _itemTextures.GetTextureTypeForItem(slot.ItemId);
@@ -114,7 +116,7 @@ public class HotbarRenderer
         var indices = new List<uint>();
    
         var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_hotbar.SlotCount - 1));
+        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
         var baseXPosition = screenCenter - totalHotbarWidth / 2f;
    
         var indicesOffset = 0u;
@@ -153,16 +155,20 @@ public class HotbarRenderer
         var indices = new List<uint>();
 
         var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_hotbar.SlotCount - 1));
+        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
         var baseXPosition = screenCenter - totalHotbarWidth / 2f;
 
         var indicesOffset = 0u;
-        for (var i = 0; i < _hotbar.SlotCount; i++)
+        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
         {
             var xOffset = i * (SlotWidth + SlotXSpacing);
             var xPosition = baseXPosition + xOffset;
 
-            vertices.AddRange(CreateQuad(xPosition, BarYPosition));
+            var color = _inventory.SelectedHotbarSlot == i
+                ? new Vector3(1.0f, 1.0f, 1.0f)
+                : new Vector3(0.75f, 0.75f, 0.75f);
+
+            vertices.AddRange(CreateQuad(xPosition, BarYPosition, color));
             indices.AddRange([
                 indicesOffset, 1 + indicesOffset, 2 + indicesOffset,
                 2 + indicesOffset, 3 + indicesOffset, indicesOffset
@@ -172,14 +178,14 @@ public class HotbarRenderer
 
         return new Mesh(vertices.ToArray(), indices.ToArray());
 
-        float[] CreateQuad(float x, float y)
+        float[] CreateQuad(float x, float y, Vector3 color)
         {
             return
             [
-                x, y, 0.0f, 0.0f,
-                x + SlotWidth, y, 1.0f, 0.0f,
-                x + SlotWidth, y + SlotHeight, 1.0f, 1.0f,
-                x, y + SlotHeight, 0.0f, 1.0f,
+                x, y, 0.0f, 0.0f, color.X, color.Y, color.Z,
+                x + SlotWidth, y, 1.0f, 0.0f, color.X, color.Y, color.Z,
+                x + SlotWidth, y + SlotHeight, 1.0f, 1.0f, color.X, color.Y, color.Z,
+                x, y + SlotHeight, 0.0f, 1.0f, color.X, color.Y, color.Z
             ];
         }
     }

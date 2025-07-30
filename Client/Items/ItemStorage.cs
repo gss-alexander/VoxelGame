@@ -74,6 +74,32 @@ public class ItemStorage
         slot.Count += count;
     }
 
+    public void RemoveItemFromSlot(int slotIndex, int amount)
+    {
+        if (amount <= 0)
+        {
+            throw new Exception($"Cannot remove negative amount of items");
+        }
+
+        var slot = GetSlot(slotIndex);
+        if (slot == null)
+        {
+            throw new Exception($"Tried to get slot outside of bounds: {slotIndex}");
+        }
+
+        var currentItemsInSlot = slot.Count;
+        if (currentItemsInSlot - amount < 0)
+        {
+            throw new Exception($"Tried to remove more items from slot than exists in slot.");
+        }
+
+        slot.Count -= amount;
+        if (slot.Count == 0)
+        {
+            slot.ItemId = "null";
+        }
+    }
+
     public bool CanAdd(string itemId, int count)
     {
         return GetSlotForAdding(itemId, count) != null;

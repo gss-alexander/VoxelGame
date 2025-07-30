@@ -4,6 +4,8 @@ namespace Client;
 
 public class PlayerInventory
 {
+    public int SelectedHotbarSlot { get; set; }
+    
     public ItemStorage Hotbar { get; }
     public ItemStorage Storage { get; }
 
@@ -33,5 +35,18 @@ public class PlayerInventory
 
         Console.WriteLine($"[PlayerInventory]: Failed to add {count} of item {itemId} to inventory");
         return false;
+    }
+
+    public void CycleSelectedHotbarSlot(int direction)
+    {
+        SelectedHotbarSlot += direction;
+        if (SelectedHotbarSlot > Hotbar.SlotCount - 1)
+        {
+            SelectedHotbarSlot = 0;
+        }
+        else if (SelectedHotbarSlot < 0)
+        {
+            SelectedHotbarSlot = Hotbar.SlotCount - 1;
+        }
     }
 }
