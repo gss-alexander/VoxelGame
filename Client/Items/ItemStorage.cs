@@ -74,6 +74,18 @@ public class ItemStorage
         slot.Count += count;
     }
 
+    public void AddItemToSlot(int slotIndex, string itemId, int count)
+    {
+        if (count <= 0)
+        {
+            throw new InvalidOperationException($"Cannot add 0 or negative amount to storage");
+        }
+
+        var slot = GetSlotInternal(slotIndex);
+        slot.ItemId = itemId;
+        slot.Count = count;
+    }
+
     public void RemoveItemFromSlot(int slotIndex, int amount)
     {
         if (amount <= 0)

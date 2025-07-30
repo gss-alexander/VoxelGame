@@ -64,6 +64,8 @@ public class Game
 
     private HotbarRenderer _hotbarRenderer;
 
+    private bool _playerControlsEnabled = false;
+
     public unsafe void Load(IWindow window)
     {
         
@@ -78,6 +80,7 @@ public class Game
             inputContext.Mice[i].Cursor.CursorMode = CursorMode.Raw;
             inputContext.Mice[i].MouseMove += OnMouseMove;
             inputContext.Mice[i].Scroll += OnMouseWheel;
+            inputContext.Mice[i].Click += OnMouseClicked;
         }
 
         _primaryMouse = inputContext.Mice.First();
@@ -121,14 +124,27 @@ public class Game
         var characterMap = new CharacterMap(_gl);
         var textShader = new Shader(_gl, GetShaderPath("text.vert"), GetShaderPath("text.frag"));
         _textRenderer = new TextRenderer(_gl, textShader, characterMap);
-
-        var uiShader = new Shader(_gl, GetShaderPath("ui.vert"), GetShaderPath("ui.frag"));
-        var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
-        _uiRenderer = new UiRenderer(_gl, uiShader, uiTexture, _blockSpriteRenderer, _window.Size.X, _window.Size.Y,
-            _textRenderer, _playerInventory);
-
+        
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
+        itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
+        _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
+        var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
+        _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
+        {
+            var blockPos = Block.WorldToBlockPosition(worldPos);
+            return _chunkSystem.IsBlockSolid(blockPos);
+        }, _blockDatabase, _blockTextures);
+
+        var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
+        _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
+            uiTexture, _textRenderer);
+
+        var inventoryRenderer = new InventoryRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
+            uiTexture, _textRenderer);
+        var draggableItemRenderer =
+            new DraggableItemRenderer(_gl, _textRenderer, window.Size.AsFloatVector(), _itemTextures);
+        _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory);
 
         var blockBreakingShader =
             new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -144,19 +160,11 @@ public class Game
         {
             _chunkSystem.PlaceBlock(blockPos, blockId);
         });
-
-
-        itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
-        _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
-        var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
-        _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
-        {
-            var blockPos = Block.WorldToBlockPosition(worldPos);
-            return _chunkSystem.IsBlockSolid(blockPos);
-        }, _blockDatabase, _blockTextures);
-
-        _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            uiTexture, _textRenderer);
+        
+        _playerInventory.Hotbar.AddItem("dirt", 45);
+        _playerInventory.Hotbar.AddItem("coal", 14);
+        _playerInventory.Storage.AddItem("glass", 52);
+        _playerInventory.Storage.AddItem("sand", 23);
     }
 
     private static string GetTexturePath(string name)
@@ -174,8 +182,21 @@ public class Game
 
     private bool _isFirstUpdate = true;
 
+    private bool _lastLeftClickStatus;
+
     public void Update(double deltaTime)
     {
+        // this is here because the actual mouse click event is extremely slow...
+        var isLeftClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Left);
+        if (isLeftClickPressed != _lastLeftClickStatus && isLeftClickPressed)
+        {
+            _uiRenderer.OnMouseClicked(MouseButton.Left, _primaryMouse.Position);
+        }
+        _lastLeftClickStatus = isLeftClickPressed;
+        
+        _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
+        _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
+        
         _chunkSystem.UpdateChunkVisibility(_camera.Position, 3);
 
         if (_isFirstUpdate)
@@ -193,58 +214,63 @@ public class Game
             }
         }
 
-        var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
-        if (raycast.HasValue)
+        if (_playerControlsEnabled)
         {
-            var blockType = _chunkSystem.GetBlock(raycast.Value.Position);
-            var block = _blockDatabase.GetById(blockType);
-            _blockBreaking.SetLookingAtBlock(block, raycast.Value.Position);
-        }
-        else
-        {
-            _blockBreaking.ClearLookingAtBlock();
-        }
-        _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left));
-        if (_blockBreaking.ShouldBreak)
-        {
-            var hit = raycast.Value;
-            var blockId = _chunkSystem.GetBlock(hit.Position);
-            var block = _blockDatabase.GetById(blockId);
-            if (block.Drops != null)
+            var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
+            if (raycast.HasValue)
             {
-                foreach (var drop in block.Drops)
+                var blockType = _chunkSystem.GetBlock(raycast.Value.Position);
+                var block = _blockDatabase.GetById(blockType);
+                _blockBreaking.SetLookingAtBlock(block, raycast.Value.Position);
+            }
+            else
+            {
+                _blockBreaking.ClearLookingAtBlock();
+            }
+            _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left));
+            if (_blockBreaking.ShouldBreak)
+            {
+                var hit = raycast.Value;
+                var blockId = _chunkSystem.GetBlock(hit.Position);
+                var block = _blockDatabase.GetById(blockId);
+                if (block.Drops != null)
                 {
-                    var randomRoll = Random.Range(0f, 1.0f);
-                    if (randomRoll <= drop.Probability)
+                    foreach (var drop in block.Drops)
                     {
-                        var randomOffset = new Vector3(Random.Range(-0.1f, 0.1f), 0f, Random.Range(-0.1f, 0.1f));
-                        _itemDroppingSystem.DropItem(Block.GetCenterPosition(hit.Position) + randomOffset, drop.Item);
+                        var randomRoll = Random.Range(0f, 1.0f);
+                        if (randomRoll <= drop.Probability)
+                        {
+                            var randomOffset = new Vector3(Random.Range(-0.1f, 0.1f), 0f, Random.Range(-0.1f, 0.1f));
+                            _itemDroppingSystem.DropItem(Block.GetCenterPosition(hit.Position) + randomOffset, drop.Item);
+                        }
                     }
                 }
-            }
             
-            _chunkSystem.DestroyBlock(hit.Position);
-        }
+                _chunkSystem.DestroyBlock(hit.Position);
+            }
         
-        if (_currentMouseClickCooldown <= 0f)
-        {
-            if (_blockPlacement.Update(raycast, _primaryMouse.IsButtonPressed(MouseButton.Right)))
+            if (_currentMouseClickCooldown <= 0f)
             {
-                _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
+                if (_blockPlacement.Update(raycast, _primaryMouse.IsButtonPressed(MouseButton.Right)))
+                {
+                    _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
+                }
+            }
+
+            else
+            {
+                _currentMouseClickCooldown -= (float)deltaTime;
             }
         }
 
-        else
-        {
-            _currentMouseClickCooldown -= (float)deltaTime;
-        }
 
-        var movementInput = GetMovementInputWithCamera();
+        var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera() : Vector3.Zero;
         _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z), _primaryKeyboard.IsKeyPressed(Key.Space));
         _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
         
-        var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
-        _primaryMouse.Cursor.CursorMode = cursorMode;
+        // var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
+        // _primaryMouse.Cursor.CursorMode = cursorMode;
+        
         
         var pickedUpItems = _itemDroppingSystem.PickUpItems(_player.Position, 1.5f);
         foreach (var pickedUpItem in pickedUpItems)
@@ -254,6 +280,8 @@ public class Game
         }
         
         _itemDroppingSystem.Update((float)deltaTime);
+        
+        _uiRenderer.Update(_primaryMouse.Position);
     }
 
     public unsafe void Render(double deltaTime)
@@ -319,7 +347,8 @@ public class Game
         
         _crosshairRenderer.Render();
         // _uiRenderer.Render(_window.Size.X, _window.Size.Y, _shader, _itemTextures);
-        _hotbarRenderer.Render();
+        // _hotbarRenderer.Render();
+        _uiRenderer.Render();
         
         _imGuiController.Render();
         
@@ -373,6 +402,11 @@ public class Game
         {
             _window.Close();
         }
+
+        if (pressedKey == Key.Tab)
+        {
+            _uiRenderer.ToggleInventory();
+        }
     }
 
     private Vector2 _lastMousePosition;
@@ -384,27 +418,36 @@ public class Game
         {
             _lastMousePosition = position;
         }
-
+        
         else
         {
-            var xOffset = (position.X - _lastMousePosition.X) * lookSensitivity;
-            var yOffset = (position.Y - _lastMousePosition.Y) * lookSensitivity;
+            if (_playerControlsEnabled)
+            {
+                var xOffset = (position.X - _lastMousePosition.X) * lookSensitivity;
+                var yOffset = (position.Y - _lastMousePosition.Y) * lookSensitivity;
+
+                _camera.Yaw += xOffset;
+                _camera.Pitch -= yOffset;
+
+                _camera.Pitch = Math.Clamp(_camera.Pitch, -89.0f, 89.0f);
+
+                var direction = _camera.Direction;
+                direction.X = MathF.Cos(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
+                direction.Y = MathF.Sin(MathUtil.DegreesToRadians(_camera.Pitch));
+                direction.Z = MathF.Sin(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
+                _camera.Direction = direction;
+                _camera.Front = Vector3.Normalize(direction);
+            }
+            
             _lastMousePosition = position;
-
-            _camera.Yaw += xOffset;
-            _camera.Pitch -= yOffset;
-
-            _camera.Pitch = Math.Clamp(_camera.Pitch, -89.0f, 89.0f);
-
-            var direction = _camera.Direction;
-            direction.X = MathF.Cos(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
-            direction.Y = MathF.Sin(MathUtil.DegreesToRadians(_camera.Pitch));
-            direction.Z = MathF.Sin(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
-            _camera.Direction = direction;
-            _camera.Front = Vector3.Normalize(direction);
         }
     }
 
+    private void OnMouseClicked(IMouse mouse, MouseButton button, Vector2 position)
+    {
+        Console.WriteLine($"clicked with mouse {button} at {position}");
+        // _uiRenderer.OnMouseClicked(button, position);
+    }
     
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
     {

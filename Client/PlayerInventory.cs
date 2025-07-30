@@ -11,7 +11,7 @@ public class PlayerInventory
 
     public PlayerInventory()
     {
-        Hotbar = new ItemStorage(9, 64);
+        Hotbar = new ItemStorage(8, 64);
         Storage = new ItemStorage(32, 64);
     }
 

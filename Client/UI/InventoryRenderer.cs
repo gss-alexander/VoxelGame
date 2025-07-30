@@ -5,10 +5,10 @@ using Silk.NET.OpenGL;
 
 namespace Client.UI;
 
-public class HotbarRenderer
+public class InventoryRenderer
 {
-    private const float BarYPosition = 950f;
-    private const float SlotXSpacing = 20f;
+    private const float BarYPosition = 550f;
+    private const float SlotSpacing = 20f;
     private const float SlotWidth = 75f;
     private const float SlotHeight = 75f;
 
@@ -24,7 +24,9 @@ public class HotbarRenderer
     private readonly Shader _uiSpriteShader;
     private readonly Shader _uiShader;
 
-    public HotbarRenderer(GL gl, PlayerInventory inventory, Vector2 screenSize, ItemTextures itemTextures,
+    private int SlotCount => _inventory.Storage.SlotCount;
+
+    public InventoryRenderer(GL gl, PlayerInventory inventory, Vector2 screenSize, ItemTextures itemTextures,
         Texture slotBackgroundTexture, TextRenderer textRenderer)
     {
         _gl = gl;
@@ -49,23 +51,33 @@ public class HotbarRenderer
         _uiSpriteShader = Shaders.GetShader(gl, "itemUiSprite");
         _uiShader = Shaders.GetShader(gl, "ui");
     }
-
     public int GetClickedSlotIndex(Vector2 screenPosition)
     {
-        if (screenPosition.Y < BarYPosition || screenPosition.Y > BarYPosition + SlotHeight)
-        {
-            return -1;
-        }
+        var columnsPerRow = _inventory.Hotbar.SlotCount;
         
-        var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
-        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
+        var screenCenter = _screenSize / 2f;
+        var totalInventoryWidth = (columnsPerRow * SlotWidth) + (SlotSpacing * (columnsPerRow - 1));
+        var baseXPosition = screenCenter.X - totalInventoryWidth / 2f;
 
-        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
+        var amountOfRows = (int)MathF.Ceiling((float)SlotCount / columnsPerRow);
+        var totalInventoryHeight = (amountOfRows * SlotHeight) + (SlotSpacing * (amountOfRows - 1));
+        var baseYPosition = screenCenter.Y - totalInventoryHeight / 2f;
+
+        for (var i = 0; i < SlotCount; i++)
         {
-            var xOffset = i * (SlotWidth + SlotXSpacing);
+            var row = (int)MathF.Floor((float)i / columnsPerRow);
+            var column = i % columnsPerRow;
+            
+            var xOffset = column * (SlotWidth + SlotSpacing);
             var xPosition = baseXPosition + xOffset;
-            if (screenPosition.X >= xPosition && screenPosition.X <= xPosition + SlotWidth)
+
+            var yOffset = row * (SlotHeight + SlotSpacing);
+            var yPosition = baseYPosition + yOffset;
+            
+            if (screenPosition.X >= xPosition &&
+                screenPosition.X <= xPosition + SlotWidth &&
+                screenPosition.Y >= yPosition &&
+                screenPosition.Y <= yPosition + SlotHeight)
             {
                 return i;
             }
@@ -114,9 +126,9 @@ public class HotbarRenderer
     {
         var itemGroups = new Dictionary<ItemTextures.ItemTextureType, List<(int slot, string itemId)>>();
     
-        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
+        for (var i = 0; i < SlotCount; i++)
         {
-            var slot = _inventory.Hotbar.GetSlot(i);
+            var slot = _inventory.Storage.GetSlot(i);
             if (slot == null) continue;
         
             var textureType = _itemTextures.GetTextureTypeForItem(slot.ItemId);
@@ -141,21 +153,32 @@ public class HotbarRenderer
 
     private void RenderItemAmountText()
     {
-        var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
-        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
+        var columnsPerRow = _inventory.Hotbar.SlotCount;
+        
+        var screenCenter = _screenSize / 2f;
+        var totalInventoryWidth = (columnsPerRow * SlotWidth) + (SlotSpacing * (columnsPerRow - 1));
+        var baseXPosition = screenCenter.X - totalInventoryWidth / 2f;
 
-        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
+        var amountOfRows = (int)MathF.Ceiling((float)SlotCount / columnsPerRow);
+        var totalInventoryHeight = (amountOfRows * SlotHeight) + (SlotSpacing * (amountOfRows - 1));
+        var baseYPosition = screenCenter.Y - totalInventoryHeight / 2f;
+
+        for (var i = 0; i < SlotCount; i++)
         {
-            var slot = _inventory.Hotbar.GetSlot(i);
+            var slot = _inventory.Storage.GetSlot(i);
             if (slot == null) continue;
+            var row = (int)MathF.Floor((float)i / columnsPerRow);
+            var column = i % columnsPerRow;
             
-            var xOffset = i * (SlotWidth + SlotXSpacing) + (SlotWidth / 1.3f);
+            var xOffset = column * (SlotWidth + SlotSpacing) + (SlotWidth / 1.3f);
             var xPosition = baseXPosition + xOffset;
+
+            var yOffset = row * (SlotHeight + SlotSpacing);
+            var yPosition = baseYPosition + yOffset;
             _textRenderer.RenderText(
                 slot.Count.ToString(),
                 xPosition,
-                BarYPosition + 10f,
+                yPosition + 10f,
                 0.5f,
                 new Vector3(0f, 0f, 0f),
                 (int)_screenSize.X,
@@ -169,27 +192,39 @@ public class HotbarRenderer
     {
         var vertices = new List<float>();
         var indices = new List<uint>();
-   
-        var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
-        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
-   
+        
+        var columnsPerRow = _inventory.Hotbar.SlotCount;
+        
+        var screenCenter = _screenSize / 2f;
+        var totalInventoryWidth = (columnsPerRow * SlotWidth) + (SlotSpacing * (columnsPerRow - 1));
+        var baseXPosition = screenCenter.X - totalInventoryWidth / 2f;
+
+        var amountOfRows = (int)MathF.Ceiling((float)SlotCount / columnsPerRow);
+        var totalInventoryHeight = (amountOfRows * SlotHeight) + (SlotSpacing * (amountOfRows - 1));
+        var baseYPosition = screenCenter.Y - totalInventoryHeight / 2f;
+
         var indicesOffset = 0u;
         foreach (var (slotIndex, itemId) in items)
         {
-            var xOffset = slotIndex * (SlotWidth + SlotXSpacing);
+            var row = (int)MathF.Floor((float)slotIndex / columnsPerRow);
+            var column = slotIndex % columnsPerRow;
+            
+            var xOffset = column * (SlotWidth + SlotSpacing);
             var xPosition = baseXPosition + xOffset;
 
+            var yOffset = row * (SlotHeight + SlotSpacing);
+            var yPosition = baseYPosition + yOffset;
+            
             var textureIndex = _itemTextures.GetTextureIndexForItem(itemId);
 
-            vertices.AddRange(CreateQuad(xPosition, BarYPosition, textureIndex));
+            vertices.AddRange(CreateQuad(xPosition, yPosition, textureIndex));
             indices.AddRange([
                 indicesOffset, 1 + indicesOffset, 2 + indicesOffset,
                 2 + indicesOffset, 3 + indicesOffset, indicesOffset
             ]);
             indicesOffset += 4;
         }
-
+   
         return new Mesh(vertices.ToArray(), indices.ToArray());
    
         float[] CreateQuad(float x, float y, uint textureIndex)
@@ -209,21 +244,31 @@ public class HotbarRenderer
         var vertices = new List<float>();
         var indices = new List<uint>();
 
-        var screenCenter = _screenSize.X / 2f;
-        var totalHotbarWidth = (_inventory.Hotbar.SlotCount * SlotWidth) + (SlotXSpacing * (_inventory.Hotbar.SlotCount - 1));
-        var baseXPosition = screenCenter - totalHotbarWidth / 2f;
+        // the number of slots that will be placed per row of the inventory. dependent on hotbar for consistency
+        var columnsPerRow = _inventory.Hotbar.SlotCount;
+        
+        var screenCenter = _screenSize / 2f;
+        var totalInventoryWidth = (columnsPerRow * SlotWidth) + (SlotSpacing * (columnsPerRow - 1));
+        var baseXPosition = screenCenter.X - totalInventoryWidth / 2f;
+
+        var amountOfRows = (int)MathF.Ceiling((float)SlotCount / columnsPerRow);
+        var totalInventoryHeight = (amountOfRows * SlotHeight) + (SlotSpacing * (amountOfRows - 1));
+        var baseYPosition = screenCenter.Y - totalInventoryHeight / 2f;
 
         var indicesOffset = 0u;
-        for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
+        for (var i = 0; i < SlotCount; i++)
         {
-            var xOffset = i * (SlotWidth + SlotXSpacing);
+            var row = (int)MathF.Floor((float)i / columnsPerRow);
+            var column = i % columnsPerRow;
+            
+            var xOffset = column * (SlotWidth + SlotSpacing);
             var xPosition = baseXPosition + xOffset;
 
-            var color = _inventory.SelectedHotbarSlot == i
-                ? new Vector3(1.0f, 1.0f, 1.0f)
-                : new Vector3(0.75f, 0.75f, 0.75f);
+            var yOffset = row * (SlotHeight + SlotSpacing);
+            var yPosition = baseYPosition + yOffset;
 
-            vertices.AddRange(CreateQuad(xPosition, BarYPosition, color));
+            var color = new Vector3(1.0f, 1.0f, 1.0f);
+            vertices.AddRange(CreateQuad(xPosition, yPosition, color));
             indices.AddRange([
                 indicesOffset, 1 + indicesOffset, 2 + indicesOffset,
                 2 + indicesOffset, 3 + indicesOffset, indicesOffset
