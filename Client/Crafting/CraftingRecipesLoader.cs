@@ -12,7 +12,7 @@ public static class CraftingRecipesLoader
         public Dictionary<string, CraftingRecipe> Recipes { get; set; } = new();
     }
 
-    public static void Load()
+    public static CraftingRecipe[] Load()
     {
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(UnderscoredNamingConvention.Instance)
@@ -29,7 +29,7 @@ public static class CraftingRecipesLoader
             recipes.Add(recipe);
             Console.WriteLine(recipe);
         }
-        
-        Console.WriteLine("aa");
+
+        return recipes.ToArray();
     }
 }

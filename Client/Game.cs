@@ -2,6 +2,7 @@
 using System.Numerics;
 using Client.Blocks;
 using Client.Chunks;
+using Client.Crafting;
 using Client.Items;
 using Client.Items.Dropping;
 using Client.UI;
@@ -144,7 +145,11 @@ public class Game
             uiTexture, _textRenderer);
         var draggableItemRenderer =
             new DraggableItemRenderer(_gl, _textRenderer, window.Size.AsFloatVector(), _itemTextures);
-        _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory);
+
+        var craftingRecipes = CraftingRecipesLoader.Load();
+        var craftingGrid = new CraftingGrid(3, 3, craftingRecipes);
+        var craftingGridUi = new CraftingGridUi(_gl, craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
+        _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
 
         var blockBreakingShader =
             new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -165,6 +170,9 @@ public class Game
         _playerInventory.Hotbar.AddItem("coal", 14);
         _playerInventory.Storage.AddItem("glass", 52);
         _playerInventory.Storage.AddItem("sand", 23);
+        _playerInventory.Storage.AddItem("log", 5);
+        _playerInventory.Storage.AddItem("plank", 47);
+        _playerInventory.Storage.AddItem("stick", 19);
     }
 
     private static string GetTexturePath(string name)
@@ -183,6 +191,7 @@ public class Game
     private bool _isFirstUpdate = true;
 
     private bool _lastLeftClickStatus;
+    private bool _lastRightClickStatus;
 
     public void Update(double deltaTime)
     {
@@ -193,6 +202,13 @@ public class Game
             _uiRenderer.OnMouseClicked(MouseButton.Left, _primaryMouse.Position);
         }
         _lastLeftClickStatus = isLeftClickPressed;
+        
+        var isRightClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Right);
+        if (isRightClickPressed != _lastRightClickStatus && isRightClickPressed)
+        {
+            _uiRenderer.OnMouseClicked(MouseButton.Right, _primaryMouse.Position);
+        }
+        _lastRightClickStatus = isRightClickPressed;
         
         _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
         _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;

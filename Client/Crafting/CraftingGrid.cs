@@ -4,6 +4,9 @@ namespace Client.Crafting;
 
 public class CraftingGrid
 {
+    public int Width => _width;
+    public int Height => _height;
+    
     public struct CraftingResult
     {
         public string ItemId { get; set; }
@@ -16,7 +19,7 @@ public class CraftingGrid
     private readonly int _height;
     private readonly CraftingRecipe[] _craftingRecipes;
 
-    private class Slot
+    public class Slot
     {
         public ItemStack? Item { get; set; }
     }
@@ -35,13 +38,39 @@ public class CraftingGrid
         }
     }
 
+    public Slot[] GetAllSlots()
+    {
+        return _slots;
+    }
+
     public void AddItemStack(ItemStack itemStack, int x, int y)
     {
         var index = GridPositionToIndex(x, y);
         var slot = _slots[index];
+        if (slot.Item.HasValue)
+        {
+            if (slot.Item.Value.ItemId == itemStack.ItemId)
+            {
+                itemStack = new ItemStack(itemStack.ItemId, slot.Item.Value.Amount + itemStack.Amount);
+            }
+        }
+        
         slot.Item = itemStack;
         
         UpdateCraftingResult();
+    }
+
+    public ItemStack? GetStackAtSlot(int x, int y)
+    {
+        var index = GridPositionToIndex(x, y);
+        var slot = _slots[index];
+        return slot.Item;
+    }
+
+    public void ClearStack(int x, int y)
+    {
+        var index = GridPositionToIndex(x, y);
+        _slots[index].Item = null;
     }
 
     public void ClearGrid()

@@ -82,8 +82,15 @@ public class ItemStorage
         }
 
         var slot = GetSlotInternal(slotIndex);
-        slot.ItemId = itemId;
-        slot.Count = count;
+        if (slot.ItemId == itemId)
+        {
+            slot.Count += count;
+        }
+        else
+        {
+            slot.ItemId = itemId;
+            slot.Count = count;
+        }
     }
 
     public void RemoveItemFromSlot(int slotIndex, int amount)

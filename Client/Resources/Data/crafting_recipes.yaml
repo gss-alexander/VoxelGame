@@ -1,4 +1,10 @@
 ﻿recipes:
+    plank:
+        result: plank
+        amount: 4
+        components:
+            - [log]
+                
     crafting_table:
         result: crafting_table
         amount: 1
