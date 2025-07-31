@@ -6,7 +6,7 @@
         
     wooden_pickaxe:
         display_name: "Wooden Pickaxe"
-        texture: "wood_pickaxe.png"
+        texture: "wooden_pickaxe.png"
         type: "tool"
         durability: 65
         mining_level: 1
