@@ -265,7 +265,7 @@ public class UiRenderer
                     var resultItemId = craftingResult.Value.ItemId;
                     var resultItemCount = craftingResult.Value.Amount;
                     _draggableItemRenderer.SetDragging(resultItemId, resultItemCount);
-                    _craftingGridUi.CraftingGrid.ClearGrid();
+                    _craftingGridUi.CraftingGrid.FinalizeCrafting();
                 }
             }
         }

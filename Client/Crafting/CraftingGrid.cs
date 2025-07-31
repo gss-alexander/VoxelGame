@@ -43,6 +43,23 @@ public class CraftingGrid
         return _slots;
     }
 
+    public void FinalizeCrafting()
+    {
+        for (var i = 0; i < _slots.Length; i++)
+        {
+            var slot = _slots[i];
+            if (slot.Item.HasValue)
+            {
+                slot.Item = new ItemStack(slot.Item.Value.ItemId, slot.Item.Value.Amount - 1);
+                if (slot.Item.Value.Amount == 0)
+                {
+                    slot.Item = null;
+                }
+            }
+        }
+        UpdateCraftingResult();
+    }
+
     public void AddItemStack(ItemStack itemStack, int x, int y)
     {
         var index = GridPositionToIndex(x, y);
