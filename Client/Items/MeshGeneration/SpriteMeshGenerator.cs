@@ -42,7 +42,6 @@ public static class SpriteMeshGenerator
         var maxDimension = Math.Max(spriteWidth, spriteHeight);
         var scale = 1.0f / maxDimension;
 
-        var indicesOffset = 0u;
         for (var x = 0; x < solidMap.Width; x++)
         {
             for (var y = 0; y < solidMap.Height; y++)
@@ -62,7 +61,7 @@ public static class SpriteMeshGenerator
                 var needLeft = !solidMap.IsSolid(x - 1, y);
                 var needRight = !solidMap.IsSolid(x + 1, y);
                 
-                AddMeshData(adjustedX, adjustedY, u, v, textureIndex, vertices, indices, ref indicesOffset, scale, 
+                AddMeshData(adjustedX, adjustedY, u, v, textureIndex, vertices, indices, scale, 
                     needBack, needFront, needLeft, needRight);
             }
         }
@@ -94,115 +93,112 @@ public static class SpriteMeshGenerator
         return foundSolidPixel ? (minX, minY, maxX, maxY) : null;
     }
 
-    private static void AddMeshData(float x, float y, float u, float v, float ti, List<float> vertices, List<uint> indices, ref uint indicesOffset, float scale,
+    private static void AddMeshData(float x, float y, float u, float v, float ti, List<float> vertices, List<uint> indices, float scale,
         bool needBack, bool needFront, bool needLeft, bool needRight)
     {
         var halfScale = scale * 0.5f;
-        var vertexCount = 0u;
-        
+    
         // BACK
         if (needBack)
         {
+            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 -halfScale + x, -halfScale + y, -halfScale, u, v, ti,   // Bottom-left
                 halfScale + x, -halfScale + y, -halfScale, u, v, ti,   // Bottom-right
                 halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Top-right
                 -halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Top-left
             ]);
-            
+        
             uint[] backIndices = [0, 1, 2, 2, 3, 0];
             foreach (var index in backIndices)
             {
-                indices.Add(index + indicesOffset + vertexCount);
+                indices.Add(index + currentIndex);
             }
-            vertexCount += 4;
         }
-        
+    
         // FRONT
         if (needFront)
         {
+            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 -halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Bottom-left
                 halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Bottom-right
                 halfScale + x,  halfScale + y,  halfScale, u, v, ti,  // Top-right
                 -halfScale + x,  halfScale + y,  halfScale, u, v, ti,  // Top-left
             ]);
-            
+        
             uint[] frontIndices = [0, 1, 2, 2, 3, 0];
             foreach (var index in frontIndices)
             {
-                indices.Add(index + indicesOffset + vertexCount);
+                indices.Add(index + currentIndex);
             }
-            vertexCount += 4;
         }
-        
+    
         // LEFT
         if (needLeft)
         {
+            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 -halfScale + x,  halfScale + y,  halfScale, u, v, ti, // Top-front
                 -halfScale + x,  halfScale + y, -halfScale, u, v, ti, // Top-back
                 -halfScale + x, -halfScale + y, -halfScale, u, v, ti,// Bottom-back
                 -halfScale + x, -halfScale + y,  halfScale, u, v, ti,// Bottom-front
             ]);
-            
+        
             uint[] leftIndices = [0, 1, 2, 2, 3, 0];
             foreach (var index in leftIndices)
             {
-                indices.Add(index + indicesOffset + vertexCount);
+                indices.Add(index + currentIndex);
             }
-            vertexCount += 4;
         }
-        
+    
         // RIGHT
         if (needRight)
         {
+            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 halfScale + x,  halfScale + y,  halfScale, u, v, ti, // Top-front
                 halfScale + x,  halfScale + y, -halfScale, u, v, ti,  // Top-back
                 halfScale + x, -halfScale + y, -halfScale, u, v, ti, // Bottom-back
                 halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Bottom-front
             ]);
-            
+        
             uint[] rightIndices = [0, 1, 2, 2, 3, 0];
             foreach (var index in rightIndices)
             {
-                indices.Add(index + indicesOffset + vertexCount);
+                indices.Add(index + currentIndex);
             }
-            vertexCount += 4;
         }
-        
+    
         // BOTTOM
+        var bottomIndex = (uint)(vertices.Count / 6);
         vertices.AddRange([
             -halfScale + x, -halfScale + y, -halfScale, u, v, ti, // Back-left
             halfScale + x, -halfScale + y, -halfScale, u, v, ti,  // Back-right
             halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Front-right
             -halfScale + x, -halfScale + y,  halfScale, u, v, ti,  // Front-left
         ]);
-        
+    
         uint[] bottomIndices = [0, 1, 2, 2, 3, 0];
         foreach (var index in bottomIndices)
         {
-            indices.Add(index + indicesOffset + vertexCount);
+            indices.Add(index + bottomIndex);
         }
-        vertexCount += 4;
-        
+    
         // TOP
+        var topIndex = (uint)(vertices.Count / 6);
         vertices.AddRange([
             -halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Back-left
             halfScale + x,  halfScale + y, -halfScale, u, v, ti,    // Back-right
             halfScale + x,  halfScale + y,  halfScale, u, v, ti,   // Front-right
             -halfScale + x,  halfScale + y,  halfScale, u, v, ti,   // Front-left
         ]);
-        
+    
         uint[] topIndices = [0, 1, 2, 2, 3, 0];
         foreach (var index in topIndices)
         {
-            indices.Add(index + indicesOffset + vertexCount);
+            indices.Add(index + topIndex);
         }
-        vertexCount += 4;
-
-        indicesOffset += vertexCount;
     }
 
     private static SpriteSolidMap LoadImageDataForItem(string texture)
