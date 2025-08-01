@@ -20,6 +20,7 @@ public class ChunkSystem
 
     private FastNoiseLite _noise;
     private readonly ChunkGenerator _chunkGenerator;
+    private readonly NewChunkGenerator _newChunkGenerator;
 
     private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, int>>> _modifiedBlocks = new();
     private readonly ObjectPool<ChunkRenderer> _chunkRendererPool;
@@ -32,6 +33,7 @@ public class ChunkSystem
         _noise = new FastNoiseLite(DateTime.Now.Millisecond);
         _noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase);
+        _newChunkGenerator = new NewChunkGenerator(_noise, _blockDatabase);
         _chunkRendererPool =
             new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase));
     }
@@ -191,7 +193,8 @@ public class ChunkSystem
 
     private Chunk CreateChunk(int worldX, int worldY)
     {
-        var chunkData = _chunkGenerator.GenerateFlatWorld(new Vector2D<int>(worldX, worldY));
+        var chunkGenerator = new FinalNewChunkGenerator(_noise, _blockDatabase, 123);
+        var chunkData = chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
         {
