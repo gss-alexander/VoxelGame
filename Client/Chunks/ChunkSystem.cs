@@ -43,7 +43,8 @@ public class ChunkSystem
         _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase);
         _newChunkGenerator = new NewChunkGenerator(_noise, _blockDatabase);
         _chunkRendererPool =
-            new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase));
+            new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase), _ => {});
+        _chunkRendererPool.Prewarm(128);
     }
 
     public void StartChunkGenerationThread()

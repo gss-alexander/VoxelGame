@@ -10,31 +10,18 @@ public class ChunkRenderer
     public bool HasTransparentBlocks { get; private set; }
     
     private readonly GL _gl;
-    private readonly BlockTextures _blockTextures;
-    private readonly BlockDatabase _blockDatabase;
 
     private readonly MeshRenderer _opaqueMeshRenderer;
     private readonly MeshRenderer _transparentMeshRenderer;
 
-    private readonly List<float> _opaqueVerticesBuffer = new();
-    private readonly List<uint> _opaqueIndicesBuffer = new();
-    private readonly List<float> _transparentVerticesBuffer = new();
-    private readonly List<uint> _transparentIndicesBuffer = new();
-    
     public ChunkRenderer(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _gl = gl;
-        _blockTextures = blockTextures;
-        _blockDatabase = blockDatabase;
-
         _opaqueMeshRenderer = CreateMeshRenderer();
         _transparentMeshRenderer = CreateMeshRenderer();
 
         const int maxFaces = Chunk.Size * Chunk.Height * Chunk.Size * 6;
-        _opaqueVerticesBuffer.EnsureCapacity(maxFaces * 28);
-        _opaqueIndicesBuffer.EnsureCapacity(maxFaces * 6);
-        _transparentVerticesBuffer.EnsureCapacity(maxFaces * 28);
-        _transparentIndicesBuffer.EnsureCapacity(maxFaces * 6);
+
     }
     
     public void RenderOpaque()

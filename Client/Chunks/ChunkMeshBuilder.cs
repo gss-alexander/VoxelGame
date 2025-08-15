@@ -5,6 +5,9 @@ namespace Client.Chunks;
 
 public static class ChunkMeshBuilder
 {
+    private static readonly ObjectPool<List<float>> _vertexBufferPool = new(() => new List<float>(), list => list.Clear());
+    private static readonly ObjectPool<List<uint>> _indexBufferPool = new(() => new List<uint>(), list => list.Clear());
+    
     public readonly struct ChunkMeshGenerationResult
     {
         public Mesh Opaque { get; }
@@ -19,10 +22,10 @@ public static class ChunkMeshBuilder
     
     public static ChunkMeshGenerationResult Create(ChunkData chunkData, BlockDatabase blockDatabase, BlockTextures blockTextures)
     {
-        var opaqueVertices = new List<float>();
-        var opaqueIndices = new List<uint>();
-        var transparentIndices = new List<uint>();
-        var transparentVertices = new List<float>();
+        var opaqueVertices = _vertexBufferPool.Get();
+        var opaqueIndices = _indexBufferPool.Get();
+        var transparentIndices = _indexBufferPool.Get();
+        var transparentVertices = _vertexBufferPool.Get();
 
         var transparentIndicesOffset = 0u;
         var opaqueIndicesOffset = 0u;
@@ -90,10 +93,16 @@ public static class ChunkMeshBuilder
             }
         }
 
-        return new ChunkMeshGenerationResult(
+        var result = new ChunkMeshGenerationResult(
             new Mesh(opaqueVertices.ToArray(), opaqueIndices.ToArray()),
             new Mesh(transparentVertices.ToArray(), transparentIndices.ToArray())
         );
+        _vertexBufferPool.Release(opaqueVertices);
+        _vertexBufferPool.Release(transparentVertices);
+        _indexBufferPool.Release(opaqueIndices);
+        _indexBufferPool.Release(transparentIndices);
+
+        return result;
     }
     
     private static bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData, BlockDatabase blockDatabase)
