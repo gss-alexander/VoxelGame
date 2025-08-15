@@ -68,14 +68,12 @@ public class Player
     {
         if (_entity.IsGrounded)
         {
-            Console.WriteLine("Stopping flying as we are on ground");
             _isFlying = false;
             return currentVelocity;
         }
 
         if (doubleJump)
         {
-            Console.WriteLine("Stopped flying due to double press");
             _isFlying = false;
             return currentVelocity;
         }
