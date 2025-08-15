@@ -12,4 +12,10 @@ public struct Mesh
         Vertices = vertices;
         Indices = indices;
     }
+
+    public Mesh(ReadOnlySpan<float> vertices, ReadOnlySpan<uint> indices)
+    {
+        Vertices = vertices.ToArray();
+        Indices = indices.ToArray();
+    }
 }

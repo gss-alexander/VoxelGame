@@ -28,7 +28,7 @@ public class ChunkSystem
 
     private readonly ConcurrentQueue<Vector2D<int>> _chunkGenerationQueue = new();
     private readonly ConcurrentQueue<Chunk> _readyChunksAwaitingRenderingQueue = new();
-    private readonly ConcurrentDictionary<Vector2D<int>, Chunk> _readyChunksAwaitingRendering = new();
+    private readonly ConcurrentDictionary<Vector2D<int>, Tuple<Chunk, ChunkMeshBuilder.ChunkMeshGenerationResult>> _readyChunksAwaitingRendering = new();
     private readonly HashSet<Vector2D<int>> _chunksBeingGenerated = new();
 
     private CancellationTokenSource _cancellationTokenSource;
@@ -71,7 +71,8 @@ public class ChunkSystem
             {
                 Console.WriteLine($"[Chunk System - Chunk generation thread]: Starting generation of chunk {chunkPosition}");
                 var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
-                _readyChunksAwaitingRendering.TryAdd(chunkPosition, newChunk);
+                var mesh = ChunkMeshBuilder.Create(newChunk.Data, _blockDatabase, _blockTextures);
+                _readyChunksAwaitingRendering.TryAdd(chunkPosition, new Tuple<Chunk, ChunkMeshBuilder.ChunkMeshGenerationResult>(newChunk, mesh));
             }
         }
     }
@@ -176,6 +177,7 @@ public class ChunkSystem
         }
         
         // Find chunks that are within the render distance of the player and is not currently visible
+        var chunksToGenerate = new List<Vector2D<int>>();
         for (var x = -renderDistance; x <= renderDistance; x++)
         {
             for (var y = -renderDistance; y <= renderDistance; y++)
@@ -185,12 +187,16 @@ public class ChunkSystem
                 var currentChunkPos = new Vector2D<int>(playerX, playerY);
                 if (!_visibleChunks.ContainsKey(currentChunkPos) && 
                     !_readyChunksAwaitingRendering.ContainsKey(currentChunkPos) &&
-                    !_chunksBeingGenerated.Contains(currentChunkPos))
+                    _chunksBeingGenerated.Add(currentChunkPos))
                 {
-                    _chunksBeingGenerated.Add(currentChunkPos);
-                    _chunkGenerationQueue.Enqueue(currentChunkPos);
+                    chunksToGenerate.Add(currentChunkPos);
                 }
             }
+        }
+
+        foreach (var chunk in chunksToGenerate.OrderBy(c => CalculateChunkPositionDistance(playerChunkPosition, c)))
+        {
+            _chunkGenerationQueue.Enqueue(chunk);
         }
 
         var chunksToProcess = _readyChunksAwaitingRendering.Keys.ToList();
@@ -202,8 +208,9 @@ public class ChunkSystem
                 if (!_visibleChunks.ContainsKey(chunkPos))
                 {
                     var renderer = _chunkRendererPool.Get();
-                    chunkToFinish.SetRenderer(renderer);
-                    _visibleChunks.Add(chunkPos, chunkToFinish);
+                    var (chunk, meshResult) = chunkToFinish;
+                    chunk.SetRenderer(renderer, meshResult.Opaque, meshResult.Transparent);
+                    _visibleChunks.Add(chunkPos, chunk);
                 }
             } 
         }
@@ -245,7 +252,7 @@ public class ChunkSystem
 
     private Chunk CreateChunk(int worldX, int worldY)
     {
-        var chunkGenerator = new FinalNewChunkGenerator(_noise, _blockDatabase, 123);
+        var chunkGenerator = new FinalNewChunkGenerator(_noise, _blockDatabase, 12345);
         var chunkData = chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))

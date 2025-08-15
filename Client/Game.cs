@@ -215,7 +215,7 @@ public class Game
         _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
         _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 4);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 8);
 
         if (_isFirstUpdate)
         {

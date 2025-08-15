@@ -5,9 +5,6 @@ namespace Client.Chunks;
 
 public static class ChunkMeshBuilder
 {
-    private static readonly ObjectPool<List<float>> _vertexBufferPool = new(() => new List<float>(), list => list.Clear());
-    private static readonly ObjectPool<List<uint>> _indexBufferPool = new(() => new List<uint>(), list => list.Clear());
-    
     public readonly struct ChunkMeshGenerationResult
     {
         public Mesh Opaque { get; }
@@ -19,13 +16,18 @@ public static class ChunkMeshBuilder
             Transparent = transparent;
         }
     }
+
+    private static readonly ObjectPool<ArrayBuffer<float>> _vertexBuffers =
+        new(() => new ArrayBuffer<float>(Chunk.Size * Chunk.Height * Chunk.Size * 6 * 24), buffer => buffer.Clear());
+    private static readonly ObjectPool<ArrayBuffer<uint>> _indexBuffers =
+        new(() => new ArrayBuffer<uint>(Chunk.Size * Chunk.Height * Chunk.Size * 6 * 6), buffer => buffer.Clear());
     
     public static ChunkMeshGenerationResult Create(ChunkData chunkData, BlockDatabase blockDatabase, BlockTextures blockTextures)
     {
-        var opaqueVertices = _vertexBufferPool.Get();
-        var opaqueIndices = _indexBufferPool.Get();
-        var transparentIndices = _indexBufferPool.Get();
-        var transparentVertices = _vertexBufferPool.Get();
+        var opaqueVertices = _vertexBuffers.Get();
+        var opaqueIndices = _indexBuffers.Get();
+        var transparentIndices = _indexBuffers.Get();
+        var transparentVertices = _vertexBuffers.Get();
 
         var transparentIndicesOffset = 0u;
         var opaqueIndicesOffset = 0u;
@@ -65,19 +67,19 @@ public static class ChunkMeshBuilder
                             var vV = face.Vertices[vertexIndex + 4];
                             var brightness = face.Vertices[vertexIndex + 5];
         
-                            vertices.Add(vX);
-                            vertices.Add(vY);
-                            vertices.Add(vZ);
-                            vertices.Add(vU);
-                            vertices.Add(vV);
-                            vertices.Add(textureIndex);
-                            vertices.Add(brightness); 
+                            vertices.Write(vX);
+                            vertices.Write(vY);
+                            vertices.Write(vZ);
+                            vertices.Write(vU);
+                            vertices.Write(vV);
+                            vertices.Write(textureIndex);
+                            vertices.Write(brightness); 
                         }
 
                         foreach (var index in face.Indices)
                         {
                             var indicesOffset = isTransparent ? transparentIndicesOffset : opaqueIndicesOffset;
-                            indices.Add(index + indicesOffset);
+                            indices.Write(index + indicesOffset);
                         }
 
                         if (isTransparent)
@@ -94,13 +96,15 @@ public static class ChunkMeshBuilder
         }
 
         var result = new ChunkMeshGenerationResult(
-            new Mesh(opaqueVertices.ToArray(), opaqueIndices.ToArray()),
-            new Mesh(transparentVertices.ToArray(), transparentIndices.ToArray())
+            new Mesh(opaqueVertices.Read(), opaqueIndices.Read()),
+            new Mesh(transparentVertices.Read(), transparentIndices.Read())
         );
-        _vertexBufferPool.Release(opaqueVertices);
-        _vertexBufferPool.Release(transparentVertices);
-        _indexBufferPool.Release(opaqueIndices);
-        _indexBufferPool.Release(transparentIndices);
+        
+        _vertexBuffers.Release(opaqueVertices);
+        _vertexBuffers.Release(transparentVertices);
+        
+        _indexBuffers.Release(opaqueIndices);
+        _indexBuffers.Release(transparentIndices);
 
         return result;
     }

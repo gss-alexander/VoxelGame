@@ -7,6 +7,7 @@ namespace Client.Chunks;
 
 public class Chunk
 {
+    public ChunkData Data => _data;
     public ChunkRenderer? Renderer { get; private set; }
 
     public Vector2 ChunkWorldCenter => new Vector2(Position.X, Position.Y) * Size;
@@ -41,11 +42,10 @@ public class Chunk
         _blockDatabase = blockDatabase;
     }
 
-    public void SetRenderer(ChunkRenderer renderer)
+    public void SetRenderer(ChunkRenderer renderer, Mesh opaqueMesh, Mesh transparentMesh)
     {
         Renderer = renderer;
-        var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures);
-        Renderer.SetMeshes(newMeshes.Opaque, newMeshes.Transparent);
+        Renderer.SetMeshes(opaqueMesh, transparentMesh);
     }
 
     public void RenderOpaque()
