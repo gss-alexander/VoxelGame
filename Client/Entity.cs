@@ -10,6 +10,7 @@ public class Entity
     public Vector3 Velocity { get; set; }
     public Vector3 Size { get; set; }
     public bool IsGrounded { get; set; }
+    public bool GravityEnabled { get; set; }
 
     private readonly Func<Vector3, bool> _isBlockSolidFunc;
     
@@ -30,6 +31,7 @@ public class Entity
 
     private void ApplyGravity(float deltaTime)
     {
+        if (!GravityEnabled) return;
         Velocity = Velocity with { Y = Velocity.Y - Gravity * deltaTime };
     }
 

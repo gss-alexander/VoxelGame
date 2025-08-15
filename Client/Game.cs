@@ -3,6 +3,7 @@ using System.Numerics;
 using Client.Blocks;
 using Client.Chunks;
 using Client.Crafting;
+using Client.Inputs;
 using Client.Items;
 using Client.Items.Dropping;
 using Client.UI;
@@ -67,9 +68,10 @@ public class Game
 
     private bool _playerControlsEnabled = false;
 
+    private ActionContext _actionContext;
+
     public unsafe void Load(IWindow window)
     {
-        
         _window = window;
         
         var inputContext = window.CreateInput();
@@ -85,6 +87,8 @@ public class Game
         }
 
         _primaryMouse = inputContext.Mice.First();
+
+        _actionContext = new ActionContext(_primaryKeyboard, _primaryMouse);
 
         _gl = window.CreateOpenGL();
         
@@ -111,7 +115,7 @@ public class Game
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
-        });
+        }, _actionContext);
 
         _blockSelector = new BlockSelector(_blockDatabase);
 
@@ -197,6 +201,8 @@ public class Game
 
     public void Update(double deltaTime)
     {
+        _actionContext.CollectInputs((float)deltaTime);
+        
         // this is here because the actual mouse click event is extremely slow...
         var isLeftClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Left);
         if (isLeftClickPressed != _lastLeftClickStatus && isLeftClickPressed)
@@ -215,7 +221,7 @@ public class Game
         _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
         _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 8);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 12);
 
         if (_isFirstUpdate)
         {
@@ -283,7 +289,7 @@ public class Game
 
 
         var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera() : Vector3.Zero;
-        _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z), _primaryKeyboard.IsKeyPressed(Key.Space));
+        _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z));
         _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
         
         // var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
