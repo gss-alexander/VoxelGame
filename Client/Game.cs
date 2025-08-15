@@ -1,8 +1,10 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Numerics;
 using Client.Blocks;
 using Client.Chunks;
 using Client.Crafting;
+using Client.Diagnostics;
 using Client.Inputs;
 using Client.Items;
 using Client.Items.Dropping;
@@ -69,6 +71,10 @@ public class Game
     private bool _playerControlsEnabled = false;
 
     private ActionContext _actionContext;
+
+    private readonly TimeAverageTracker _updateTimeAverage = new(60);
+    private readonly TimeAverageTracker _renderTimeAverage = new(60);
+    private readonly TimeAverageTracker _deltaTimeAverage = new(60);
 
     public unsafe void Load(IWindow window)
     {
@@ -199,8 +205,11 @@ public class Game
     private bool _lastLeftClickStatus;
     private bool _lastRightClickStatus;
 
+    private readonly Stopwatch _updateStopwatch = new();
+
     public void Update(double deltaTime)
     {
+        _updateStopwatch.Restart();
         _actionContext.CollectInputs((float)deltaTime);
         
         // this is here because the actual mouse click event is extremely slow...
@@ -306,10 +315,16 @@ public class Game
         _itemDroppingSystem.Update((float)deltaTime);
         
         _uiRenderer.Update(_primaryMouse.Position);
+        
+        _updateStopwatch.Stop();
+        _updateTimeAverage.AddTime((float)_updateStopwatch.Elapsed.TotalSeconds);
+        _deltaTimeAverage.AddTime((float)deltaTime);
     }
 
+    private readonly Stopwatch _renderStopwatch = new();
     public unsafe void Render(double deltaTime)
     {
+        _renderStopwatch.Restart();
         _imGuiController.Update((float)deltaTime);
         
         _gl.Enable(EnableCap.DepthTest);
@@ -350,7 +365,9 @@ public class Game
         _gl.DepthMask(true);
         
         ImGuiNET.ImGui.Begin("Debug");
-        ImGuiNET.ImGui.Text($"FPS: {1.0 / deltaTime:F1}");
+        ImGuiNET.ImGui.Text($"FPS: {1.0 / _deltaTimeAverage.AverageTime:F1}");
+        ImGuiNET.ImGui.Text($"Average update time: {_updateTimeAverage.AverageTime}");
+        ImGuiNET.ImGui.Text($"Average render time: {_renderTimeAverage.AverageTime}");
         ImGuiNET.ImGui.Text($"Visible chunks: {_chunkSystem.VisibleChunkCount}");
         ImGuiNET.ImGui.Text($"Player position: {_player.Position}");
         ImGuiNET.ImGui.Text($"Player chunk position: {Chunk.WorldToChunkPosition(_camera.Position)}");
@@ -375,6 +392,9 @@ public class Game
         _uiRenderer.Render();
         
         _imGuiController.Render();
+
+        _renderStopwatch.Stop();
+        _renderTimeAverage.AddTime((float)_renderStopwatch.Elapsed.TotalSeconds);
         
         // UI RENDERING - END
     }
