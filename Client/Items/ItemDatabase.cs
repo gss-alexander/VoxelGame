@@ -23,7 +23,7 @@ public class ItemDatabase
             var blockItemData = new BlockItemData()
             {
                 DisplayName = block.DisplayName,
-                ExternalId = block.ExternalId,
+                ExternalId = block.ExternalId.ToSnakeCase(),
                 Texture = "missing.png" // todo: needs generated block sprite texture
             };
             _items.Add(blockItemData.ExternalId, blockItemData);

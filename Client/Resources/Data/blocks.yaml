@@ -93,3 +93,17 @@ blocks:
     - item: "plank"
       probability: 1.0
       count: 1
+      
+  crafting_table:
+    display_name: "Crafting table"
+    textures:
+      default: "crafting_table_side.png"
+      top: "crafting_table_top.png"
+      bottom: "crafting_table_top.png"
+    is_transparent: false
+    is_solid: true
+    strength: 5.0
+    drops:
+      - item: "crafting_table"
+        probability: 1.0
+        count: 1
