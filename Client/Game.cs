@@ -173,6 +173,8 @@ public class Game
         _playerInventory.Storage.AddItem("log", 5);
         _playerInventory.Storage.AddItem("plank", 47);
         _playerInventory.Storage.AddItem("stick", 19);
+        
+        _chunkSystem.StartChunkGenerationThread();
     }
 
     private static string GetTexturePath(string name)
@@ -224,7 +226,7 @@ public class Game
             {
                 if (!_chunkSystem.IsBlockSolid(new Vector3D<int>(0, y, 0)))
                 {
-                    _player.Position = new Vector3(0f, y + 1.5f, 0f);
+                    _player.Position = new Vector3(0f, y + 100.5f, 0f);
                     break;
                 }
             }
@@ -416,6 +418,7 @@ public class Game
         Console.WriteLine($"Key \"{pressedKey}\" pressed!");
         if (pressedKey == Key.Escape)
         {
+            _chunkSystem.StopChunkGenerationThread();
             _window.Close();
         }
 

@@ -7,7 +7,7 @@ namespace Client.Chunks;
 
 public class Chunk
 {
-    public ChunkRenderer Renderer { get; }
+    public ChunkRenderer? Renderer { get; private set; }
 
     public Vector2 ChunkWorldCenter => new Vector2(Position.X, Position.Y) * Size;
     public Vector2D<int> Position => _data.Position;
@@ -16,6 +16,7 @@ public class Chunk
     public const int Height = 256;
 
     private readonly ChunkData _data;
+    private readonly BlockTextures _blockTextures;
     private readonly BlockDatabase _blockDatabase;
 
     public static Vector2D<int> WorldToChunkPosition(Vector3 worldPosition)
@@ -33,12 +34,18 @@ public class Chunk
         );
     }
 
-    public Chunk(GL gl, ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase, ChunkRenderer chunkRenderer)
+    public Chunk(GL gl, ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _data = data;
+        _blockTextures = blockTextures;
         _blockDatabase = blockDatabase;
-        Renderer = chunkRenderer;
-        Renderer.RegenerateMeshes(_data);
+    }
+
+    public void SetRenderer(ChunkRenderer renderer)
+    {
+        Renderer = renderer;
+        var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures);
+        Renderer.SetMeshes(newMeshes.Opaque, newMeshes.Transparent);
     }
 
     public void RenderOpaque()
@@ -56,30 +63,13 @@ public class Chunk
         return Renderer.HasTransparentBlocks;
     }
 
-    public void GenerateFlatWorld()
-    {
-        const int height = 6;
-        for (var x = 0; x < Size; x++)
-        {
-            for (var z = 0; z < Size; z++)
-            {
-                for (var y = 0; y < height - 2; y++)
-                {
-                    SetBlock(x, y, z, _blockDatabase.GetInternalId("cobblestone"), false);
-                }
-                
-                SetBlock(x, height - 2, z, _blockDatabase.GetInternalId("dirt"), false);
-                SetBlock(x, height - 1, z, _blockDatabase.GetInternalId("grass"), false);
-            }
-        }
-    }
-
     public void SetBlock(int x, int y, int z, int block, bool regenerateMesh = true)
     {
         _data.SetBlock(new Vector3D<int>(x, y, z), block);
         if (regenerateMesh)
         {
-            Renderer.RegenerateMeshes(_data);
+            var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures);
+            Renderer.SetMeshes(newMeshes.Opaque, newMeshes.Transparent);
         }
     }
 

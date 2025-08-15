@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Concurrent;
+using System.Numerics;
 using Client.Blocks;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -24,6 +25,13 @@ public class ChunkSystem
 
     private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, int>>> _modifiedBlocks = new();
     private readonly ObjectPool<ChunkRenderer> _chunkRendererPool;
+
+    private readonly ConcurrentQueue<Vector2D<int>> _chunkGenerationQueue = new();
+    private readonly ConcurrentQueue<Chunk> _readyChunksAwaitingRenderingQueue = new();
+    private readonly ConcurrentDictionary<Vector2D<int>, Chunk> _readyChunksAwaitingRendering = new();
+    private readonly HashSet<Vector2D<int>> _chunksBeingGenerated = new();
+
+    private CancellationTokenSource _cancellationTokenSource;
     
     public ChunkSystem(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
@@ -36,6 +44,35 @@ public class ChunkSystem
         _newChunkGenerator = new NewChunkGenerator(_noise, _blockDatabase);
         _chunkRendererPool =
             new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase));
+    }
+
+    public void StartChunkGenerationThread()
+    {
+        Console.WriteLine($"[Chunk System]: Starting chunk generation thread");
+        _cancellationTokenSource = new CancellationTokenSource();
+        Task.Run(() =>
+        {
+            ChunkGenerationLoop(_cancellationTokenSource.Token);
+        });
+    }
+
+    public void StopChunkGenerationThread()
+    {
+        _cancellationTokenSource.Cancel();
+        Console.WriteLine($"[Chunk System]: Stopped chunk generation thread");
+    }
+
+    private void ChunkGenerationLoop(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (_chunkGenerationQueue.TryDequeue(out var chunkPosition))
+            {
+                Console.WriteLine($"[Chunk System - Chunk generation thread]: Starting generation of chunk {chunkPosition}");
+                var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
+                _readyChunksAwaitingRendering.TryAdd(chunkPosition, newChunk);
+            }
+        }
     }
 
     public bool IsBlockSolid(Vector3D<int> blockPosition)
@@ -138,24 +175,38 @@ public class ChunkSystem
         }
         
         // Find chunks that are within the render distance of the player and is not currently visible
-        var chunksInRange = new List<Vector2D<int>>();
         for (var x = -renderDistance; x <= renderDistance; x++)
         {
             for (var y = -renderDistance; y <= renderDistance; y++)
             {
                 var playerX = x + playerChunkPosition.X;
                 var playerY = y + playerChunkPosition.Y;
-                if (_visibleChunks.All(kvp => kvp.Value.Position.X != playerX || kvp.Value.Position.Y != playerY))
+                var currentChunkPos = new Vector2D<int>(playerX, playerY);
+                if (!_visibleChunks.ContainsKey(currentChunkPos) && 
+                    !_readyChunksAwaitingRendering.ContainsKey(currentChunkPos) &&
+                    !_chunksBeingGenerated.Contains(currentChunkPos))
                 {
-                    chunksInRange.Add(new Vector2D<int>(playerX, playerY));
+                    _chunksBeingGenerated.Add(currentChunkPos);
+                    _chunkGenerationQueue.Enqueue(currentChunkPos);
                 }
             }
         }
-        foreach (var chunkPosition in chunksInRange)
+
+        var chunksToProcess = _readyChunksAwaitingRendering.Keys.ToList();
+        foreach (var chunkPos in chunksToProcess)
         {
-            var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
-            _visibleChunks.Add(chunkPosition, newChunk);
+            if (_readyChunksAwaitingRendering.TryRemove(chunkPos, out var chunkToFinish))
+            {
+                _chunksBeingGenerated.Remove(chunkPos); // Remove from tracking
+                if (!_visibleChunks.ContainsKey(chunkPos))
+                {
+                    var renderer = _chunkRendererPool.Get();
+                    chunkToFinish.SetRenderer(renderer);
+                    _visibleChunks.Add(chunkPos, chunkToFinish);
+                }
+            } 
         }
+        
     }
     
     public void RenderChunks()
@@ -204,7 +255,7 @@ public class ChunkSystem
                 chunkData.SetBlock(pos, modifiedBlock.Item2);
             }
         }
-        var chunk = new Chunk(_gl, chunkData, _blockTextures, _blockDatabase, _chunkRendererPool.Get());
+        var chunk = new Chunk(_gl, chunkData, _blockTextures, _blockDatabase);
         return chunk;
     }
 }
