@@ -37,6 +37,11 @@ public class BlockDatabase
         return _externalToInternalIdMapping[externalId];
     }
 
+    public string GetExternalId(int id)
+    {
+        return _blocks[id].ExternalId;
+    }
+
     public BlockData GetById(int id)
     {
         return _blocks[id];

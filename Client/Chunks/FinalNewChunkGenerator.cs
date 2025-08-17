@@ -35,6 +35,20 @@ public class FinalNewChunkGenerator
         return chunkData;
     }
 
+    public bool IsVirtualBlockSolid(Vector3D<int> blockWorldPosition)
+    {
+        var height = GetHeightAtPosition(new Vector2D<int>(blockWorldPosition.X, blockWorldPosition.Z));
+
+        if (blockWorldPosition.Y < height - 3)
+            return true;
+        else if (blockWorldPosition.Y < height - 1)
+            return true;
+        else if (blockWorldPosition.Y == height - 1)
+            return true;
+
+        return false;
+    }
+
     private void GenerateTerrain(ChunkData chunkData)
     {
         _noise.SetSeed(_seed);

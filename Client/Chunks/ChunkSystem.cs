@@ -20,8 +20,7 @@ public class ChunkSystem
     private readonly List<Vector2D<int>> _chunksToHide = new();
 
     private FastNoiseLite _noise;
-    private readonly ChunkGenerator _chunkGenerator;
-    private readonly NewChunkGenerator _newChunkGenerator;
+    private readonly FinalNewChunkGenerator _chunkGenerator;
 
     private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, int>>> _modifiedBlocks = new();
     private readonly ObjectPool<ChunkRenderer> _chunkRendererPool;
@@ -40,11 +39,10 @@ public class ChunkSystem
         _blockDatabase = blockDatabase;
         _noise = new FastNoiseLite(DateTime.Now.Millisecond);
         _noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
-        _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase);
-        _newChunkGenerator = new NewChunkGenerator(_noise, _blockDatabase);
         _chunkRendererPool =
             new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase), _ => {});
         _chunkRendererPool.Prewarm(128);
+        _chunkGenerator = new FinalNewChunkGenerator(_noise, _blockDatabase, 12345);
     }
 
     public void StartChunkGenerationThread()
@@ -89,6 +87,26 @@ public class ChunkSystem
         return chunk.IsBlockSolid(localPosition.X, localPosition.Y, localPosition.Z);
     }
 
+    public bool IsVirtualBlockSolid(Vector3D<int> blockPosition)
+    {
+        var isVirtuallySolid = _chunkGenerator.IsVirtualBlockSolid(blockPosition);
+
+        var isModifiedAndNotSolid = false;
+        var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
+        if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlocksInChunk))
+        {
+            foreach (var (pos, id) in modifiedBlocksInChunk)
+            {
+                if (blockPosition == pos)
+                {
+                    isModifiedAndNotSolid = !_blockDatabase.GetById(id).IsSolid;
+                    break;
+                }
+            }
+        }
+
+        return isVirtuallySolid && !isModifiedAndNotSolid;
+    }
     
     public Vector3D<int> BlockToLocalPosition(Vector3D<int> blockPosition)
     {
@@ -121,6 +139,34 @@ public class ChunkSystem
         SetBlock(blockPosition, blockId);
     }
 
+    public void ApplyPersistedBlockChanges(Dictionary<Vector3D<int>, string> changes)
+    {
+        foreach (var (worldPosition, externalBlockId) in changes)
+        {
+            var chunkPosition = Chunk.BlockToChunkPosition(worldPosition);
+            var blockId = _blockDatabase.GetInternalId(externalBlockId);
+            RegisterModifiedBlock(chunkPosition, worldPosition, blockId);
+        }
+    }
+
+    public Dictionary<Vector3D<int>, string> GetModifiedBlocks()
+    {
+        // Convert the internal modified block collection to one that is external friendly. Calculates the world position
+        // as they are stored by their local chunk coordinates, and they use internal int IDs.
+        
+        var result = new Dictionary<Vector3D<int>, string>();
+        foreach (var (_, modifiedBlocks) in _modifiedBlocks)
+        {
+            foreach (var (blockPosition, blockId) in modifiedBlocks)
+            {
+                var externalId = _blockDatabase.GetExternalId(blockId);
+                result.Add(blockPosition, externalId);
+            }
+        }
+
+        return result;
+    }
+
     private void SetBlock(Vector3D<int> blockPosition, int blockId)
     {
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
@@ -131,7 +177,11 @@ public class ChunkSystem
 
         var localPosition = BlockToLocalPosition(blockPosition);
         chunk.SetBlock(localPosition.X, localPosition.Y, localPosition.Z, blockId);
+        RegisterModifiedBlock(chunkPosition, blockPosition, blockId);
+    }
 
+    private void RegisterModifiedBlock(Vector2D<int> chunkPosition, Vector3D<int> blockPosition, int blockId)
+    {
         if (!_modifiedBlocks.ContainsKey(chunkPosition))
         {
             _modifiedBlocks.Add(chunkPosition, new List<(Vector3D<int>, int)>());
@@ -156,6 +206,72 @@ public class ChunkSystem
         }
     }
 
+    public void ForceLoad(Vector3 playerWorldPosition, int renderDistance)
+    {
+        var playerChunkPosition = Chunk.WorldToChunkPosition(playerWorldPosition);
+        
+        // Hide all chunks that are outside of the render distance of the player
+        _chunksToHide.Clear();
+        foreach (var (chunkPos, chunk) in _visibleChunks)
+        {
+            var distance = CalculateChunkPositionDistance(playerChunkPosition, chunk.Position);
+            if (CalculateChunkPositionDistance(playerChunkPosition, chunk.Position) > renderDistance)
+            {
+                _chunksToHide.Add(chunkPos);
+            }
+        }
+        foreach (var chunkPos in _chunksToHide)
+        {
+            _chunkRendererPool.Release(_visibleChunks[chunkPos].Renderer);
+            _visibleChunks.Remove(chunkPos);
+        }
+        
+        // Find chunks that are within the render distance of the player and is not currently visible
+        var chunksToGenerate = new List<Vector2D<int>>();
+        for (var x = -renderDistance; x <= renderDistance; x++)
+        {
+            for (var y = -renderDistance; y <= renderDistance; y++)
+            {
+                var playerX = x + playerChunkPosition.X;
+                var playerY = y + playerChunkPosition.Y;
+                var currentChunkPos = new Vector2D<int>(playerX, playerY);
+                if (!_visibleChunks.ContainsKey(currentChunkPos) && 
+                    !_readyChunksAwaitingRendering.ContainsKey(currentChunkPos) &&
+                    _chunksBeingGenerated.Add(currentChunkPos))
+                {
+                    chunksToGenerate.Add(currentChunkPos);
+                }
+            }
+        }
+
+        foreach (var chunk in chunksToGenerate.OrderBy(c => CalculateChunkPositionDistance(playerChunkPosition, c)))
+        {
+            _chunkGenerationQueue.Enqueue(chunk);
+        }
+
+        // Can I really call myself a programmer after this?
+        while (_readyChunksAwaitingRendering.Count < renderDistance * 6)
+        {
+            continue;
+        }
+
+        var chunksToProcess = _readyChunksAwaitingRendering.Keys.ToList();
+        foreach (var chunkPos in chunksToProcess)
+        {
+            if (_readyChunksAwaitingRendering.TryRemove(chunkPos, out var chunkToFinish))
+            {
+                _chunksBeingGenerated.Remove(chunkPos); // Remove from tracking
+                if (!_visibleChunks.ContainsKey(chunkPos))
+                {
+                    var renderer = _chunkRendererPool.Get();
+                    var (chunk, meshResult) = chunkToFinish;
+                    chunk.SetRenderer(renderer, meshResult.Opaque, meshResult.Transparent);
+                    _visibleChunks.Add(chunkPos, chunk);
+                }
+            }
+        }
+    }
+    
     public void UpdateChunkVisibility(Vector3 playerWorldPosition, int renderDistance)
     {
         var playerChunkPosition = Chunk.WorldToChunkPosition(playerWorldPosition);
@@ -214,7 +330,6 @@ public class ChunkSystem
                 }
             } 
         }
-        
     }
     
     public void RenderChunks()
@@ -252,8 +367,7 @@ public class ChunkSystem
 
     private Chunk CreateChunk(int worldX, int worldY)
     {
-        var chunkGenerator = new FinalNewChunkGenerator(_noise, _blockDatabase, 12345);
-        var chunkData = chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
+        var chunkData = _chunkGenerator.Generate(new Vector2D<int>(worldX, worldY));
         var chunkPosition = new Vector2D<int>(worldX, worldY);
         if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlockList))
         {

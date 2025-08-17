@@ -8,6 +8,7 @@ using Client.Diagnostics;
 using Client.Inputs;
 using Client.Items;
 using Client.Items.Dropping;
+using Client.Persistence;
 using Client.UI;
 using Client.UI.Text;
 using Silk.NET.Input;
@@ -184,8 +185,14 @@ public class Game
         _playerInventory.Storage.AddItem("plank", 47);
         _playerInventory.Storage.AddItem("stick", 19);
         
+        _isWorldLoaded = TryLoadingWorld(); 
+        
         _chunkSystem.StartChunkGenerationThread();
+        
+        _chunkSystem.ForceLoad(_player.Position, 4);
     }
+
+    private bool _isWorldLoaded;
 
     private static string GetTexturePath(string name)
     {
@@ -234,17 +241,8 @@ public class Game
 
         if (_isFirstUpdate)
         {
+            OnFirstUpdate();
             _isFirstUpdate = false;
-            
-            // set player position to the top of the chunk.
-            for (var y = 0; y < Chunk.Height; y++)
-            {
-                if (!_chunkSystem.IsBlockSolid(new Vector3D<int>(0, y, 0)))
-                {
-                    _player.Position = new Vector3(0f, y + 100.5f, 0f);
-                    break;
-                }
-            }
         }
 
         if (_playerControlsEnabled)
@@ -454,6 +452,25 @@ public class Game
         }
     }
 
+    private void OnFirstUpdate()
+    {
+        if (!_isWorldLoaded)
+        {
+            // set player position to the top of the chunk.
+            for (var y = 0; y < Chunk.Height; y++)
+            {
+                var blockPosition = Block.WorldToBlockPosition(_player.Position);
+                if (!_chunkSystem.IsVirtualBlockSolid(new Vector3D<int>(blockPosition.X, y, blockPosition.Z)))
+                {
+                    _player.Position = _player.Position with { Y = y + 0.5f };
+                    break;
+                }
+            }
+        }
+        
+        OnMouseMove(_primaryMouse, _primaryMouse.Position);
+    }
+
     private Vector2 _lastMousePosition;
 
     private void OnMouseMove(IMouse mouse, Vector2 position)
@@ -464,28 +481,25 @@ public class Game
             _lastMousePosition = position;
         }
         
-        else
+        if (_playerControlsEnabled)
         {
-            if (_playerControlsEnabled)
-            {
-                var xOffset = (position.X - _lastMousePosition.X) * lookSensitivity;
-                var yOffset = (position.Y - _lastMousePosition.Y) * lookSensitivity;
+            var xOffset = (position.X - _lastMousePosition.X) * lookSensitivity;
+            var yOffset = (position.Y - _lastMousePosition.Y) * lookSensitivity;
 
-                _camera.Yaw += xOffset;
-                _camera.Pitch -= yOffset;
+            _camera.Yaw += xOffset;
+            _camera.Pitch -= yOffset;
 
-                _camera.Pitch = Math.Clamp(_camera.Pitch, -89.0f, 89.0f);
+            _camera.Pitch = Math.Clamp(_camera.Pitch, -89.0f, 89.0f);
 
-                var direction = _camera.Direction;
-                direction.X = MathF.Cos(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
-                direction.Y = MathF.Sin(MathUtil.DegreesToRadians(_camera.Pitch));
-                direction.Z = MathF.Sin(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
-                _camera.Direction = direction;
-                _camera.Front = Vector3.Normalize(direction);
-            }
-            
-            _lastMousePosition = position;
+            var direction = _camera.Direction;
+            direction.X = MathF.Cos(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
+            direction.Y = MathF.Sin(MathUtil.DegreesToRadians(_camera.Pitch));
+            direction.Z = MathF.Sin(MathUtil.DegreesToRadians(_camera.Yaw)) * MathF.Cos(MathUtil.DegreesToRadians(_camera.Pitch));
+            _camera.Direction = direction;
+            _camera.Front = Vector3.Normalize(direction);
         }
+            
+        _lastMousePosition = position;
     }
 
     private void OnMouseClicked(IMouse mouse, MouseButton button, Vector2 position)
@@ -498,5 +512,37 @@ public class Game
     {
         var direction = scrollWheel.Y > 0 ? 1 : -1;
         _playerInventory.CycleSelectedHotbarSlot(direction);
+    }
+
+    private bool TryLoadingWorld()
+    {
+        if (WorldStorage.DoesWorldExist("Test world"))
+        {
+            var worldData = WorldStorage.LoadFromName("Test world");
+            _chunkSystem.ApplyPersistedBlockChanges(worldData.ModifiedBlocks);
+            _player.Position = worldData.PlayerPosition;
+            _camera.Pitch = worldData.CameraPitch;
+            _camera.Yaw = worldData.CameraYaw;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void OnClosing()
+    {
+        var worldData = new WorldData("Test world");
+        
+        // Register all modified blocks
+        foreach (var kvp in _chunkSystem.GetModifiedBlocks())
+        {
+            worldData.AddModifiedBlock(kvp.Key, kvp.Value);
+        }
+        
+        worldData.PlayerPosition = _player.Position;
+        worldData.CameraPitch = _camera.Pitch;
+        worldData.CameraYaw = _camera.Yaw;
+        
+        WorldStorage.StoreWorld(worldData);
     }
 }
