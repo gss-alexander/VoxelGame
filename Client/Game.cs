@@ -80,6 +80,8 @@ public class Game
 
     private CloudSystem _cloudSystem;
 
+    private ItemDatabase _itemDatabase;
+
     public unsafe void Load(IWindow window)
     {
         _window = window;
@@ -143,6 +145,7 @@ public class Game
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
+        _itemDatabase = itemDatabase;
         _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
         var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
         _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
@@ -391,6 +394,34 @@ public class Game
             ImGuiNET.ImGui.Text($"Looking at block face: NaN");
         }
         ImGuiNET.ImGui.Text($"Selected block: {_blockDatabase.GetById(_blockSelector.CurrentBlock).DisplayName}");
+        ImGuiNET.ImGui.Separator();
+        var availableItems = _itemDatabase.All;
+        if (ImGuiNET.ImGui.BeginCombo("Item", availableItems[_selectedItemIndex].DisplayName))
+        {
+            for (var i = 0; i < availableItems.Length; i++)
+            {
+                bool isSelected = (_selectedItemIndex == i);
+                if (ImGuiNET.ImGui.Selectable(availableItems[i].DisplayName, isSelected))
+                {
+                    _selectedItemIndex = i;
+                }
+
+                if (isSelected)
+                {
+                    ImGuiNET.ImGui.SetItemDefaultFocus();
+                }
+            }
+            ImGuiNET.ImGui.EndCombo();
+        }
+
+        if (ImGuiNET.ImGui.Button("+1"))
+        {
+            _playerInventory.Storage.AddItem(availableItems[_selectedItemIndex].ExternalId, 1);
+        }
+        if (ImGuiNET.ImGui.Button("+16"))
+        {
+            _playerInventory.Storage.AddItem(availableItems[_selectedItemIndex].ExternalId, 16);
+        }
         ImGuiNET.ImGui.End(); 
         
         _crosshairRenderer.Render();
@@ -405,6 +436,8 @@ public class Game
         
         // UI RENDERING - END
     }
+
+    private int _selectedItemIndex = 0;
 
     private Vector3 GetMovementInputWithCamera()
     {
