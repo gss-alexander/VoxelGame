@@ -18,4 +18,18 @@ public struct Mesh
         Vertices = vertices.ToArray();
         Indices = indices.ToArray();
     }
+
+    public Mesh(IEnumerable<Mesh> individualMeshes)
+    {
+        var vertices = new List<float>();
+        var indices = new List<uint>();
+        foreach (var mesh in individualMeshes)
+        {
+            vertices.AddRange(mesh.Vertices);
+            indices.AddRange(mesh.Indices);
+        }
+
+        Vertices = vertices.ToArray();
+        Indices = indices.ToArray();
+    }
 }

@@ -1,4 +1,23 @@
-﻿namespace Client.Blocks;
+﻿using Silk.NET.Maths;
+
+namespace Client.Blocks;
+
+public static class FaceDirectionExtensions
+{
+    public static Vector3D<int> GetVectorOffset(this BlockGeometry.FaceDirection direction)
+    {
+        return direction switch
+        {
+            BlockGeometry.FaceDirection.Back => new Vector3D<int>(0, 0, -1),
+            BlockGeometry.FaceDirection.Front => new Vector3D<int>(0, 0, 1),
+            BlockGeometry.FaceDirection.Left => new Vector3D<int>(-1, 0, 0),
+            BlockGeometry.FaceDirection.Right => new Vector3D<int>(1, 0, 0),
+            BlockGeometry.FaceDirection.Top => new Vector3D<int>(0, 1, 0),
+            BlockGeometry.FaceDirection.Bottom => new Vector3D<int>(0, -1, 0),
+            _ => throw new NotImplementedException()
+        };
+    }
+}
 
 public static class BlockGeometry
 {

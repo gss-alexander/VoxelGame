@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using Client.Blocks;
 using Client.Chunks;
+using Client.Clouds;
 using Client.Crafting;
 using Client.Diagnostics;
 using Client.Inputs;
@@ -76,6 +77,8 @@ public class Game
     private readonly TimeAverageTracker _updateTimeAverage = new(60);
     private readonly TimeAverageTracker _renderTimeAverage = new(60);
     private readonly TimeAverageTracker _deltaTimeAverage = new(60);
+
+    private CloudSystem _cloudSystem;
 
     public unsafe void Load(IWindow window)
     {
@@ -189,7 +192,10 @@ public class Game
         
         _chunkSystem.StartChunkGenerationThread();
         
-        _chunkSystem.ForceLoad(_player.Position, 4);
+        _chunkSystem.ForceLoad(_player.Position, 1);
+
+        _cloudSystem = new CloudSystem(_gl);
+        _cloudSystem.GenerateClouds();
     }
 
     private bool _isWorldLoaded;
@@ -237,7 +243,7 @@ public class Game
         _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
         _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 12);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 4);
 
         if (_isFirstUpdate)
         {
@@ -314,6 +320,8 @@ public class Game
         
         _uiRenderer.Update(_primaryMouse.Position);
         
+        _cloudSystem.Update((float)deltaTime);
+        
         _updateStopwatch.Stop();
         _updateTimeAverage.AddTime((float)_updateStopwatch.Elapsed.TotalSeconds);
         _deltaTimeAverage.AddTime((float)deltaTime);
@@ -353,7 +361,8 @@ public class Game
         _itemDroppingSystem.RenderDroppedItems(view, projection);
         
         _blockBreaking.Render(view, projection);
-        // _itemDropRenderer.Render(view, projection);
+        
+        _cloudSystem.Render(view, projection);
         
         // WORLD RENDERING - END
         
