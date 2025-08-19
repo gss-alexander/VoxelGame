@@ -5,6 +5,7 @@ using Client.Blocks;
 using Client.Chunks;
 using Client.Clouds;
 using Client.Crafting;
+using Client.Debug;
 using Client.Diagnostics;
 using Client.Inputs;
 using Client.Items;
@@ -81,6 +82,8 @@ public class Game
     private CloudSystem _cloudSystem;
 
     private ItemDatabase _itemDatabase;
+
+    private DebugMenu _debugMenu;
 
     public unsafe void Load(IWindow window)
     {
@@ -199,6 +202,9 @@ public class Game
 
         _cloudSystem = new CloudSystem(_gl);
         _cloudSystem.GenerateClouds();
+
+        _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
+            _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player);
     }
 
     private bool _isWorldLoaded;
@@ -304,9 +310,18 @@ public class Game
         }
 
 
-        var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera() : Vector3.Zero;
-        _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z));
-        _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
+        if (!_debugMenu.FreeCamEnabled)
+        {
+            var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera(true) : Vector3.Zero;
+            _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z));
+            _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
+        }
+        else
+        {
+            const float freecamSpeed = 20f;
+            var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera(false) : Vector3.Zero;
+            _camera.Position += movementInput * (freecamSpeed * (float)deltaTime);
+        }
         
         // var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
         // _primaryMouse.Cursor.CursorMode = cursorMode;
@@ -374,55 +389,7 @@ public class Game
         _gl.DepthMask(false);
         _gl.DepthMask(true);
         
-        ImGuiNET.ImGui.Begin("Debug");
-        ImGuiNET.ImGui.Text($"FPS: {1.0 / _deltaTimeAverage.AverageTime:F1}");
-        ImGuiNET.ImGui.Text($"Average update time: {_updateTimeAverage.AverageTime}");
-        ImGuiNET.ImGui.Text($"Average render time: {_renderTimeAverage.AverageTime}");
-        ImGuiNET.ImGui.Text($"Visible chunks: {_chunkSystem.VisibleChunkCount}");
-        ImGuiNET.ImGui.Text($"Player position: {_player.Position}");
-        ImGuiNET.ImGui.Text($"Player chunk position: {Chunk.WorldToChunkPosition(_camera.Position)}");
-        var raycastHit = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
-        if (raycastHit.HasValue)
-        {
-            ImGuiNET.ImGui.Text($"Looking at block pos: {raycastHit.Value.Position}");
-            ImGuiNET.ImGui.Text($"Looking at block face: {raycastHit.Value.Face}");
-        }
-
-        else
-        {
-            ImGuiNET.ImGui.Text($"Looking at block pos: NaN");
-            ImGuiNET.ImGui.Text($"Looking at block face: NaN");
-        }
-        ImGuiNET.ImGui.Text($"Selected block: {_blockDatabase.GetById(_blockSelector.CurrentBlock).DisplayName}");
-        ImGuiNET.ImGui.Separator();
-        var availableItems = _itemDatabase.All;
-        if (ImGuiNET.ImGui.BeginCombo("Item", availableItems[_selectedItemIndex].DisplayName))
-        {
-            for (var i = 0; i < availableItems.Length; i++)
-            {
-                bool isSelected = (_selectedItemIndex == i);
-                if (ImGuiNET.ImGui.Selectable(availableItems[i].DisplayName, isSelected))
-                {
-                    _selectedItemIndex = i;
-                }
-
-                if (isSelected)
-                {
-                    ImGuiNET.ImGui.SetItemDefaultFocus();
-                }
-            }
-            ImGuiNET.ImGui.EndCombo();
-        }
-
-        if (ImGuiNET.ImGui.Button("+1"))
-        {
-            _playerInventory.Storage.AddItem(availableItems[_selectedItemIndex].ExternalId, 1);
-        }
-        if (ImGuiNET.ImGui.Button("+16"))
-        {
-            _playerInventory.Storage.AddItem(availableItems[_selectedItemIndex].ExternalId, 16);
-        }
-        ImGuiNET.ImGui.End(); 
+        _debugMenu.Draw();
         
         _crosshairRenderer.Render();
         // _uiRenderer.Render(_window.Size.X, _window.Size.Y, _shader, _itemTextures);
@@ -437,9 +404,8 @@ public class Game
         // UI RENDERING - END
     }
 
-    private int _selectedItemIndex = 0;
 
-    private Vector3 GetMovementInputWithCamera()
+    private Vector3 GetMovementInputWithCamera(bool projectToHorizontalPlane)
     {
         var inputVector = Vector2.Zero;
     
@@ -460,10 +426,13 @@ public class Game
         var right = -_camera.Right;
     
         // Project onto horizontal plane (remove Y component for ground movement)
-        forward.Y = 0;
-        right.Y = 0;
-        forward = Vector3.Normalize(forward);
-        right = Vector3.Normalize(right);
+        if (projectToHorizontalPlane)
+        {
+            forward.Y = 0;
+            right.Y = 0;
+            forward = Vector3.Normalize(forward);
+            right = Vector3.Normalize(right);
+        }
 
         if (inputVector == Vector2.Zero)
         {
