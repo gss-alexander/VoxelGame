@@ -10,7 +10,7 @@ public class CloudRenderer
     
     public CloudRenderer(GL gl, Mesh cloudsMesh)
     {
-        _cloudShader = Shaders.GetShader(gl, "cloud");
+        _cloudShader = Shaders.GetShader("cloud");
         
         _meshRenderer = new MeshRenderer(gl, cloudsMesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 4, 0);

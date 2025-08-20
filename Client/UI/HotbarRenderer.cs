@@ -46,8 +46,8 @@ public class HotbarRenderer
         _itemSpritesRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
         _itemSpritesRenderer.Unbind();
         
-        _uiSpriteShader = Shaders.GetShader(gl, "itemUiSprite");
-        _uiShader = Shaders.GetShader(gl, "ui");
+        _uiSpriteShader = Shaders.GetShader("itemUiSprite");
+        _uiShader = Shaders.GetShader("ui");
     }
 
     public int GetClickedSlotIndex(Vector2 screenPosition)

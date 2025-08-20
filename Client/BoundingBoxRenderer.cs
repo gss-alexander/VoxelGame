@@ -36,7 +36,7 @@ public class BoundingBoxRenderer
     public BoundingBoxRenderer(GL gl)
     {
         _gl = gl;
-        _shader = Shaders.GetShader(_gl, "line");
+        _shader = Shaders.GetShader( "line");
 
         _gl.BindVertexArray(0);
         _vbo = new BufferObject<float>(_gl, LineVertices, BufferTargetARB.ArrayBuffer);

@@ -54,8 +54,8 @@ public class CraftingGridUi
         _resultItemRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
         _resultItemRenderer.Unbind();
         
-        _uiSpriteShader = Shaders.GetShader(gl, "itemUiSprite");
-        _uiShader = Shaders.GetShader(_gl, "ui");
+        _uiSpriteShader = Shaders.GetShader("itemUiSprite");
+        _uiShader = Shaders.GetShader("ui");
     }
     
     public void Render()

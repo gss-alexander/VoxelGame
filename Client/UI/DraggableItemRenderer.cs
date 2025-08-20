@@ -40,7 +40,7 @@ public class DraggableItemRenderer
         _itemSpriteRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
         _itemSpriteRenderer.Unbind();
         
-        _uiSpriteShader = Shaders.GetShader(gl, "itemUiSprite");
+        _uiSpriteShader = Shaders.GetShader("itemUiSprite");
     }
 
     public void SetDragging(string itemId, int count)

@@ -14,7 +14,7 @@ public class BlockRenderer : IWorldRenderable
     public BlockRenderer(GL gl, BlockItemData blockItemData, BlockDatabase blockDatabase, BlockTextures blockTextures)
     {
         _blockTextures = blockTextures;
-        _shader = Shaders.GetShader(gl, "shader");
+        _shader = Shaders.GetShader("shader");
 
         var mesh = BlockMeshGenerator.Generate(blockItemData, blockDatabase, blockTextures);
         _meshRenderer = new MeshRenderer(gl, mesh);
