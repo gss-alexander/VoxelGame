@@ -108,6 +108,7 @@ public class Game
         _actionContext = new ActionContext(_primaryKeyboard, _primaryMouse);
 
         _gl = window.CreateOpenGL();
+        OpenGl.Context = _gl;
         
         _blockData = BlockDataLoader.Load(Path.Combine("..", "..", "..", "Resources", "Data", "blocks.yaml"));
         _blockDatabase = new BlockDatabase(_blockData);
@@ -115,7 +116,7 @@ public class Game
 
         _chunkSystem = new ChunkSystem(_gl, _blockTextures, _blockDatabase);
 
-        _shader = new Shader(_gl,
+        _shader = new Shader(
             GetShaderPath("shader.vert"),
             GetShaderPath("shader.frag")
         );
@@ -144,7 +145,7 @@ public class Game
         _inventory.Hotbar.Add(1, (_blockDatabase.GetInternalId("dirt"), 25));
         
         var characterMap = new CharacterMap(_gl);
-        var textShader = new Shader(_gl, GetShaderPath("text.vert"), GetShaderPath("text.frag"));
+        var textShader = new Shader(GetShaderPath("text.vert"), GetShaderPath("text.frag"));
         _textRenderer = new TextRenderer(_gl, textShader, characterMap);
         
         var items = ItemLoader.Load();
@@ -152,7 +153,7 @@ public class Game
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
         _itemDatabase = itemDatabase;
         _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
-        var itemDropShader = new Shader(_gl, GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
+        var itemDropShader = new Shader(GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
         _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
@@ -174,7 +175,7 @@ public class Game
         _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
 
         var blockBreakingShader =
-            new Shader(_gl, GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
+            new Shader(GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
         var blockBreakingTextureArray = new TextureArrayBuilder(16, 16)
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "1.png"))
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "2.png"))

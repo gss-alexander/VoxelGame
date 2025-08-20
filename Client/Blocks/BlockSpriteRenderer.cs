@@ -28,7 +28,7 @@ public class BlockSpriteRenderer
 
     public byte[] GetBlockTextureData(int blockId)
     {
-        var blockShader = Shaders.GetShader(_gl, "shader");
+        var blockShader = Shaders.GetShader("shader");
         var data = RenderBlockToData(blockId, blockShader, _blockTextures);
         return data;
     }
