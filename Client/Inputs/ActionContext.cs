@@ -41,7 +41,6 @@ public class ActionContext
     {
         _currentTime += deltaTime;
         
-        // Reset double press flags
         foreach (var key in _doublePressed.Keys.ToList())
         {
             _doublePressed[key] = false;
@@ -49,11 +48,25 @@ public class ActionContext
         
         UpdateKeyboardAction(InputAction.Jump, Key.Space);
         UpdateKeyboardAction(InputAction.Crouch, Key.ControlLeft);
+        UpdateKeyboardAction(InputAction.MoveForward, Key.W);
+        UpdateKeyboardAction(InputAction.MoveBackward, Key.S);
+        UpdateKeyboardAction(InputAction.MoveLeft, Key.A);
+        UpdateKeyboardAction(InputAction.MoveRight, Key.D);
     }
 
     private void UpdateKeyboardAction(InputAction action, Key associatedKey)
     {
-        if (_keyboard.IsKeyPressed(associatedKey))
+        UpdateAction(action, _keyboard.IsKeyPressed(associatedKey));
+    }
+
+    private void UpdateMouseAction(InputAction action, MouseButton associatedMouseButton)
+    {
+        UpdateAction(action, _mouse.IsButtonPressed(associatedMouseButton));
+    }
+
+    private void UpdateAction(InputAction action, bool isPressed)
+    {
+        if (isPressed)
         {
             var currentState = _actions[action];
             

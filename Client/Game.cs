@@ -356,7 +356,6 @@ public class Game
         _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
         _gl.ClearColor(0.47f, 0.742f, 1f, 1.0f);
         _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
-    
         
         _blockTextures.Textures.Bind(TextureUnit.Texture0);
         _shader.Use();
@@ -409,16 +408,16 @@ public class Game
     {
         var inputVector = Vector2.Zero;
     
-        if (_primaryKeyboard.IsKeyPressed(Key.W))
+        if (_actionContext.IsHeld(InputAction.MoveForward))
             inputVector.Y += 1f; // Forward
     
-        if (_primaryKeyboard.IsKeyPressed(Key.S))
+        if (_actionContext.IsHeld(InputAction.MoveBackward))
             inputVector.Y -= 1f; // Backward
     
-        if (_primaryKeyboard.IsKeyPressed(Key.D))
+        if (_actionContext.IsHeld(InputAction.MoveRight))
             inputVector.X += 1f; // Right
     
-        if (_primaryKeyboard.IsKeyPressed(Key.A))
+        if (_actionContext.IsHeld(InputAction.MoveLeft))
             inputVector.X -= 1f; // Left
 
         // Transform input based on camera orientation
