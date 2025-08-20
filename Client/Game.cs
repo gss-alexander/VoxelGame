@@ -13,6 +13,7 @@ using Client.Items.Dropping;
 using Client.Persistence;
 using Client.UI;
 using Client.UI.Text;
+using Client.UILib;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -87,9 +88,13 @@ public class Game
 
     private GraphicsSettings _graphicsSettings = new();
 
+    private Image _testImage;
+    private Text _testText;
+
     public unsafe void Load(IWindow window)
     {
         _window = window;
+        ApplicationData.WindowDimensions = _window.Size.AsFloatVector();
         
         var inputContext = window.CreateInput();
         _primaryKeyboard = inputContext.Keyboards.First();
@@ -210,6 +215,14 @@ public class Game
             _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player);
 
         _graphicsSettings.RenderDistance = 4;
+
+        var craftingTableTexture = new Texture(_gl, GetTexturePath("Blocks/crafting_table_side.png"));
+        _testImage = new Image(new Vector2(ApplicationData.WindowDimensions.X / 2f, ApplicationData.WindowDimensions.Y / 2f), new Vector2(0.5f, 0.5f), new Vector2(300f, 300f),
+            new Vector3(1f, 1f, 1f));
+        _testImage.Texture = craftingTableTexture;
+
+        _testText = new Text(new Vector2(100f, 100f), new Vector2(200f, 200f), new Vector2(0f, 0f));
+        _testText.Content = "This is a testing string OwO #420BlazeIt";
     }
 
     private bool _isWorldLoaded;
@@ -400,19 +413,20 @@ public class Game
         
         _debugMenu.Draw();
         
-        _crosshairRenderer.Render();
+        // _crosshairRenderer.Render();
+        _testImage.Render();
+        _testText.Render();
         // _uiRenderer.Render(_window.Size.X, _window.Size.Y, _shader, _itemTextures);
         // _hotbarRenderer.Render();
-        _uiRenderer.Render();
-        
-        _imGuiController.Render();
+        // _uiRenderer.Render();
+        //
+        // _imGuiController.Render();
 
         _renderStopwatch.Stop();
         _renderTimeAverage.AddTime((float)_renderStopwatch.Elapsed.TotalSeconds);
         
         // UI RENDERING - END
     }
-
 
     private Vector3 GetMovementInputWithCamera(bool projectToHorizontalPlane)
     {
@@ -455,6 +469,7 @@ public class Game
     {
         _gl.Viewport(newSize);
         _frameBufferSize = newSize;
+        ApplicationData.WindowDimensions = newSize.AsFloatVector();
     }
 
     public void OnKeyDown(IKeyboard keyboard, Key pressedKey, int keyCode)
