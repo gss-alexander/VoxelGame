@@ -38,10 +38,7 @@ public class BlockPlacement
         _placeBlockAction(Block.GetFaceNeighbour(raycastHit.Value.Position, raycastHit.Value.Face), blockId);
         _playerInventory.Hotbar.RemoveItemFromSlot(_playerInventory.SelectedHotbarSlot, 1);
         var blockData = _blockDatabase.GetById(blockId);
-        if (blockData.PlacementSoundId != null)
-        {
-            _soundPlayer.PlaySound(blockData.PlacementSoundId);
-        }
+        _soundPlayer.PlaySound(blockData.PlacementSoundId ?? "blocks/placement/default");
         
         return true;
     }
