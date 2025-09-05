@@ -65,7 +65,7 @@ public class BlockBreaking
         _currentDestruction = 0f;
     }
 
-    public void UpdateDestruction(float deltaTime, bool isDestroying, bool lookingAtBlock)
+    public void UpdateDestruction(float deltaTime, bool isDestroying, BlockData? lookingAtBlock)
     {
         if (!isDestroying)
         {
@@ -74,9 +74,9 @@ public class BlockBreaking
             return;
         }
 
-        if (_timeUntilNextSoundClip <= 0.0f && lookingAtBlock)
+        if (_timeUntilNextSoundClip <= 0.0f && lookingAtBlock != null)
         {
-            _soundPlayer.PlaySound("block_break");
+            _soundPlayer.PlaySound(lookingAtBlock.BreakingSoundId ?? "blocks/breaking/default");
             _timeUntilNextSoundClip = DestructionSoundFrequencyInSeconds;
         }
         else

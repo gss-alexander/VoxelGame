@@ -41,5 +41,6 @@ public class BlockData
     public bool IsTransparent { get; set; }
     public bool IsSolid { get; set; }
     public string? PlacementSoundId { get; set; }
+    public string? BreakingSoundId { get; set; }
     public BlockDrop[]? Drops { get; set; }
 }

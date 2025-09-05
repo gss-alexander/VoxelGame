@@ -290,7 +290,16 @@ public class Game
             {
                 _blockBreaking.ClearLookingAtBlock();
             }
-            _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left), raycast.HasValue);
+
+            BlockData? lookingAtBlockData = null;
+            if (raycast.HasValue)
+            {
+                var hit = raycast.Value;
+                var blockId = _chunkSystem.GetBlock(hit.Position);
+                lookingAtBlockData = _blockDatabase.GetById(blockId);
+            }
+            
+            _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left), lookingAtBlockData);
             if (_blockBreaking.ShouldBreak)
             {
                 var hit = raycast.Value;

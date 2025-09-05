@@ -3,7 +3,7 @@ sounds:
     path: "witch.wav"
   blocks/placement/default:
     path: "block_place.wav"
-  block_break:
+  blocks/breaking/default:
     path: "block_break.wav"
   blocks/placement/glass:
     path: "glass_place.wav"

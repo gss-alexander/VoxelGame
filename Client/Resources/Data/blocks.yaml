@@ -11,6 +11,7 @@ blocks:
         probability: 1.0
         count: 1
     placement_sound_id: "blocks/placement/default"
+    breaking_sound_id: "step"
     
   grass:
     display_name: "Grass"
