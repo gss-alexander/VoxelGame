@@ -4,6 +4,15 @@ namespace Client.Audio;
 
 public class AudioSource : IDisposable
 {
+    public bool IsPlaying
+    {
+        get
+        {
+            Al.GetSourcei(_sourceHandle, Al.SourceState, out var state);
+            return state == Al.Playing;
+        }
+    }
+
     public AudioClip? Clip
     {
         get => _clip;

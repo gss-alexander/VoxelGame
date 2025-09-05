@@ -40,5 +40,6 @@ public class BlockData
     public float Strength { get; set; }
     public bool IsTransparent { get; set; }
     public bool IsSolid { get; set; }
+    public string? PlacementSoundId { get; set; }
     public BlockDrop[]? Drops { get; set; }
 }

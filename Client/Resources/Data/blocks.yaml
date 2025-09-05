@@ -10,9 +10,7 @@ blocks:
       - item: "dirt"
         probability: 1.0
         count: 1
-      - item: "coal"
-        probability: 0.5
-        count: 1
+    placement_sound_id: "blocks/placement/default"
     
   grass:
     display_name: "Grass"
@@ -61,6 +59,7 @@ blocks:
     - item: "glass"
       probability: 1.0
       count: 1
+    placement_sound_id: "blocks/placement/glass"
     
   leaves:
     display_name: "Leaves"

@@ -136,7 +136,7 @@ public class Game
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
-        }, _actionContext);
+        }, _actionContext, _soundPlayer);
 
         _blockSelector = new BlockSelector(_blockDatabase);
 
@@ -187,7 +187,7 @@ public class Game
         _blockPlacement = new BlockPlacement(_playerInventory, itemDatabase, _blockDatabase, (blockPos, blockId) =>
         {
             _chunkSystem.PlaceBlock(blockPos, blockId);
-        });
+        }, _soundPlayer);
         
         _playerInventory.Hotbar.AddItem("dirt", 45);
         _playerInventory.Hotbar.AddItem("coal", 14);
@@ -207,7 +207,7 @@ public class Game
         _cloudSystem.GenerateClouds();
 
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
-            _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player);
+            _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player, _soundPlayer);
 
     }
 
@@ -239,6 +239,7 @@ public class Game
     {
         _updateStopwatch.Restart();
         _actionContext.CollectInputs((float)deltaTime);
+        _soundPlayer.Update();
         
         // this is here because the actual mouse click event is extremely slow...
         var isLeftClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Left);
@@ -316,7 +317,6 @@ public class Game
                 if (_blockPlacement.Update(raycast, _primaryMouse.IsButtonPressed(MouseButton.Right)))
                 {
                     _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
-                    _soundPlayer.PlaySound("block_place");
                 }
             }
 

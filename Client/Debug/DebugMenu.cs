@@ -2,6 +2,7 @@
 using Client.Chunks;
 using Client.Diagnostics;
 using Client.Items;
+using Client.Sound;
 
 namespace Client.Debug;
 
@@ -20,13 +21,14 @@ public class DebugMenu
     private readonly TimeAverageTracker _renderTimeAverage;
     private readonly ChunkSystem _chunkSystem;
     private readonly Player _player;
+    private readonly SoundPlayer _soundPlayer;
 
     private int _selectedItemIndex;
 
     public DebugMenu(Camera camera, BlockDatabase blockDatabase, BlockSelector blockSelector, ItemDatabase itemDatabase,
         VoxelRaycaster voxelRaycaster, PlayerInventory playerInventory, TimeAverageTracker deltaTimeAverage,
         TimeAverageTracker updateTimeAverage, TimeAverageTracker renderTimeAverage, ChunkSystem chunkSystem,
-        Player player)
+        Player player, SoundPlayer soundPlayer)
     {
         _camera = camera;
         _blockDatabase = blockDatabase;
@@ -39,6 +41,7 @@ public class DebugMenu
         _renderTimeAverage = renderTimeAverage;
         _chunkSystem = chunkSystem;
         _player = player;
+        _soundPlayer = soundPlayer;
     }
 
     public void Draw()
@@ -53,6 +56,8 @@ public class DebugMenu
         DrawItemSelection();
         ImGuiNET.ImGui.Separator();
         DrawToggles();
+        ImGuiNET.ImGui.Separator();
+        DrawSoundInfo();
 
         ImGuiNET.ImGui.End(); 
     }
@@ -127,5 +132,10 @@ public class DebugMenu
         {
             _playerInventory.Storage.AddItem(availableItems[_selectedItemIndex].ExternalId, 16);
         }
+    }
+
+    private void DrawSoundInfo()
+    {
+        ImGuiNET.ImGui.Text($"Active sound sources: {_soundPlayer.ActiveSoundSources}");
     }
 }

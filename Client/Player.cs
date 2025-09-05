@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Client.Inputs;
+using Client.Sound;
 using Silk.NET.Maths;
 
 namespace Client;
@@ -7,6 +8,7 @@ namespace Client;
 public class Player
 {
     private readonly ActionContext _actionContext;
+    private readonly SoundPlayer _soundPlayer;
 
     public Vector3 Position
     {
@@ -19,14 +21,17 @@ public class Player
     private const float GroundMovementSpeed = 5f;
     private const float FlyingMovementSpeed = 10f;
     private const float FlyingElevationChangeSpeed = 6f;
+    private const float FootstepFrequencyInSeconds = 0.4f;
 
     private readonly Entity _entity;
 
     private bool _isFlying;
+    private float _timeUntilNextFootstepInSeconds;
 
-    public Player(Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc, ActionContext actionContext)
+    public Player(Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc, ActionContext actionContext, SoundPlayer soundPlayer)
     {
         _actionContext = actionContext;
+        _soundPlayer = soundPlayer;
         _entity = new Entity(startingPosition, new(0.6f, 1.8f, 0.6f), isBlockSolidFunc);
     }
 
@@ -60,6 +65,8 @@ public class Player
         
         _entity.Velocity = velocity;
         _entity.Update(deltaTime);
+        
+        UpdateFootstepSounds(deltaTime, movementInput != Vector2.Zero);
     }
 
     private float HorizontalSpeed => _isFlying ? FlyingMovementSpeed : GroundMovementSpeed;
@@ -94,5 +101,24 @@ public class Player
         }
 
         return currentVelocity;
+    }
+
+    private void UpdateFootstepSounds(float deltaTime, bool isMoving)
+    {
+        if (!isMoving || !_entity.IsGrounded)
+        {
+            _timeUntilNextFootstepInSeconds = FootstepFrequencyInSeconds;
+            return;
+        }
+
+        if (isMoving && _timeUntilNextFootstepInSeconds <= 0f)
+        {
+            _soundPlayer.PlaySound("step");
+            _timeUntilNextFootstepInSeconds = FootstepFrequencyInSeconds;
+        }
+        else
+        {
+            _timeUntilNextFootstepInSeconds -= deltaTime;
+        }
     }
 }
