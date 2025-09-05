@@ -22,17 +22,22 @@ public class Player
     private const float FlyingMovementSpeed = 10f;
     private const float FlyingElevationChangeSpeed = 6f;
     private const float FootstepFrequencyInSeconds = 0.4f;
+    private const float MinimumMovementThreshold = 0.1f;
 
     private readonly Entity _entity;
 
     private bool _isFlying;
-    private float _timeUntilNextFootstepInSeconds;
+    private float _footstepTimer;
+    private bool _wasGroundedLastFrame;
+    private Vector3 _lastPosition;
 
     public Player(Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc, ActionContext actionContext, SoundPlayer soundPlayer)
     {
         _actionContext = actionContext;
         _soundPlayer = soundPlayer;
         _entity = new Entity(startingPosition, new(0.6f, 1.8f, 0.6f), isBlockSolidFunc);
+        _lastPosition = startingPosition;
+        _wasGroundedLastFrame = false;
     }
 
     public void Update(float deltaTime, Vector2 movementInput)
@@ -66,7 +71,10 @@ public class Player
         _entity.Velocity = velocity;
         _entity.Update(deltaTime);
         
-        UpdateFootstepSounds(deltaTime, movementInput != Vector2.Zero);
+        UpdateFootstepSounds(deltaTime);
+        
+        _wasGroundedLastFrame = _entity.IsGrounded;
+        _lastPosition = _entity.Position;
     }
 
     private float HorizontalSpeed => _isFlying ? FlyingMovementSpeed : GroundMovementSpeed;
@@ -103,22 +111,33 @@ public class Player
         return currentVelocity;
     }
 
-    private void UpdateFootstepSounds(float deltaTime, bool isMoving)
+    private void UpdateFootstepSounds(float deltaTime)
     {
-        if (!isMoving || !_entity.IsGrounded)
+        bool justLanded = _entity.IsGrounded && !_wasGroundedLastFrame;
+        bool isMoving = IsPlayerMoving(deltaTime);
+        
+        if (justLanded && isMoving)
         {
-            _timeUntilNextFootstepInSeconds = FootstepFrequencyInSeconds;
             return;
         }
-
-        if (isMoving && _timeUntilNextFootstepInSeconds <= 0f)
+        
+        if (!isMoving || !_entity.IsGrounded)
+        {
+            _footstepTimer = 0f;
+            return;
+        }
+        
+        _footstepTimer -= deltaTime;
+        if (_footstepTimer <= 0f)
         {
             _soundPlayer.PlaySound("step");
-            _timeUntilNextFootstepInSeconds = FootstepFrequencyInSeconds;
+            _footstepTimer = FootstepFrequencyInSeconds;
         }
-        else
-        {
-            _timeUntilNextFootstepInSeconds -= deltaTime;
-        }
+    }
+    
+    private bool IsPlayerMoving(float deltaTime)
+    {
+        var horizontalMovement = new Vector2(_entity.Position.X - _lastPosition.X, _entity.Position.Z - _lastPosition.Z);
+        return horizontalMovement.Length() > MinimumMovementThreshold * deltaTime;
     }
 }
