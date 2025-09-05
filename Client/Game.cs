@@ -85,8 +85,6 @@ public class Game
 
     private DebugMenu _debugMenu;
 
-    private GraphicsSettings _graphicsSettings = new();
-
     public unsafe void Load(IWindow window)
     {
         _window = window;
@@ -208,8 +206,6 @@ public class Game
 
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
             _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player);
-
-        _graphicsSettings.RenderDistance = 4;
     }
 
     private bool _isWorldLoaded;
@@ -257,7 +253,7 @@ public class Game
         _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
         _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, _graphicsSettings.RenderDistance);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, 4);
 
         if (_isFirstUpdate)
         {
@@ -374,11 +370,6 @@ public class Game
         _shader.SetUniform("uModel", model);
         _shader.SetUniform("uView", view);
         _shader.SetUniform("uProjection", projection);
-        _shader.SetUniform("uCameraPos", _camera.Position);
-        _shader.SetUniform("uFogColor", new Vector3(0.47f, 0.742f, 1.0f));
-        var blockRenderDistance = Chunk.Size * _graphicsSettings.RenderDistance;
-        _shader.SetUniform("uFogNear", (float)blockRenderDistance * 0.8f);
-        _shader.SetUniform("uFogFar", (float)blockRenderDistance);
 
         // WORLD RENDERING - START
         

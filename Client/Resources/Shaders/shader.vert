@@ -7,20 +7,15 @@ layout (location = 3) in float aBrightness;
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
-uniform vec3 uCameraPos;
 
 out vec2 fUv;
 flat out int fTextureIndex;
 out float fBrightness;
-out float fDistance;
 
 void main()
 {
-    vec4 worldPos = uModel * vec4(vPos, 1.0);
-    gl_Position = uProjection * uView * worldPos;
-
+    gl_Position = uProjection * uView * uModel * vec4(vPos, 1.0);
     fUv = vUv;
     fTextureIndex = int(vTextureIndex);
-    fBrightness = aBrightness;
-    fDistance = length(worldPos.xyz - uCameraPos);
+    fBrightness = aBrightness; 
 }
