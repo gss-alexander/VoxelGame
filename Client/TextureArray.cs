@@ -6,13 +6,11 @@ public class TextureArray
 {
     private readonly uint _handle;
     private readonly GL _gl;
-    private readonly uint _layerCount;
 
-    public TextureArray(GL gl, uint handle, uint layerCount)
+    public TextureArray(GL gl, uint handle)
     {
         _handle = handle;
         _gl = gl;
-        _layerCount = layerCount;
     }
 
     public void Bind(TextureUnit textureSlot = TextureUnit.Texture0)

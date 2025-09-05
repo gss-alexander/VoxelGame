@@ -20,7 +20,7 @@ public class ChunkSystem
     private readonly List<Vector2D<int>> _chunksToHide = new();
 
     private FastNoiseLite _noise;
-    private readonly FinalNewChunkGenerator _chunkGenerator;
+    private readonly ChunkGenerator _chunkGenerator;
 
     private readonly Dictionary<Vector2D<int>, List<ValueTuple<Vector3D<int>, int>>> _modifiedBlocks = new();
     private readonly ObjectPool<ChunkRenderer> _chunkRendererPool;
@@ -42,7 +42,7 @@ public class ChunkSystem
         _chunkRendererPool =
             new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase), _ => {});
         _chunkRendererPool.Prewarm(128);
-        _chunkGenerator = new FinalNewChunkGenerator(_noise, _blockDatabase, 12345);
+        _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase, 12345);
     }
 
     public void StartChunkGenerationThread()
@@ -67,7 +67,6 @@ public class ChunkSystem
         {
             if (_chunkGenerationQueue.TryDequeue(out var chunkPosition))
             {
-                Console.WriteLine($"[Chunk System - Chunk generation thread]: Starting generation of chunk {chunkPosition}");
                 var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
                 var mesh = ChunkMeshBuilder.Create(newChunk.Data, _blockDatabase, _blockTextures);
                 _readyChunksAwaitingRendering.TryAdd(chunkPosition, new Tuple<Chunk, ChunkMeshBuilder.ChunkMeshGenerationResult>(newChunk, mesh));

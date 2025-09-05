@@ -55,7 +55,7 @@ public class TextureArrayBuilder
 
         SetParameters(gl);
 
-        return new TextureArray(gl, handle, (uint)_textureData.Count);
+        return new TextureArray(gl, handle);
     }
 
     private static void SetParameters(GL gl)

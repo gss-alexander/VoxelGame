@@ -106,7 +106,6 @@ public static class SpriteMeshGenerator
                 halfScale + x,  halfScale + y, -halfScale, u, v, ti,    // Top-right
                 -halfScale + x,  halfScale + y, -halfScale, u, v, ti,    // Top-left
             ]);
-            Console.WriteLine(indicesOffset);
         
             uint[] backIndices = [0, 1, 2, 2, 3, 0];
             foreach (var index in backIndices)
@@ -120,7 +119,6 @@ public static class SpriteMeshGenerator
         // FRONT
         if (needFront)
         {
-            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 -halfScale + x, -halfScale + y,  halfScale, u, v, ti,   // Bottom-left
                 halfScale + x, -halfScale + y,  halfScale, u, v, ti,   // Bottom-right
@@ -140,7 +138,6 @@ public static class SpriteMeshGenerator
         // LEFT
         if (needLeft)
         {
-            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 -halfScale + x,  halfScale + y,  halfScale, u, v, ti,  // Top-front
                 -halfScale + x,  halfScale + y, -halfScale, u, v, ti,  // Top-back
@@ -160,7 +157,6 @@ public static class SpriteMeshGenerator
         // RIGHT
         if (needRight)
         {
-            var currentIndex = (uint)(vertices.Count / 6);
             vertices.AddRange([
                 halfScale + x,  halfScale + y,  halfScale, u, v, ti,  // Top-front
                 halfScale + x,  halfScale + y, -halfScale, u, v, ti,   // Top-back
@@ -178,7 +174,6 @@ public static class SpriteMeshGenerator
         }
     
         // BOTTOM
-        var bottomIndex = (uint)(vertices.Count / 6);
         vertices.AddRange([
             -halfScale + x, -halfScale + y, -halfScale, u, v, ti,  // Back-left
             halfScale + x, -halfScale + y, -halfScale, u, v, ti,   // Back-right
@@ -195,7 +190,6 @@ public static class SpriteMeshGenerator
         indicesOffset += 4;
     
         // TOP
-        var topIndex = (uint)(vertices.Count / 6);
         vertices.AddRange([
             -halfScale + x,  halfScale + y, -halfScale, u, v, ti,    // Back-left
             halfScale + x,  halfScale + y, -halfScale, u, v, ti,     // Back-right

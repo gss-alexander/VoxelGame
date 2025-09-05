@@ -51,7 +51,6 @@ public class Game
     private Shader _lineShader;
 
     private BlockSpriteRenderer _blockSpriteRenderer;
-    private Inventory _inventory;
 
     private BlockData[] _blockData;
     private BlockTextures _blockTextures;
@@ -138,9 +137,6 @@ public class Game
         _blockSpriteRenderer = new BlockSpriteRenderer(_gl, _blockTextures);
 
         _playerInventory = new PlayerInventory();
-        _inventory = new Inventory();
-        _inventory.Hotbar.Add(0, (_blockDatabase.GetInternalId("cobblestone"), 54));
-        _inventory.Hotbar.Add(1, (_blockDatabase.GetInternalId("dirt"), 25));
         
         var characterMap = new CharacterMap(_gl);
         var textShader = new Shader(GetShaderPath("text.vert"), GetShaderPath("text.frag"));
@@ -324,14 +320,9 @@ public class Game
             _camera.Position += movementInput * (freecamSpeed * (float)deltaTime);
         }
         
-        // var cursorMode = _primaryKeyboard.IsKeyPressed(Key.Tab) ? CursorMode.Normal : CursorMode.Raw;
-        // _primaryMouse.Cursor.CursorMode = cursorMode;
-        
-        
         var pickedUpItems = _itemDroppingSystem.PickUpItems(_player.Position, 1.5f);
         foreach (var pickedUpItem in pickedUpItems)
         {
-            Console.WriteLine($"[Item Pickup]: Picked up {pickedUpItem}");
             _playerInventory.TryAddItem(pickedUpItem, 1);
         }
         
@@ -392,8 +383,6 @@ public class Game
         _debugMenu.Draw();
         
         _crosshairRenderer.Render();
-        // _uiRenderer.Render(_window.Size.X, _window.Size.Y, _shader, _itemTextures);
-        // _hotbarRenderer.Render();
         _uiRenderer.Render();
         
         _imGuiController.Render();
@@ -450,7 +439,6 @@ public class Game
 
     public void OnKeyDown(IKeyboard keyboard, Key pressedKey, int keyCode)
     {
-        Console.WriteLine($"Key \"{pressedKey}\" pressed!");
         if (pressedKey == Key.Escape)
         {
             _chunkSystem.StopChunkGenerationThread();
@@ -515,8 +503,6 @@ public class Game
 
     private void OnMouseClicked(IMouse mouse, MouseButton button, Vector2 position)
     {
-        Console.WriteLine($"clicked with mouse {button} at {position}");
-        // _uiRenderer.OnMouseClicked(button, position);
     }
     
     private void OnMouseWheel(IMouse mouse, ScrollWheel scrollWheel)
