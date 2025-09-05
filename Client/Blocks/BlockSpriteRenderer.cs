@@ -48,7 +48,7 @@ public class BlockSpriteRenderer
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         _gl.Enable(EnableCap.DepthTest);
         
-        var tempBlock = new BlockModel(_gl, blockTextures, blockId, blockShader, Vector3.Zero, _ => false, 1f);
+        var tempBlock = new BlockModel(blockTextures, blockId, blockShader, Vector3.Zero, _ => false, 1f);
         blockShader.Use();
         blockShader.SetUniform("uView", _viewMatrix);
         blockShader.SetUniform("uProjection", _projectionMatrix);

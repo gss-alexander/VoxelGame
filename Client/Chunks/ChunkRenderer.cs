@@ -9,19 +9,13 @@ public class ChunkRenderer
 {
     public bool HasTransparentBlocks { get; private set; }
     
-    private readonly GL _gl;
-
     private readonly MeshRenderer _opaqueMeshRenderer;
     private readonly MeshRenderer _transparentMeshRenderer;
 
-    public ChunkRenderer(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
+    public ChunkRenderer()
     {
-        _gl = gl;
         _opaqueMeshRenderer = CreateMeshRenderer();
         _transparentMeshRenderer = CreateMeshRenderer();
-
-        const int maxFaces = Chunk.Size * Chunk.Height * Chunk.Size * 6;
-
     }
     
     public void RenderOpaque()
@@ -36,9 +30,9 @@ public class ChunkRenderer
 
     private MeshRenderer CreateMeshRenderer()
     {
-        _gl.BindVertexArray(0); // Ensure that we are not binding the EBO and VBO to existing VAO
+        OpenGl.Context.BindVertexArray(0); // Ensure that we are not binding the EBO and VBO to existing VAO
         
-        var renderer = MeshRenderer.Empty(_gl);
+        var renderer = MeshRenderer.Empty();
         renderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
         renderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
         renderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index

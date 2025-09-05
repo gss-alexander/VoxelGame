@@ -12,7 +12,6 @@ public class BlockModel
 
     private const float Gravity = 14f;
     
-    private readonly GL _gl;
     private readonly BlockTextures _blockTextures;
     private readonly Shader _shader;
 
@@ -23,9 +22,8 @@ public class BlockModel
 
     private float _rotation;
     
-    public BlockModel(GL gl, BlockTextures blockTextures, int blockId, Shader shader, Vector3 worldPos, Func<Vector3, bool> isBlockSolidFunc, float size)
+    public BlockModel(BlockTextures blockTextures, int blockId, Shader shader, Vector3 worldPos, Func<Vector3, bool> isBlockSolidFunc, float size)
     {
-        _gl = gl;
         _blockTextures = blockTextures;
         _shader = shader;
         Position = worldPos;
@@ -33,9 +31,9 @@ public class BlockModel
         BlockId = blockId;
         Size = size;
 
-        _gl.BindVertexArray(0); // todo: maybe remove
+        OpenGl.Context.BindVertexArray(0); // todo: maybe remove
         _mesh = GenerateMesh(blockId);
-        _meshRenderer = new MeshRenderer(_gl, _mesh);
+        _meshRenderer = new MeshRenderer(_mesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
         _meshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index

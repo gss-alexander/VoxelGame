@@ -5,18 +5,16 @@ namespace Client.UI.Text;
 
 public class TextRenderer
 {
-    private readonly GL _gl;
     private readonly Shader _shader;
     private readonly CharacterMap _characterMap;
     private readonly MeshRenderer _meshRenderer;
 
-    public TextRenderer(GL gl, Shader shader, CharacterMap characterMap)
+    public TextRenderer(Shader shader, CharacterMap characterMap)
     {
-        _gl = gl;
         _shader = shader;
         _characterMap = characterMap;
 
-        _meshRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
+        _meshRenderer = new MeshRenderer(Mesh.Empty, BufferUsageARB.DynamicDraw);
         _meshRenderer.SetVertexAttribute(0, 4, VertexAttribPointerType.Float, 4, 0);
         _meshRenderer.Unbind();
     }
@@ -39,9 +37,9 @@ public class TextRenderer
             _ => x // Left alignment (default)
         };
 
-        _gl.Disable(EnableCap.DepthTest); 
-        _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        OpenGl.Context.Disable(EnableCap.DepthTest); 
+        OpenGl.Context.Enable(EnableCap.Blend);
+        OpenGl.Context.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
     
         _shader.Use();
         _shader.SetUniform("text", 0);
@@ -72,8 +70,8 @@ public class TextRenderer
         }
     
         _meshRenderer.Unbind();
-        _gl.Enable(EnableCap.DepthTest);
-        _gl.Disable(EnableCap.Blend);
+        OpenGl.Context.Enable(EnableCap.DepthTest);
+        OpenGl.Context.Disable(EnableCap.Blend);
     }
 
     private Mesh GenerateCharacterMesh(float x, float y, float width, float height)

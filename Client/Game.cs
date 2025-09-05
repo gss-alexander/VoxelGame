@@ -26,8 +26,6 @@ namespace Client;
 
 public class Game
 {
-    private GL _gl;
-
     private Shader _shader;
 
     private Camera _camera = new();
@@ -111,14 +109,13 @@ public class Game
 
         _actionContext = new ActionContext(_primaryKeyboard, _primaryMouse);
 
-        _gl = window.CreateOpenGL();
-        OpenGl.Context = _gl;
+        OpenGl.Context = window.CreateOpenGL();
         
         _blockData = BlockDataLoader.Load(Path.Combine("..", "..", "..", "Resources", "Data", "blocks.yaml"));
         _blockDatabase = new BlockDatabase(_blockData);
-        _blockTextures = new BlockTextures(_gl, _blockDatabase);
+        _blockTextures = new BlockTextures(OpenGl.Context, _blockDatabase);
 
-        _chunkSystem = new ChunkSystem(_gl, _blockTextures, _blockDatabase);
+        _chunkSystem = new ChunkSystem(_blockTextures, _blockDatabase);
 
         _shader = new Shader(
             GetShaderPath("shader.vert"),
@@ -129,10 +126,10 @@ public class Game
 
         _frameBufferSize = window.Size;
 
-        _imGuiController = new ImGuiController(_gl, window, inputContext);
+        _imGuiController = new ImGuiController(OpenGl.Context, window, inputContext);
 
         _crosshairRenderer = new CrosshairRenderer();
-        _crosshairRenderer.Initialize(_gl, window.Size.X, window.Size.Y);
+        _crosshairRenderer.Initialize(OpenGl.Context, window.Size.X, window.Size.Y);
 
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
         _player = new Player(new Vector3(0f, 100f, 0f), worldPos =>
@@ -143,38 +140,38 @@ public class Game
 
         _blockSelector = new BlockSelector(_blockDatabase);
 
-        _blockSpriteRenderer = new BlockSpriteRenderer(_gl, _blockTextures);
+        _blockSpriteRenderer = new BlockSpriteRenderer(OpenGl.Context, _blockTextures);
 
         _playerInventory = new PlayerInventory();
         
-        var characterMap = new CharacterMap(_gl);
+        var characterMap = new CharacterMap(OpenGl.Context);
         var textShader = new Shader(GetShaderPath("text.vert"), GetShaderPath("text.frag"));
-        _textRenderer = new TextRenderer(_gl, textShader, characterMap);
+        _textRenderer = new TextRenderer(textShader, characterMap);
         
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
         _itemDatabase = itemDatabase;
-        _itemTextures = new ItemTextures(_gl, itemDatabase, _blockDatabase, _blockSpriteRenderer);
+        _itemTextures = new ItemTextures(OpenGl.Context, itemDatabase, _blockDatabase, _blockSpriteRenderer);
         var itemDropShader = new Shader(GetShaderPath("itemDrop.vert"),  GetShaderPath("itemDrop.frag"));
-        _itemDroppingSystem = new ItemDroppingSystem(_gl, itemDatabase, _itemTextures, itemDropShader, worldPos =>
+        _itemDroppingSystem = new ItemDroppingSystem(itemDatabase, _itemTextures, itemDropShader, worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
 
-        var uiTexture = new Texture(_gl, GetTexturePath("hotbar_slot_background.png"));
-        _hotbarRenderer = new HotbarRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
+        var uiTexture = new Texture(OpenGl.Context, GetTexturePath("hotbar_slot_background.png"));
+        _hotbarRenderer = new HotbarRenderer(OpenGl.Context, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
             uiTexture, _textRenderer);
 
-        var inventoryRenderer = new InventoryRenderer(_gl, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
+        var inventoryRenderer = new InventoryRenderer(_playerInventory, window.Size.AsFloatVector(), _itemTextures,
             uiTexture, _textRenderer);
         var draggableItemRenderer =
-            new DraggableItemRenderer(_gl, _textRenderer, window.Size.AsFloatVector(), _itemTextures);
+            new DraggableItemRenderer(_textRenderer, window.Size.AsFloatVector(), _itemTextures);
 
         var craftingRecipes = CraftingRecipesLoader.Load();
         var craftingGrid = new CraftingGrid(3, 3, craftingRecipes);
-        var craftingGridUi = new CraftingGridUi(_gl, craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
+        var craftingGridUi = new CraftingGridUi(craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
         _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
 
         var blockBreakingShader =
@@ -185,8 +182,8 @@ public class Game
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "3.png"))
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "4.png"))
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
-            .Build(_gl);
-        _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray, _soundPlayer);
+            .Build(OpenGl.Context);
+        _blockBreaking = new BlockBreaking(OpenGl.Context, blockBreakingShader, blockBreakingTextureArray, _soundPlayer);
         _blockPlacement = new BlockPlacement(_playerInventory, itemDatabase, _blockDatabase, (blockPos, blockId) =>
         {
             _chunkSystem.PlaceBlock(blockPos, blockId);
@@ -206,7 +203,7 @@ public class Game
         
         _chunkSystem.ForceLoad(_player.Position, 1);
 
-        _cloudSystem = new CloudSystem(_gl);
+        _cloudSystem = new CloudSystem();
         _cloudSystem.GenerateClouds();
 
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
@@ -375,11 +372,11 @@ public class Game
         _renderStopwatch.Restart();
         // _imGuiController.Update((float)deltaTime);
         
-        _gl.Enable(EnableCap.DepthTest);
-        _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-        _gl.ClearColor(0.47f, 0.742f, 1f, 1.0f);
-        _gl.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
+        OpenGl.Context.Enable(EnableCap.DepthTest);
+        OpenGl.Context.Enable(EnableCap.Blend);
+        OpenGl.Context.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        OpenGl.Context.ClearColor(0.47f, 0.742f, 1f, 1.0f);
+        OpenGl.Context.Clear((uint) (ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit));
         
         _blockTextures.Textures.Bind(TextureUnit.Texture0);
         _shader.Use();
@@ -409,8 +406,8 @@ public class Game
         
         // UI RENDERING - START
         
-        _gl.DepthMask(false);
-        _gl.DepthMask(true);
+        OpenGl.Context.DepthMask(false);
+        OpenGl.Context.DepthMask(true);
         
         _debugMenu.Draw();
         
@@ -465,7 +462,7 @@ public class Game
 
     public void OnFrameBufferResize(Vector2D<int> newSize)
     {
-        _gl.Viewport(newSize);
+        OpenGl.Context.Viewport(newSize);
         _frameBufferSize = newSize;
     }
 

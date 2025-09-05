@@ -10,7 +10,6 @@ public class ChunkSystem
 {
     public int VisibleChunkCount => _visibleChunks.Count;
     
-    private readonly GL _gl;
     private readonly BlockTextures _blockTextures;
     private readonly BlockDatabase _blockDatabase;
 
@@ -32,15 +31,14 @@ public class ChunkSystem
 
     private CancellationTokenSource _cancellationTokenSource;
     
-    public ChunkSystem(GL gl, BlockTextures blockTextures, BlockDatabase blockDatabase)
+    public ChunkSystem(BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
-        _gl = gl;
         _blockTextures = blockTextures;
         _blockDatabase = blockDatabase;
         _noise = new FastNoiseLite(DateTime.Now.Millisecond);
         _noise.SetNoiseType(FastNoiseLite.NoiseType.Perlin);
         _chunkRendererPool =
-            new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(_gl, _blockTextures, _blockDatabase), _ => {});
+            new ObjectPool<ChunkRenderer>(() => new ChunkRenderer(), _ => {});
         _chunkRendererPool.Prewarm(128);
         _chunkGenerator = new ChunkGenerator(_noise, _blockDatabase, 12345);
     }
@@ -376,7 +374,7 @@ public class ChunkSystem
                 chunkData.SetBlock(pos, modifiedBlock.Item2);
             }
         }
-        var chunk = new Chunk(_gl, chunkData, _blockTextures, _blockDatabase);
+        var chunk = new Chunk(chunkData, _blockTextures, _blockDatabase);
         return chunk;
     }
 }

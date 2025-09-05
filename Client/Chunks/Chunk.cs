@@ -35,7 +35,7 @@ public class Chunk
         );
     }
 
-    public Chunk(GL gl, ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase)
+    public Chunk(ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase)
     {
         _data = data;
         _blockTextures = blockTextures;

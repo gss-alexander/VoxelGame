@@ -6,20 +6,18 @@ namespace Client.Items.Dropping;
 
 public class ItemDropRenderer : IWorldRenderable
 {
-    private readonly GL _gl;
     private readonly Shader _shader;
     private readonly ItemTextures _itemTextures;
 
     private readonly MeshRenderer _meshRenderer;
 
-    public ItemDropRenderer(GL gl, Shader shader, ItemTextures itemTextures, ItemData itemData)
+    public ItemDropRenderer(Shader shader, ItemTextures itemTextures, ItemData itemData)
     {
-        _gl = gl;
         _shader = shader;
         _itemTextures = itemTextures;
 
         var mesh = SpriteMeshGenerator.Generate(itemData, itemTextures);
-        _meshRenderer = new MeshRenderer(_gl, mesh);
+        _meshRenderer = new MeshRenderer(mesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 6, 0);
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 6, 3);
         _meshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 6, 5);

@@ -11,13 +11,13 @@ public class BlockRenderer : IWorldRenderable
     private readonly MeshRenderer _meshRenderer;
     private readonly Shader _shader;
     
-    public BlockRenderer(GL gl, BlockItemData blockItemData, BlockDatabase blockDatabase, BlockTextures blockTextures)
+    public BlockRenderer(BlockItemData blockItemData, BlockDatabase blockDatabase, BlockTextures blockTextures)
     {
         _blockTextures = blockTextures;
         _shader = Shaders.GetShader("shader");
 
         var mesh = BlockMeshGenerator.Generate(blockItemData, blockDatabase, blockTextures);
-        _meshRenderer = new MeshRenderer(gl, mesh);
+        _meshRenderer = new MeshRenderer(mesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 7, 0); // Position
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 3); // UV
         _meshRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 7, 5); // Texture Index

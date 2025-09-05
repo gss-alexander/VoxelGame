@@ -6,7 +6,6 @@ namespace Client.Items.Dropping;
 
 public class ItemDroppingSystem
 {
-    private readonly GL _gl;
     private readonly ItemDatabase _itemDatabase;
     private readonly ItemTextures _itemTextures;
     private readonly Shader _droppedItemShader;
@@ -18,10 +17,9 @@ public class ItemDroppingSystem
     private readonly List<string> _pickedUpItems = new();
     private readonly List<DroppedItem> _droppedItemsToClear = new();
 
-    public ItemDroppingSystem(GL gl, ItemDatabase itemDatabase, ItemTextures itemTextures, Shader droppedItemShader,
+    public ItemDroppingSystem(ItemDatabase itemDatabase, ItemTextures itemTextures, Shader droppedItemShader,
         Func<Vector3, bool> isBlockSolidFunc, BlockDatabase blockDatabase, BlockTextures blockTextures)
     {
-        _gl = gl;
         _itemDatabase = itemDatabase;
         _itemTextures = itemTextures;
         _droppedItemShader = droppedItemShader;
@@ -41,8 +39,8 @@ public class ItemDroppingSystem
     private IWorldRenderable CreateRendererForItem(ItemData itemData)
     {
         return itemData.GetType() == typeof(BlockItemData)
-            ? new BlockRenderer(_gl, (BlockItemData)itemData, _blockDatabase, _blockTextures)
-            : new ItemDropRenderer(_gl, _droppedItemShader, _itemTextures, itemData);
+            ? new BlockRenderer((BlockItemData)itemData, _blockDatabase, _blockTextures)
+            : new ItemDropRenderer(_droppedItemShader, _itemTextures, itemData);
     }
 
     public List<string> PickUpItems(Vector3 origin, float distance)

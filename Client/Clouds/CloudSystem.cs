@@ -5,7 +5,6 @@ namespace Client.Clouds;
 
 public class CloudSystem
 {
-    private readonly GL _gl;
 
     private class Cloud
     {
@@ -26,9 +25,8 @@ public class CloudSystem
     private const float MovementSpeed = 0.5f;
     private const float Spacing = 80f;
     
-    public CloudSystem(GL gl)
+    public CloudSystem()
     {
-        _gl = gl;
     }
 
     public void GenerateClouds()
@@ -38,7 +36,7 @@ public class CloudSystem
             for (var z = -10; z < 10; z++)
             {
                 var mesh = _cloudGenerator.GenerateMesh();
-                var renderer = new CloudRenderer(_gl, mesh);
+                var renderer = new CloudRenderer(mesh);
                 _clouds.Add(new Cloud(new Vector3(x * Spacing, 150, z * Spacing), renderer));
             }
         }

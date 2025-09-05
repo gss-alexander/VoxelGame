@@ -9,7 +9,6 @@ public class CraftingGridUi
 {
     public CraftingGrid CraftingGrid => _craftingGrid;
     
-    private readonly GL _gl;
     private readonly CraftingGrid _craftingGrid;
     private readonly Vector2 _screenSize;
     private readonly Texture _slotBackgroundTexture;
@@ -28,27 +27,26 @@ public class CraftingGridUi
     private readonly MeshRenderer _itemSpritesRenderer;
     private readonly MeshRenderer _resultItemRenderer;
 
-    public CraftingGridUi(GL gl, CraftingGrid craftingGrid, Vector2 screenSize, Texture slotBackgroundTexture, ItemTextures itemTextures)
+    public CraftingGridUi( CraftingGrid craftingGrid, Vector2 screenSize, Texture slotBackgroundTexture, ItemTextures itemTextures)
     {
-        _gl = gl;
         _craftingGrid = craftingGrid;
         _screenSize = screenSize;
         _slotBackgroundTexture = slotBackgroundTexture;
         _itemTextures = itemTextures;
 
-        _backgroundMeshRenderer = new MeshRenderer(_gl, GenerateBackgroundMesh());
+        _backgroundMeshRenderer = new MeshRenderer(GenerateBackgroundMesh());
         _backgroundMeshRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 7, 0);
         _backgroundMeshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 7, 2);
         _backgroundMeshRenderer.SetVertexAttribute(2, 3, VertexAttribPointerType.Float, 7, 4);
         _backgroundMeshRenderer.Unbind();
         
-        _itemSpritesRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
+        _itemSpritesRenderer = new MeshRenderer(Mesh.Empty, BufferUsageARB.DynamicDraw);
         _itemSpritesRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 5, 0);
         _itemSpritesRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 5, 2);
         _itemSpritesRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
         _itemSpritesRenderer.Unbind();
         
-        _resultItemRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
+        _resultItemRenderer = new MeshRenderer(Mesh.Empty, BufferUsageARB.DynamicDraw);
         _resultItemRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 5, 0);
         _resultItemRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 5, 2);
         _resultItemRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
@@ -60,9 +58,9 @@ public class CraftingGridUi
     
     public void Render()
     {
-        _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-        _gl.Disable(EnableCap.DepthTest);
+        OpenGl.Context.Enable(EnableCap.Blend);
+        OpenGl.Context.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        OpenGl.Context.Disable(EnableCap.DepthTest);
         
         var projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
             0,
@@ -76,8 +74,8 @@ public class CraftingGridUi
         RenderBackground(projectionMatrix);
         RenderItems(projectionMatrix);
         
-        _gl.Enable(EnableCap.DepthTest);
-        _gl.Disable(EnableCap.Blend);
+        OpenGl.Context.Enable(EnableCap.DepthTest);
+        OpenGl.Context.Disable(EnableCap.Blend);
     }
 
     public ItemStack? GetStackAtSlotIndex(int slotIndex)

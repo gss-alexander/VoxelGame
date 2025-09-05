@@ -6,7 +6,6 @@ public class MeshRenderer : IDisposable
 {
     public int VertexCount => _mesh.Vertices.Length;
 
-    private readonly GL _gl;
     
     private readonly BufferObject<float> _vbo;
     private readonly BufferObject<uint> _ebo;
@@ -14,16 +13,15 @@ public class MeshRenderer : IDisposable
 
     private Mesh _mesh;
 
-    public static MeshRenderer Empty(GL gl) => new(gl, Mesh.Empty);
+    public static MeshRenderer Empty() => new(Mesh.Empty);
     
-    public MeshRenderer(GL gl, Mesh mesh, BufferUsageARB usage = BufferUsageARB.StaticDraw)
+    public MeshRenderer(Mesh mesh, BufferUsageARB usage = BufferUsageARB.StaticDraw)
     {
-        _gl = gl;
         _mesh = mesh;
         
-        _vbo = new BufferObject<float>(_gl, mesh.Vertices, BufferTargetARB.ArrayBuffer, usage);
-        _ebo = new BufferObject<uint>(_gl, mesh.Indices, BufferTargetARB.ElementArrayBuffer, usage);
-        _vao = new VertexArrayObject<float, uint>(_gl, _vbo, _ebo);
+        _vbo = new BufferObject<float>(OpenGl.Context, mesh.Vertices, BufferTargetARB.ArrayBuffer, usage);
+        _ebo = new BufferObject<uint>(OpenGl.Context, mesh.Indices, BufferTargetARB.ElementArrayBuffer, usage);
+        _vao = new VertexArrayObject<float, uint>(OpenGl.Context, _vbo, _ebo);
     }
 
     public void SetVertexAttribute(int index, int count, VertexAttribPointerType pointerType, int vertexSize,
@@ -34,13 +32,13 @@ public class MeshRenderer : IDisposable
 
     public void Unbind()
     {
-        _gl.BindVertexArray(0);
+        OpenGl.Context.BindVertexArray(0);
     }
 
     public void Render()
     {
         _vao.Bind();
-        _gl.DrawElements(PrimitiveType.Triangles, 
+        OpenGl.Context.DrawElements(PrimitiveType.Triangles, 
             (uint)_mesh.Indices.Length, 
             DrawElementsType.UnsignedInt,
             ReadOnlySpan<float>.Empty);

@@ -8,11 +8,11 @@ public class CloudRenderer
     private readonly MeshRenderer _meshRenderer;
     private readonly Shader _cloudShader;
     
-    public CloudRenderer(GL gl, Mesh cloudsMesh)
+    public CloudRenderer(Mesh cloudsMesh)
     {
         _cloudShader = Shaders.GetShader("cloud");
         
-        _meshRenderer = new MeshRenderer(gl, cloudsMesh);
+        _meshRenderer = new MeshRenderer(cloudsMesh);
         _meshRenderer.SetVertexAttribute(0, 3, VertexAttribPointerType.Float, 4, 0);
         _meshRenderer.SetVertexAttribute(1, 1, VertexAttribPointerType.Float, 4, 3);
         _meshRenderer.Unbind();

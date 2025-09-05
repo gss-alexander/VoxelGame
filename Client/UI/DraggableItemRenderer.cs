@@ -18,7 +18,6 @@ public class DraggableItemRenderer
     
     private const float Size = 75f;
     
-    private readonly GL _gl;
     private readonly TextRenderer _textRenderer;
     private readonly Vector2 _screenSize;
     private readonly ItemTextures _itemTextures;
@@ -27,14 +26,13 @@ public class DraggableItemRenderer
 
     private Vector2 _lastPosition;
 
-    public DraggableItemRenderer(GL gl, TextRenderer textRenderer, Vector2 screenSize, ItemTextures itemTextures)
+    public DraggableItemRenderer(TextRenderer textRenderer, Vector2 screenSize, ItemTextures itemTextures)
     {
-        _gl = gl;
         _textRenderer = textRenderer;
         _screenSize = screenSize;
         _itemTextures = itemTextures;
 
-        _itemSpriteRenderer = new MeshRenderer(gl, Mesh.Empty, BufferUsageARB.DynamicDraw);
+        _itemSpriteRenderer = new MeshRenderer(Mesh.Empty, BufferUsageARB.DynamicDraw);
         _itemSpriteRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 5, 0);
         _itemSpriteRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 5, 2);
         _itemSpriteRenderer.SetVertexAttribute(2, 1, VertexAttribPointerType.Float, 5, 4);
@@ -66,9 +64,9 @@ public class DraggableItemRenderer
     
     public void Render()
     {
-        _gl.Enable(EnableCap.Blend);
-        _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-        _gl.Disable(EnableCap.DepthTest);
+        OpenGl.Context.Enable(EnableCap.Blend);
+        OpenGl.Context.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+        OpenGl.Context.Disable(EnableCap.DepthTest);
         
         var projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
             0,
@@ -86,8 +84,8 @@ public class DraggableItemRenderer
         _itemSpriteRenderer.Render();
         RenderItemAmountText(_lastPosition);
         
-        _gl.Enable(EnableCap.DepthTest);
-        _gl.Disable(EnableCap.Blend);
+        OpenGl.Context.Enable(EnableCap.DepthTest);
+        OpenGl.Context.Disable(EnableCap.Blend);
     }
     
     private void RenderItemAmountText(Vector2 position)
