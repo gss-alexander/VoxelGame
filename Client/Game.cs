@@ -12,6 +12,7 @@ using Client.Inputs;
 using Client.Items;
 using Client.Items.Dropping;
 using Client.Persistence;
+using Client.Settings;
 using Client.Sound;
 using Client.UI;
 using Client.UI.Text;
@@ -87,6 +88,8 @@ public class Game
     private DebugMenu _debugMenu;
 
     private AudioContext _audioContext;
+
+    private GraphicsSettings _graphicsSettings = new();
 
     public unsafe void Load(IWindow window)
     {
@@ -259,7 +262,7 @@ public class Game
         _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
         _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
-        _chunkSystem.UpdateChunkVisibility(_camera.Position, 4);
+        _chunkSystem.UpdateChunkVisibility(_camera.Position, _graphicsSettings.RenderDistance);
 
         if (_actionContext.IsPressed(InputAction.DebugAction))
         {
@@ -370,7 +373,7 @@ public class Game
     public unsafe void Render(double deltaTime)
     {
         _renderStopwatch.Restart();
-        _imGuiController.Update((float)deltaTime);
+        // _imGuiController.Update((float)deltaTime);
         
         _gl.Enable(EnableCap.DepthTest);
         _gl.Enable(EnableCap.Blend);
@@ -414,7 +417,7 @@ public class Game
         _crosshairRenderer.Render();
         _uiRenderer.Render();
         
-        _imGuiController.Render();
+        // _imGuiController.Render();
 
         _renderStopwatch.Stop();
         _renderTimeAverage.AddTime((float)_renderStopwatch.Elapsed.TotalSeconds);
