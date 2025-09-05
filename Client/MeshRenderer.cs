@@ -52,6 +52,7 @@ public class MeshRenderer : IDisposable
         _vbo.UpdateData(newMesh.Vertices);
         _ebo.UpdateData(newMesh.Indices);
         _mesh = newMesh;
+        Unbind();
     }
         
     public void Dispose()
