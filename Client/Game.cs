@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
+using Client.Audio;
 using Client.Blocks;
 using Client.Chunks;
 using Client.Clouds;
@@ -11,6 +12,7 @@ using Client.Inputs;
 using Client.Items;
 using Client.Items.Dropping;
 using Client.Persistence;
+using Client.Sound;
 using Client.UI;
 using Client.UI.Text;
 using Silk.NET.Input;
@@ -84,6 +86,8 @@ public class Game
 
     private DebugMenu _debugMenu;
 
+    private AudioContext _audioContext;
+
     public unsafe void Load(IWindow window)
     {
         _window = window;
@@ -117,6 +121,8 @@ public class Game
             GetShaderPath("shader.vert"),
             GetShaderPath("shader.frag")
         );
+        
+        _soundPlayer = new SoundPlayer();
 
         _frameBufferSize = window.Size;
 
@@ -177,7 +183,7 @@ public class Game
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "4.png"))
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
             .Build(_gl);
-        _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray);
+        _blockBreaking = new BlockBreaking(_gl, blockBreakingShader, blockBreakingTextureArray, _soundPlayer);
         _blockPlacement = new BlockPlacement(_playerInventory, itemDatabase, _blockDatabase, (blockPos, blockId) =>
         {
             _chunkSystem.PlaceBlock(blockPos, blockId);
@@ -202,7 +208,10 @@ public class Game
 
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
             _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player);
+
     }
+
+    private SoundPlayer _soundPlayer;
 
     private bool _isWorldLoaded;
 
@@ -251,6 +260,16 @@ public class Game
         
         _chunkSystem.UpdateChunkVisibility(_camera.Position, 4);
 
+        if (_actionContext.IsPressed(InputAction.DebugAction))
+        {
+            _soundPlayer.PlaySound("hurt_fall");
+        }
+
+        if (_actionContext.IsReleased(InputAction.DebugAction))
+        {
+            _soundPlayer.Stop();
+        }
+
         if (_isFirstUpdate)
         {
             OnFirstUpdate();
@@ -270,7 +289,7 @@ public class Game
             {
                 _blockBreaking.ClearLookingAtBlock();
             }
-            _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left));
+            _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left), raycast.HasValue);
             if (_blockBreaking.ShouldBreak)
             {
                 var hit = raycast.Value;
@@ -297,6 +316,7 @@ public class Game
                 if (_blockPlacement.Update(raycast, _primaryMouse.IsButtonPressed(MouseButton.Right)))
                 {
                     _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
+                    _soundPlayer.PlaySound("block_place");
                 }
             }
 
@@ -541,5 +561,7 @@ public class Game
         worldData.CameraYaw = _camera.Yaw;
         
         WorldStorage.StoreWorld(worldData);
+        
+        // _audioManager.Cleanup();
     }
 }

@@ -23,4 +23,8 @@
       <Folder Include="UI\Elements\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Client.Audio\Client.Audio.csproj" />
+    </ItemGroup>
+
 </Project>

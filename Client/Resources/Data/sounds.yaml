@@ -1,0 +1,7 @@
+sounds:
+  hurt_fall:
+    path: "witch.wav"
+  block_place:
+    path: "block_place.wav"
+  block_break:
+    path: "block_break.wav"

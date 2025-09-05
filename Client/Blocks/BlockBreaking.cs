@@ -1,4 +1,5 @@
 using System.Numerics;
+using Client.Sound;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
@@ -12,9 +13,11 @@ public class BlockBreaking
     private readonly GL _gl;
     private readonly Shader _shader;
     private readonly TextureArray _breakingTextureArray;
-    
+    private readonly SoundPlayer _soundPlayer;
+
     private const float DestructionPerSecond = 10.0f;
     private const int DestructionTextureCount = 5;
+    private const float DestructionSoundFrequencyInSeconds = 0.3f;
 
 
     private readonly BufferObject<float> _vbo;
@@ -25,12 +28,14 @@ public class BlockBreaking
     private Vector3D<int> _targetPosition;
     private int _lastTexturePos;
     private float _currentDestruction;
+    private float _timeUntilNextSoundClip;
 
-    public BlockBreaking(GL gl, Shader shader, TextureArray breakingTextureArray)
+    public BlockBreaking(GL gl, Shader shader, TextureArray breakingTextureArray, SoundPlayer soundPlayer)
     {
         _gl = gl;
         _shader = shader;
         _breakingTextureArray = breakingTextureArray;
+        _soundPlayer = soundPlayer;
 
         _gl.BindVertexArray(0);
         _vbo = new BufferObject<float>(gl, [], BufferTargetARB.ArrayBuffer);
@@ -60,12 +65,23 @@ public class BlockBreaking
         _currentDestruction = 0f;
     }
 
-    public void UpdateDestruction(float deltaTime, bool isDestroying)
+    public void UpdateDestruction(float deltaTime, bool isDestroying, bool lookingAtBlock)
     {
         if (!isDestroying)
         {
             _currentDestruction = 0f;
+            _timeUntilNextSoundClip = 0f;
             return;
+        }
+
+        if (_timeUntilNextSoundClip <= 0.0f && lookingAtBlock)
+        {
+            _soundPlayer.PlaySound("block_break");
+            _timeUntilNextSoundClip = DestructionSoundFrequencyInSeconds;
+        }
+        else
+        {
+            _timeUntilNextSoundClip -= deltaTime;
         }
 
         _currentDestruction += DestructionPerSecond * deltaTime;

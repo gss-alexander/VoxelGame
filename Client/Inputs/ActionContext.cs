@@ -52,6 +52,7 @@ public class ActionContext
         UpdateKeyboardAction(InputAction.MoveBackward, Key.S);
         UpdateKeyboardAction(InputAction.MoveLeft, Key.A);
         UpdateKeyboardAction(InputAction.MoveRight, Key.D);
+        UpdateKeyboardAction(InputAction.DebugAction, Key.Q);
     }
 
     private void UpdateKeyboardAction(InputAction action, Key associatedKey)
