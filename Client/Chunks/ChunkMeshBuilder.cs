@@ -1,4 +1,6 @@
-﻿using Client.Blocks;
+﻿using System.Diagnostics;
+using Client.Blocks;
+using JetBrains.Profiler.Api;
 using Silk.NET.Maths;
 
 namespace Client.Chunks;
@@ -22,8 +24,11 @@ public static class ChunkMeshBuilder
     private static readonly ObjectPool<ArrayBuffer<uint>> _indexBuffers =
         new(() => new ArrayBuffer<uint>(Chunk.Size * Chunk.Height * Chunk.Size * 6 * 6), buffer => buffer.Clear());
     
-    public static ChunkMeshGenerationResult Create(ChunkData chunkData, BlockDatabase blockDatabase, BlockTextures blockTextures)
+    public static ChunkMeshGenerationResult Create(ChunkData chunkData, BlockDatabase blockDatabase, BlockTextures blockTextures, Func<Vector3D<int>, int> getBlockFunc)
     {
+        var sw = Stopwatch.StartNew();
+        MeasureProfiler.StartCollectingData();
+        
         var opaqueVertices = _vertexBuffers.Get();
         var opaqueIndices = _indexBuffers.Get();
         var transparentIndices = _indexBuffers.Get();
@@ -51,7 +56,7 @@ public static class ChunkMeshBuilder
 
                     foreach (var face in BlockGeometry.Faces)
                     {
-                        if (IsFaceBlockSolid(x, y, z, face.Direction, chunkData, blockDatabase))
+                        if (IsFaceBlockSolid(x, y, z, face.Direction, chunkData, blockDatabase, getBlockFunc))
                         {
                             continue;
                         }
@@ -106,10 +111,14 @@ public static class ChunkMeshBuilder
         _indexBuffers.Release(opaqueIndices);
         _indexBuffers.Release(transparentIndices);
 
+        sw.Stop();
+        MeasureProfiler.SaveData();
+        Console.WriteLine($"[Chunk Mesh Builder]: Generated mesh in {sw.ElapsedMilliseconds}ms");
         return result;
     }
     
-    private static bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData, BlockDatabase blockDatabase)
+    private static bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData,
+        BlockDatabase blockDatabase, Func<Vector3D<int>, int> getBlockFunc)
     {
         var facePositionOffset = face switch
         {
@@ -124,8 +133,8 @@ public static class ChunkMeshBuilder
 
         var faceBlockPosition =
             new Vector3D<int>(facePositionOffset.X + x, facePositionOffset.Y + y, facePositionOffset.Z + z);
-        
-        var neighbourBlockSolid = IsBlockSolid(faceBlockPosition, chunkData, blockDatabase);
+
+        var neighbourBlockSolid = IsBlockSolid(faceBlockPosition, chunkData, blockDatabase, getBlockFunc);
         var neighbourIsTransparent = false;
         if (!IsPositionOutOfBounds(faceBlockPosition))
         {
@@ -143,11 +152,14 @@ public static class ChunkMeshBuilder
                position.Z >= Chunk.Size || position.Z < 0;
     }
     
-    private static bool IsBlockSolid(Vector3D<int> position, ChunkData chunkData, BlockDatabase blockDatabase)
+    private static bool IsBlockSolid(Vector3D<int> position, ChunkData chunkData, BlockDatabase blockDatabase,
+        Func<Vector3D<int>, int> blockFunc)
     {
         if (IsPositionOutOfBounds(position))
         {
-            return false;
+            var worldBlockPosition = Chunk.LocalChunkToWorldPosition(chunkData.Position, position);
+            var blockId = blockFunc(worldBlockPosition);
+            return blockDatabase.GetById(blockId).IsSolid;
         }
 
         var block = chunkData.GetBlock(position);

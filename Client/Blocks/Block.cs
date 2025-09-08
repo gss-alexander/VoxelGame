@@ -18,7 +18,7 @@ public class Block
     {
         return new Vector3(blockPosition.X, blockPosition.Y, blockPosition.Z);
     }
-
+    
     public static Vector3D<int> GetFaceNeighbour(Vector3D<int> originBlockPosition,
         BlockGeometry.FaceDirection faceDirection)
     {

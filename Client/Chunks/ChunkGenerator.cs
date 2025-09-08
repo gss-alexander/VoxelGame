@@ -49,6 +49,20 @@ public class ChunkGenerator
         return false;
     }
 
+    public int GetVirtualBlock(Vector3D<int> blockWorldPosition)
+    {
+        var height = GetHeightAtPosition(new Vector2D<int>(blockWorldPosition.X, blockWorldPosition.Z));
+
+        if (blockWorldPosition.Y < height - 3)
+            return _blockDatabase.GetInternalId("cobblestone");
+        else if (blockWorldPosition.Y < height - 1)
+            return _blockDatabase.GetInternalId("dirt");
+        else if (blockWorldPosition.Y == height - 1)
+            return _blockDatabase.GetInternalId("grass");
+
+        return _blockDatabase.GetInternalId("air");
+    }
+
     private void GenerateTerrain(ChunkData chunkData)
     {
         _noise.SetSeed(_seed);

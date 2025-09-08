@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <PackageReference Include="FreeTypeSharp" Version="3.0.1" />
+      <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.10" />
       <PackageReference Include="Silk.NET" Version="2.22.0" />
       <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0" />
       <PackageReference Include="StbImageSharp" Version="2.30.15" />

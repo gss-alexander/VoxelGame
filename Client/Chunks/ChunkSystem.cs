@@ -66,7 +66,7 @@ public class ChunkSystem
             if (_chunkGenerationQueue.TryDequeue(out var chunkPosition))
             {
                 var newChunk = CreateChunk(chunkPosition.X, chunkPosition.Y);
-                var mesh = ChunkMeshBuilder.Create(newChunk.Data, _blockDatabase, _blockTextures);
+                var mesh = ChunkMeshBuilder.Create(newChunk.Data, _blockDatabase, _blockTextures, GetVirtualBlock);
                 _readyChunksAwaitingRendering.TryAdd(chunkPosition, new Tuple<Chunk, ChunkMeshBuilder.ChunkMeshGenerationResult>(newChunk, mesh));
             }
         }
@@ -103,6 +103,24 @@ public class ChunkSystem
         }
 
         return isVirtuallySolid && !isModifiedAndNotSolid;
+    }
+
+    public int GetVirtualBlock(Vector3D<int> blockPosition)
+    {
+        var blockId = _chunkGenerator.GetVirtualBlock(blockPosition);
+        var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
+        if (_modifiedBlocks.TryGetValue(chunkPosition, out var modifiedBlocksInChunk))
+        {
+            foreach (var (pos, id) in modifiedBlocksInChunk)
+            {
+                if (blockPosition == pos)
+                {
+                    blockId = id;
+                }
+            }
+        }
+
+        return blockId;
     }
     
     public Vector3D<int> BlockToLocalPosition(Vector3D<int> blockPosition)
@@ -374,7 +392,7 @@ public class ChunkSystem
                 chunkData.SetBlock(pos, modifiedBlock.Item2);
             }
         }
-        var chunk = new Chunk(chunkData, _blockTextures, _blockDatabase);
+        var chunk = new Chunk(chunkData, _blockTextures, _blockDatabase, GetVirtualBlock);
         return chunk;
     }
 }

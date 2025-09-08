@@ -19,6 +19,7 @@ public class Chunk
     private readonly ChunkData _data;
     private readonly BlockTextures _blockTextures;
     private readonly BlockDatabase _blockDatabase;
+    private readonly Func<Vector3D<int>, int> _getBlockFunc;
 
     public static Vector2D<int> WorldToChunkPosition(Vector3 worldPosition)
     {
@@ -35,11 +36,21 @@ public class Chunk
         );
     }
 
-    public Chunk(ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase)
+    public static Vector3D<int> LocalChunkToWorldPosition(Vector2D<int> chunkPosition, Vector3D<int> localBlockPosition)
+    {
+        return new Vector3D<int>(
+            Size * chunkPosition.X + localBlockPosition.X,
+            localBlockPosition.Y,
+            Size * chunkPosition.Y + localBlockPosition.Z
+        );
+    }
+
+    public Chunk(ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase, Func<Vector3D<int>, int> getBlockFunc)
     {
         _data = data;
         _blockTextures = blockTextures;
         _blockDatabase = blockDatabase;
+        _getBlockFunc = getBlockFunc;
     }
 
     public void SetRenderer(ChunkRenderer renderer, Mesh opaqueMesh, Mesh transparentMesh)
@@ -68,7 +79,7 @@ public class Chunk
         _data.SetBlock(new Vector3D<int>(x, y, z), block);
         if (regenerateMesh)
         {
-            var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures);
+            var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures, _getBlockFunc);
             Renderer.SetMeshes(newMeshes.Opaque, newMeshes.Transparent);
         }
     }
