@@ -9,6 +9,8 @@ namespace Client.Debug;
 public class DebugMenu
 {
     public bool FreeCamEnabled { get; private set; }
+    public bool RenderWireframes { get; private set; }
+    public bool UseVSync { get; private set; }
     
     private readonly Camera _camera;
     private readonly BlockDatabase _blockDatabase;
@@ -67,6 +69,14 @@ public class DebugMenu
         var freecamEnabled = FreeCamEnabled;
         ImGuiNET.ImGui.Checkbox("Freecam", ref freecamEnabled);
         FreeCamEnabled = freecamEnabled;
+
+        var renderWireframes = RenderWireframes;
+        ImGuiNET.ImGui.Checkbox("Render Wire Frames", ref renderWireframes);
+        RenderWireframes = renderWireframes;
+
+        var useVSync = UseVSync;
+        ImGuiNET.ImGui.Checkbox("V-Sync", ref useVSync);
+        UseVSync = useVSync;
     }
 
     private void DrawAverages()

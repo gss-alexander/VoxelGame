@@ -97,6 +97,7 @@ public class Game
         _primaryKeyboard = inputContext.Keyboards.First();
         _primaryKeyboard.KeyDown += OnKeyDown;
 
+
         for (int i = 0; i < inputContext.Mice.Count; i++)
         {
             inputContext.Mice[i].Cursor.CursorMode = CursorMode.Raw;
@@ -370,7 +371,8 @@ public class Game
     public unsafe void Render(double deltaTime)
     {
         _renderStopwatch.Restart();
-        // _imGuiController.Update((float)deltaTime);
+        _window.VSync = _debugMenu.UseVSync;
+        _imGuiController.Update((float)deltaTime);
         
         OpenGl.Context.Enable(EnableCap.DepthTest);
         OpenGl.Context.Enable(EnableCap.Blend);
@@ -392,6 +394,11 @@ public class Game
         _shader.SetUniform("uProjection", projection);
 
         // WORLD RENDERING - START
+
+        if (_debugMenu.RenderWireframes)
+        {
+            OpenGl.Context.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line);
+        }
         
         _chunkSystem.RenderChunks();
         _chunkSystem.RenderTransparency(_camera.Position);
@@ -401,6 +408,11 @@ public class Game
         _blockBreaking.Render(view, projection);
         
         _cloudSystem.Render(view, projection);
+        
+        if (_debugMenu.RenderWireframes)
+        {
+            OpenGl.Context.PolygonMode(GLEnum.FrontAndBack, GLEnum.Fill);
+        }
         
         // WORLD RENDERING - END
         
@@ -414,7 +426,7 @@ public class Game
         _crosshairRenderer.Render();
         _uiRenderer.Render();
         
-        // _imGuiController.Render();
+        _imGuiController.Render();
 
         _renderStopwatch.Stop();
         _renderTimeAverage.AddTime((float)_renderStopwatch.Elapsed.TotalSeconds);
