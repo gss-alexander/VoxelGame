@@ -21,7 +21,7 @@ public class Player
     private const float GroundMovementSpeed = 5f;
     private const float FlyingMovementSpeed = 10f;
     private const float FlyingElevationChangeSpeed = 6f;
-    private const float FootstepFrequencyInSeconds = 0.4f;
+    private const float FootstepFrequencyInSeconds = 0.5f;
     private const float MinimumMovementThreshold = 0.1f;
 
     private readonly Entity _entity;
