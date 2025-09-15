@@ -1,4 +1,5 @@
-﻿using Client.Blocks;
+﻿using System.Numerics;
+using Client.Blocks;
 using Client.Chunks;
 using Client.Diagnostics;
 using Client.Items;
@@ -60,6 +61,7 @@ public class DebugMenu
         DrawToggles();
         ImGuiNET.ImGui.Separator();
         DrawSoundInfo();
+        DrawControlButtons();
 
         ImGuiNET.ImGui.End(); 
     }
@@ -147,5 +149,13 @@ public class DebugMenu
     private void DrawSoundInfo()
     {
         ImGuiNET.ImGui.Text($"Active sound sources: {_soundPlayer.ActiveSoundSources}");
+    }
+
+    private void DrawControlButtons()
+    {
+        if (ImGuiNET.ImGui.Button("Reset position"))
+        {
+            _player.Position = new Vector3(0f, 100f, 0f);
+        }
     }
 }
