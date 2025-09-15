@@ -5,6 +5,8 @@ namespace Client;
 
 public class Shader
 {
+    private static readonly Dictionary<string, int> UniformLocationCache = new();
+    
     private readonly uint _handle;
     
     public Shader(string vertexShaderPath, string fragmentShaderPath)
@@ -35,44 +37,45 @@ public class Shader
     {
         unsafe
         {
-            var location = OpenGl.Context.GetUniformLocation(_handle, name);
-            if (location == -1)
-            {
-                throw new Exception($"{name} uniform not found on shader");
-            }
-
+            var location = GetUniformLocation(name);
             OpenGl.Context.UniformMatrix4(location, 1, false, (float*)&value);
         }
     }
 
     public void SetUniform(string name, float value)
     {
-        var location = OpenGl.Context.GetUniformLocation(_handle, name);
-        if (location == -1)
-        {
-            throw new Exception($"{name} uniform not found on shader");
-        }
+        var location = GetUniformLocation(name);
         OpenGl.Context.Uniform1(location, value);
     }
     
     public void SetUniform(string name, int value)
     {
-        var location = OpenGl.Context.GetUniformLocation(_handle, name);
-        if (location == -1)
-        {
-            throw new Exception($"{name} uniform not found on shader");
-        }
+        var location = GetUniformLocation(name);
         OpenGl.Context.Uniform1(location, value);
     }
 
     public void SetUniform(string name, Vector3 value)
     {
+        var location = GetUniformLocation(name);
+        OpenGl.Context.Uniform3(location, value);
+    }
+
+    private int GetUniformLocation(string name)
+    {
+        if (UniformLocationCache.TryGetValue(name, out var cachedLocation))
+        {
+            return cachedLocation;
+        }
+        
         var location = OpenGl.Context.GetUniformLocation(_handle, name);
         if (location == -1)
         {
             throw new Exception($"{name} uniform not found on shader");
         }
-        OpenGl.Context.Uniform3(location, value);
+        
+        UniformLocationCache.Add(name, location);
+        
+        return location;
     }
 
     private uint LoadShader(ShaderType type, string source)
