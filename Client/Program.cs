@@ -9,7 +9,7 @@ var game = new Game();
 var windowOptions = WindowOptions.Default with
 {
     Size = new Vector2D<int>(1920, 1080),
-    Title = $"{AppConstants.GameTitle} - v{AppConstants.MajorVersion}.{AppConstants.MinorVersion}"
+    Title = $"{AppConstants.GameTitle} - v{AppConstants.MajorVersion}.{AppConstants.MinorVersion}.{AppConstants.RevisionVersion}"
 };
 
 WorldStorage.Initialize();
