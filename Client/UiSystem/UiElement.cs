@@ -1,4 +1,5 @@
 using System.Numerics;
+using Silk.NET.Vulkan;
 
 namespace Client.UiSystem;
 
@@ -17,7 +18,15 @@ public abstract class UiElement
         CenterMiddle
     }
 
-    public Vector2 Position { get; set; }
+    public Vector2 Position
+    {
+        get => _position;
+        set
+        {
+            _position = value;
+            IsDirty = true;
+        }
+    }
     
     public Vector2 AbsolutePosition => 
         (Parent?.AbsolutePosition ?? Vector2.Zero) + 
@@ -25,16 +34,29 @@ public abstract class UiElement
         Position;
 
     public int ZOrder { get; set; }
-    
-    public Vector2 Size { get; set; }
+
+    public Vector2 Size
+    {
+        get => _size;
+        set
+        {
+            _size = value;
+            IsDirty = true;
+        }
+    }
     public AnchorMode Anchor { get; set; } 
     public bool Visible { get; set; } = true;
     public List<UiElement> Children { get; } = new();
     public UiElement? Parent { get; set; }
 
+    private Vector2 _position;
+    private Vector2 _size;
+
+    protected bool IsDirty { get; set; } = true;
+
     public abstract void Update(float deltaTime);
     public abstract void Render(float deltaTime);
-    public abstract bool HandleInput(Vector2 mousePosition, bool isClicked);
+    public abstract void HandleInput(Vector2 mousePosition, bool isClicked);
 
     public void AddChild(UiElement element)
     {
