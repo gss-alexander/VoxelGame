@@ -70,6 +70,7 @@ public class ChunkGenerator
         var stoneId = _blockDatabase.GetInternalId("cobblestone");
         var dirtId = _blockDatabase.GetInternalId("dirt");
         var grassId = _blockDatabase.GetInternalId("grass");
+        var bedrockId = _blockDatabase.GetInternalId("bedrock");
         
         for (var x = 0; x < Chunk.Size; x++)
         {
@@ -82,7 +83,9 @@ public class ChunkGenerator
                 for (var y = 0; y < Chunk.Height; y++)
                 {
                     var pos = new Vector3D<int>(x, y, z);
-                    if (y < height - 3)
+                    if (y == 0)
+                        chunkData.SetBlock(pos, bedrockId);
+                    else if (y < height - 3)
                         chunkData.SetBlock(pos, stoneId);
                     else if (y < height - 1)
                         chunkData.SetBlock(pos, dirtId);

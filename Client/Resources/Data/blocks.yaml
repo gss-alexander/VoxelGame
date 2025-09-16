@@ -118,3 +118,11 @@ blocks:
         probability: 1.0
         count: 1
     tool_type: "axe"
+    
+  bedrock:
+    display_name: "Bedrock"
+    textures:
+      default: "bedrock.png"
+    is_transparent: false
+    is_solid: true
+    strength: 10000.0
