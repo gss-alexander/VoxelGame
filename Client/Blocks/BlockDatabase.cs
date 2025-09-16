@@ -2,34 +2,41 @@
 
 public class BlockDatabase
 {
-    public (int id, BlockData data)[] GetAll()
-    {
-        return _blocks.Select(kvp => (kvp.Key, kvp.Value)).ToArray();
-    }
-    
-    private readonly Dictionary<int, BlockData> _blocks = new();
-
+    private readonly BlockData[] _blocks;
     private readonly Dictionary<string, int> _externalToInternalIdMapping = new();
+    private readonly int _maxBlockId;
 
     public BlockDatabase(BlockData[] blocks)
     {
+        _maxBlockId = blocks.Length;
+        _blocks = new BlockData[_maxBlockId + 1];
+        
         for (var i = 0; i < blocks.Length; i++)
         {
             var block = blocks[i];
-            _blocks.Add(i, block);
+            _blocks[i] = block;
             _externalToInternalIdMapping.Add(block.ExternalId, i);
         }
         
-        // Manually add air block - todo: look into just not having an air block...
-        _blocks.Add(blocks.Length, new BlockData
+        _blocks[_maxBlockId] = new BlockData
         {
             DisplayName = "Air",
             ExternalId = "air",
             IsSolid = false,
             IsTransparent = false,
             Strength = 0f
-        });
-        _externalToInternalIdMapping.Add("air", blocks.Length);
+        };
+        _externalToInternalIdMapping.Add("air", _maxBlockId);
+    }
+
+    public (int id, BlockData data)[] GetAll()
+    {
+        var result = new (int, BlockData)[_blocks.Length];
+        for (var i = 0; i < _blocks.Length; i++)
+        {
+            result[i] = (i, _blocks[i]);
+        }
+        return result;
     }
 
     public int GetInternalId(string externalId)
