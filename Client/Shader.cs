@@ -5,7 +5,7 @@ namespace Client;
 
 public class Shader
 {
-    private static readonly Dictionary<string, int> UniformLocationCache = new();
+    private readonly Dictionary<string, int> _uniformLocationCache = new();
     
     private readonly uint _handle;
     
@@ -62,7 +62,7 @@ public class Shader
 
     private int GetUniformLocation(string name)
     {
-        if (UniformLocationCache.TryGetValue(name, out var cachedLocation))
+        if (_uniformLocationCache.TryGetValue(name, out var cachedLocation))
         {
             return cachedLocation;
         }
@@ -73,7 +73,7 @@ public class Shader
             throw new Exception($"{name} uniform not found on shader");
         }
         
-        UniformLocationCache.Add(name, location);
+        _uniformLocationCache.Add(name, location);
         
         return location;
     }
