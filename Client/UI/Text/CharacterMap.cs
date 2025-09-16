@@ -4,6 +4,8 @@ namespace Client.UI.Text;
 
 public class CharacterMap
 {
+    public const float BaseFontSize = 16f;
+    
     private readonly GL _gl;
     private readonly Dictionary<char, Character> _map = new();
 
