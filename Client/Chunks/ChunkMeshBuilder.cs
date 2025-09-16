@@ -36,66 +36,65 @@ public static class ChunkMeshBuilder
 
         var transparentIndicesOffset = 0u;
         var opaqueIndicesOffset = 0u;
-        for (var x = 0; x < Chunk.Size; x++)
+        var totalBlocks = Chunk.Size * Chunk.Height * Chunk.Size;
+        for (var i = 0; i < totalBlocks; i++)
         {
-            for (var y = 0; y < Chunk.Height; y++)
+            var x = i % Chunk.Size;
+            var y = (i / Chunk.Size) % Chunk.Height;
+            var z = i / (Chunk.Size * Chunk.Height);
+    
+            var blockPos = new Vector3D<int>(x, y, z);
+            var blockId = chunkData.GetBlock(blockPos);
+            var blockData = blockDatabase.GetById(blockId);
+            if (!blockData.IsSolid)
             {
-                for (var z = 0; z < Chunk.Size; z++)
+                continue;
+            }
+
+            var isTransparent = blockData.IsTransparent;
+            var vertices = isTransparent ? transparentVertices : opaqueVertices;
+            var indices = isTransparent ? transparentIndices : opaqueIndices;
+
+            foreach (var face in BlockGeometry.Faces)
+            {
+                if (IsFaceBlockSolid(x, y, z, face.Direction, chunkData, blockDatabase, getBlockFunc))
                 {
-                    var blockPos = new Vector3D<int>(x, y, z);
-                    var blockId = chunkData.GetBlock(blockPos);
-                    var blockData = blockDatabase.GetById(blockId);
-                    if (!blockData.IsSolid)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    var isTransparent = blockData.IsTransparent;
-                    var vertices = isTransparent ? transparentVertices : opaqueVertices;
-                    var indices = isTransparent ? transparentIndices : opaqueIndices;
-
-                    foreach (var face in BlockGeometry.Faces)
-                    {
-                        if (IsFaceBlockSolid(x, y, z, face.Direction, chunkData, blockDatabase, getBlockFunc))
-                        {
-                            continue;
-                        }
-
-                        var textureIndex = blockTextures.GetBlockTextureIndex(blockId, face.Direction);
+                var textureIndex = blockTextures.GetBlockTextureIndex(blockId, face.Direction);
                         
-                        for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
-                        {
-                            var vX = face.Vertices[vertexIndex] + x + (Chunk.Size * chunkData.Position.X);
-                            var vY = face.Vertices[vertexIndex + 1] + y;
-                            var vZ = face.Vertices[vertexIndex + 2] + z + (Chunk.Size * chunkData.Position.Y);
-                            var vU = face.Vertices[vertexIndex + 3];
-                            var vV = face.Vertices[vertexIndex + 4];
-                            var brightness = face.Vertices[vertexIndex + 5];
+                for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
+                {
+                    var vX = face.Vertices[vertexIndex] + x + (Chunk.Size * chunkData.Position.X);
+                    var vY = face.Vertices[vertexIndex + 1] + y;
+                    var vZ = face.Vertices[vertexIndex + 2] + z + (Chunk.Size * chunkData.Position.Y);
+                    var vU = face.Vertices[vertexIndex + 3];
+                    var vV = face.Vertices[vertexIndex + 4];
+                    var brightness = face.Vertices[vertexIndex + 5];
         
-                            vertices.Write(vX);
-                            vertices.Write(vY);
-                            vertices.Write(vZ);
-                            vertices.Write(vU);
-                            vertices.Write(vV);
-                            vertices.Write(textureIndex);
-                            vertices.Write(brightness); 
-                        }
+                    vertices.Write(vX);
+                    vertices.Write(vY);
+                    vertices.Write(vZ);
+                    vertices.Write(vU);
+                    vertices.Write(vV);
+                    vertices.Write(textureIndex);
+                    vertices.Write(brightness); 
+                }
 
-                        foreach (var index in face.Indices)
-                        {
-                            var indicesOffset = isTransparent ? transparentIndicesOffset : opaqueIndicesOffset;
-                            indices.Write(index + indicesOffset);
-                        }
+                foreach (var index in face.Indices)
+                {
+                    var indicesOffset = isTransparent ? transparentIndicesOffset : opaqueIndicesOffset;
+                    indices.Write(index + indicesOffset);
+                }
 
-                        if (isTransparent)
-                        {
-                            transparentIndicesOffset += 4;
-                        }
-                        else
-                        {
-                            opaqueIndicesOffset += 4;
-                        }
-                    }
+                if (isTransparent)
+                {
+                    transparentIndicesOffset += 4;
+                }
+                else
+                {
+                    opaqueIndicesOffset += 4;
                 }
             }
         }
