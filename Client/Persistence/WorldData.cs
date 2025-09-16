@@ -11,6 +11,7 @@ public class WorldData
     public float CameraPitch { get; set; }
     public float CameraYaw { get; set; }
     public Dictionary<Vector3D<int>, string> ModifiedBlocks { get; set; } = new();
+    public PlayerInventory Inventory { get; set; } = new();
 
     public WorldData()
     {
@@ -42,6 +43,7 @@ public class WorldData
         var options = new JsonSerializerOptions();
         options.Converters.Add(new Vector3DIntKeyConverter());
         options.Converters.Add(new Vector3Converter());
+        options.Converters.Add(new PlayerInventoryConverter());
         return options;
     }
 }

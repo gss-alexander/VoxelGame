@@ -35,7 +35,7 @@ public class ItemStorage
         return slot;
     }
 
-    private Slot GetSlotInternal(int slotIndex)
+    public Slot GetSlotInternal(int slotIndex)
     {
         return _slots[slotIndex];
     }

@@ -190,14 +190,6 @@ public class Game
             _chunkSystem.PlaceBlock(blockPos, blockId);
         }, _soundPlayer);
         
-        _playerInventory.Hotbar.AddItem("dirt", 45);
-        _playerInventory.Hotbar.AddItem("coal", 14);
-        _playerInventory.Storage.AddItem("glass", 52);
-        _playerInventory.Storage.AddItem("sand", 23);
-        _playerInventory.Storage.AddItem("log", 5);
-        _playerInventory.Storage.AddItem("plank", 47);
-        _playerInventory.Storage.AddItem("stick", 19);
-        
         _isWorldLoaded = TryLoadingWorld(); 
         
         _chunkSystem.StartChunkGenerationThread();
@@ -562,6 +554,7 @@ public class Game
             _player.Position = worldData.PlayerPosition;
             _camera.Pitch = worldData.CameraPitch;
             _camera.Yaw = worldData.CameraYaw;
+            PlayerInventory.Copy(worldData.Inventory, _playerInventory);
             return true;
         }
 
@@ -581,6 +574,7 @@ public class Game
         worldData.PlayerPosition = _player.Position;
         worldData.CameraPitch = _camera.Pitch;
         worldData.CameraYaw = _camera.Yaw;
+        worldData.Inventory = _playerInventory;
         
         WorldStorage.StoreWorld(worldData);
         
