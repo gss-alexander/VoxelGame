@@ -53,6 +53,8 @@ public class ActionContext
         UpdateKeyboardAction(InputAction.MoveLeft, Key.A);
         UpdateKeyboardAction(InputAction.MoveRight, Key.D);
         UpdateKeyboardAction(InputAction.DropItem, Key.Q);
+        UpdateMouseAction(InputAction.DestroyBlock, MouseButton.Left);
+        UpdateMouseAction(InputAction.PlaceBlock, MouseButton.Right);
     }
 
     private void UpdateKeyboardAction(InputAction action, Key associatedKey)

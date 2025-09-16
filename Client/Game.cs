@@ -290,7 +290,7 @@ public class Game
                 lookingAtBlockData = _blockDatabase.GetById(blockId);
             }
             
-            _blockBreaking.UpdateDestruction((float)deltaTime, _primaryMouse.IsButtonPressed(MouseButton.Left), lookingAtBlockData);
+            _blockBreaking.UpdateDestruction((float)deltaTime, _actionContext.IsHeld(InputAction.DestroyBlock), lookingAtBlockData);
             if (_blockBreaking.ShouldBreak)
             {
                 var hit = raycast.Value;
@@ -314,7 +314,7 @@ public class Game
         
             if (_currentMouseClickCooldown <= 0f)
             {
-                if (_blockPlacement.Update(raycast, _primaryMouse.IsButtonPressed(MouseButton.Right)))
+                if (_blockPlacement.Update(raycast, _actionContext.IsHeld(InputAction.PlaceBlock)))
                 {
                     _currentMouseClickCooldown = _mouseClickCooldownInSeconds;
                 }
