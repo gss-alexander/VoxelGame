@@ -112,12 +112,14 @@ public class DebugMenu
         if (raycastHit.HasValue)
         {
             ImGuiNET.ImGui.Text($"Looking at block pos: {raycastHit.Value.Position}");
+            ImGuiNET.ImGui.Text($"Looking at local block: {Block.WorldBlockToLocalChunkPosition(raycastHit.Value.Position)}");
             ImGuiNET.ImGui.Text($"Looking at block face: {raycastHit.Value.Face}");
         }
 
         else
         {
             ImGuiNET.ImGui.Text($"Looking at block pos: NaN");
+            ImGuiNET.ImGui.Text($"Looking at local block: NaN");
             ImGuiNET.ImGui.Text($"Looking at block face: NaN");
         }
     }
