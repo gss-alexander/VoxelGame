@@ -92,6 +92,7 @@ public class DebugMenu
         ImGuiNET.ImGui.Text($"FPS: {1.0 / _deltaTimeAverage.AverageTime:F1}");
         ImGuiNET.ImGui.Text($"Average update time: {_updateTimeAverage.AverageTime}");
         ImGuiNET.ImGui.Text($"Average render time: {_renderTimeAverage.AverageTime}");
+        ImGuiNET.ImGui.Text($"Average chunk mesh generation time: {ChunkGenerationTimeTracking.MeshGenerationTime.AverageTime}");
     }
 
     private void DrawPositionData()

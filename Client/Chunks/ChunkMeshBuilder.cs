@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Client.Blocks;
+using Client.Diagnostics;
 using JetBrains.Profiler.Api;
 using Silk.NET.Maths;
 
@@ -113,6 +114,7 @@ public static class ChunkMeshBuilder
         sw.Stop();
         MeasureProfiler.SaveData();
         Console.WriteLine($"[Chunk Mesh Builder]: Generated mesh in {sw.ElapsedMilliseconds}ms");
+        ChunkGenerationTimeTracking.MeshGenerationTime.AddTime((float)sw.Elapsed.TotalSeconds);
         return result;
     }
     
