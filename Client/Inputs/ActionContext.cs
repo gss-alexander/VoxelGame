@@ -1,9 +1,13 @@
-﻿using Silk.NET.Input;
+﻿using System.Numerics;
+using Silk.NET.Input;
 
 namespace Client.Inputs;
 
 public class ActionContext
 {
+    public bool MovementBlocked { get; set; }
+    public Vector2 MousePosition => _mouse.Position;
+    
     private struct ActionState
     {
         public bool Pressed;
@@ -37,6 +41,11 @@ public class ActionContext
         }
     }
 
+    public void SetCursorLocked(bool locked)
+    {
+        _mouse.Cursor.CursorMode = locked ? CursorMode.Raw : CursorMode.Normal;
+    }
+
     public void CollectInputs(float deltaTime)
     {
         _currentTime += deltaTime;
@@ -55,6 +64,8 @@ public class ActionContext
         UpdateKeyboardAction(InputAction.DropItem, Key.Q);
         UpdateMouseAction(InputAction.DestroyBlock, MouseButton.Left);
         UpdateMouseAction(InputAction.PlaceBlock, MouseButton.Right);
+        UpdateKeyboardAction(InputAction.TogglePause, Key.Escape);
+        UpdateMouseAction(InputAction.UiClick, MouseButton.Left);
     }
 
     private void UpdateKeyboardAction(InputAction action, Key associatedKey)

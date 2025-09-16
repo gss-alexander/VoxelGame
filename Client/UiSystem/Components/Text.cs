@@ -109,8 +109,9 @@ public class Text : UiElement
         OpenGl.Context.Disable(EnableCap.Blend);
     }
 
-    public override void HandleInput(Vector2 mousePosition, bool isClicked)
+    public override bool HandleInput(Vector2 mousePosition, bool isClicked)
     {
+        return false;
     }
 
     private Mesh GenerateCharacterMesh(float x, float y, float width, float height)

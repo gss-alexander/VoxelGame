@@ -16,7 +16,8 @@ public class Panel : UiElement
         }
     }
 
-    public override void HandleInput(Vector2 mousePosition, bool isClicked)
+    public override bool HandleInput(Vector2 mousePosition, bool isClicked)
     {
+        return false;
     }
 }

@@ -16,6 +16,8 @@ using Client.Settings;
 using Client.Sound;
 using Client.UI;
 using Client.UI.Text;
+using Client.UiSystem;
+using Client.UiSystem.Components;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -71,8 +73,6 @@ public class Game
 
     private HotbarRenderer _hotbarRenderer;
 
-    private bool _playerControlsEnabled = false;
-
     private ActionContext _actionContext;
 
     private readonly TimeAverageTracker _updateTimeAverage = new(60);
@@ -88,6 +88,10 @@ public class Game
     private AudioContext _audioContext;
 
     private GraphicsSettings _graphicsSettings = new();
+
+    private UiManager _uiManager;
+
+    private GameController _gameController;
 
     public unsafe void Load(IWindow window)
     {
@@ -202,6 +206,12 @@ public class Game
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
             _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player, _soundPlayer, _graphicsSettings);
 
+        var sprite = new Texture(OpenGl.Context,
+                Path.Combine("..", "..", "..", "Resources", "Textures", "Blocks", "crafting_table_side.png"));
+
+        _gameController = new GameController(() => _window.Close());
+        
+        _uiManager = new UiManager(_actionContext, _gameController);
     }
 
     private SoundPlayer _soundPlayer;
@@ -249,8 +259,7 @@ public class Game
         }
         _lastRightClickStatus = isRightClickPressed;
         
-        _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
-        _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
+        // _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
         _chunkSystem.UpdateChunkVisibility(_camera.Position, _graphicsSettings.RenderDistance);
 
@@ -260,7 +269,7 @@ public class Game
             _isFirstUpdate = false;
         }
 
-        if (_playerControlsEnabled)
+        if (!_actionContext.MovementBlocked)
         {
             var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
             if (raycast.HasValue)
@@ -332,14 +341,14 @@ public class Game
 
         if (!_debugMenu.FreeCamEnabled)
         {
-            var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera(true) : Vector3.Zero;
+            var movementInput = !_actionContext.MovementBlocked ? GetMovementInputWithCamera(true) : Vector3.Zero;
             _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z));
             _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
         }
         else
         {
             const float freecamSpeed = 20f;
-            var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera(false) : Vector3.Zero;
+            var movementInput = !_actionContext.MovementBlocked ? GetMovementInputWithCamera(false) : Vector3.Zero;
             _camera.Position += movementInput * (freecamSpeed * (float)deltaTime);
         }
         
@@ -354,6 +363,13 @@ public class Game
         _uiRenderer.Update(_primaryMouse.Position);
         
         _cloudSystem.Update((float)deltaTime);
+
+        if (_actionContext.IsPressed(InputAction.TogglePause))
+        {
+            _uiManager.TogglePauseMenu();
+        }
+        
+        _uiManager.Update((float)deltaTime);
         
         _updateStopwatch.Stop();
         _updateTimeAverage.AddTime((float)_updateStopwatch.Elapsed.TotalSeconds);
@@ -416,6 +432,8 @@ public class Game
         
         _debugMenu.Draw();
         
+        _uiManager.Render((float)deltaTime);
+        
         _crosshairRenderer.Render();
         _uiRenderer.Render();
         
@@ -475,12 +493,6 @@ public class Game
 
     public void OnKeyDown(IKeyboard keyboard, Key pressedKey, int keyCode)
     {
-        if (pressedKey == Key.Escape)
-        {
-            _chunkSystem.StopChunkGenerationThread();
-            _window.Close();
-        }
-
         if (pressedKey == Key.Tab)
         {
             _uiRenderer.ToggleInventory();
@@ -516,7 +528,7 @@ public class Game
             _lastMousePosition = position;
         }
         
-        if (_playerControlsEnabled)
+        if (!_actionContext.MovementBlocked)
         {
             var xOffset = (position.X - _lastMousePosition.X) * lookSensitivity;
             var yOffset = (position.Y - _lastMousePosition.Y) * lookSensitivity;
@@ -565,6 +577,8 @@ public class Game
 
     public void OnClosing()
     {
+        _chunkSystem.StopChunkGenerationThread();
+        
         var worldData = new WorldData("Test world");
         
         // Register all modified blocks
@@ -579,7 +593,5 @@ public class Game
         worldData.Inventory = _playerInventory;
         
         WorldStorage.StoreWorld(worldData);
-        
-        // _audioManager.Cleanup();
     }
 }

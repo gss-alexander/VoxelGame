@@ -2,14 +2,20 @@
 
 public enum InputAction
 {
+    // Movement
     MoveForward,
     MoveBackward,
     MoveLeft,
     MoveRight,
     Jump,
     Crouch,
-    DebugAction,
+    
+    // World interaction
     DropItem,
     PlaceBlock,
-    DestroyBlock
+    DestroyBlock,
+    
+    // UI
+    UiClick,
+    TogglePause,
 }

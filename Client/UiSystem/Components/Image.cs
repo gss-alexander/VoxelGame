@@ -5,8 +5,8 @@ namespace Client.UiSystem.Components;
 
 public class Image : UiElement
 {
-    public Vector3 Color { get; set; }
-    public float Alpha { get; set; }
+    public Vector3 Color { get; set; } = Vector3.One;
+    public float Alpha { get; set; } = 1f;
     public Texture? Sprite { get; set; }
 
     private readonly MeshRenderer _meshRenderer;
@@ -16,7 +16,7 @@ public class Image : UiElement
     {
         _shader = Shaders.GetShader("ui_image");
         
-        _meshRenderer = new MeshRenderer(GenerateQuadMesh(), BufferUsageARB.DynamicDraw);
+        _meshRenderer = new MeshRenderer(Mesh.Empty, BufferUsageARB.DynamicDraw);
         _meshRenderer.SetVertexAttribute(0, 2, VertexAttribPointerType.Float, 4, 0);
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 4, 2);
         _meshRenderer.Unbind();
@@ -70,8 +70,9 @@ public class Image : UiElement
         }
     }
 
-    public override void HandleInput(Vector2 mousePosition, bool isClicked)
+    public override bool HandleInput(Vector2 mousePosition, bool isClicked)
     {
+        return false;
     }
 
     private Mesh GenerateQuadMesh()
