@@ -31,7 +31,7 @@ public class ItemDroppingSystem
     public void CreateDroppedItem(Vector3 worldPosition, string itemId)
     {
         var itemData = _itemDatabase.Get(itemId);
-        var droppedItem = new DroppedItem(CreateRendererForItem(itemData), itemData, worldPosition, _isBlockSolidFunc, Vector3.Zero, 0f);
+        var droppedItem = new DroppedItem(CreateRendererForItem(itemData), itemData, worldPosition, _isBlockSolidFunc, Vector3.Zero, 0.25f);
         _droppedItems.Add(droppedItem);
         Console.WriteLine($"[Item Dropping System]: Dropping item {itemId} at position {worldPosition}");
     }
