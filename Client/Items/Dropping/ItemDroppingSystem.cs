@@ -28,12 +28,21 @@ public class ItemDroppingSystem
         _blockTextures = blockTextures;
     }
 
-    public void DropItem(Vector3 worldPosition, string itemId)
+    public void CreateDroppedItem(Vector3 worldPosition, string itemId)
     {
         var itemData = _itemDatabase.Get(itemId);
-        var droppedItem = new DroppedItem(CreateRendererForItem(itemData), itemData, worldPosition, _isBlockSolidFunc);
+        var droppedItem = new DroppedItem(CreateRendererForItem(itemData), itemData, worldPosition, _isBlockSolidFunc, Vector3.Zero, 0f);
         _droppedItems.Add(droppedItem);
         Console.WriteLine($"[Item Dropping System]: Dropping item {itemId} at position {worldPosition}");
+    }
+
+    public void PlayerDropItem(Vector3 origin, Vector3 direction, float force, string itemId)
+    {
+        var velocity = direction * force;
+        
+        var itemData = _itemDatabase.Get(itemId);
+        var droppedItem = new DroppedItem(CreateRendererForItem(itemData), itemData, origin, _isBlockSolidFunc, velocity, 0.75f);
+        _droppedItems.Add(droppedItem);
     }
 
     private IWorldRenderable CreateRendererForItem(ItemData itemData)
@@ -49,6 +58,8 @@ public class ItemDroppingSystem
         _droppedItemsToClear.Clear();
         foreach (var droppedItem in _droppedItems)
         {
+            if (!droppedItem.CanPickUp) continue;
+            
             if (Vector3.Distance(origin, droppedItem.Position) <= distance)
             {
                 _pickedUpItems.Add(droppedItem.ItemId);

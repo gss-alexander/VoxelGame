@@ -9,6 +9,7 @@ public enum InputAction
     Jump,
     Crouch,
     DebugAction,
+    DropItem,
     PlaceBlock,
     DestroyBlock
 }

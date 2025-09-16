@@ -5,6 +5,7 @@ namespace Client.Items.Dropping;
 
 public class DroppedItem
 {
+    public bool CanPickUp => _timeWhenPlayerCanPickUp < _time;
     public string ItemId { get; }
     public Vector3 Position => _entity.Position;
     
@@ -14,15 +15,20 @@ public class DroppedItem
     private const float BobStrength = 0.05f;
     
     private readonly Entity _entity;
+    private readonly float _timeWhenPlayerCanPickUp;
 
     private readonly IWorldRenderable _renderer;
 
     private float _time;
 
-    public DroppedItem(IWorldRenderable renderer, ItemData itemData, Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc)
+    public DroppedItem(IWorldRenderable renderer, ItemData itemData, Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc, Vector3 startingVelocity, float timeWhenPlayerCanPickUp)
     {
         _renderer = renderer;
+        _timeWhenPlayerCanPickUp = timeWhenPlayerCanPickUp;
         _entity = new Entity(startingPosition, new Vector3(Scale, Scale, Scale), isBlockSolidFunc);
+        _entity.GravityEnabled = true;
+        _entity.Velocity = startingVelocity;
+        _entity.Friction = 5f;
         ItemId = itemData.ExternalId;
     }
 

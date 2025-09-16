@@ -262,16 +262,6 @@ public class Game
         
         _chunkSystem.UpdateChunkVisibility(_camera.Position, _graphicsSettings.RenderDistance);
 
-        if (_actionContext.IsPressed(InputAction.DebugAction))
-        {
-            _soundPlayer.PlaySound("hurt_fall");
-        }
-
-        if (_actionContext.IsReleased(InputAction.DebugAction))
-        {
-            _soundPlayer.Stop();
-        }
-
         if (_isFirstUpdate)
         {
             OnFirstUpdate();
@@ -314,7 +304,7 @@ public class Game
                         if (randomRoll <= drop.Probability)
                         {
                             var randomOffset = new Vector3(Random.Range(-0.1f, 0.1f), 0f, Random.Range(-0.1f, 0.1f));
-                            _itemDroppingSystem.DropItem(Block.GetCenterPosition(hit.Position) + randomOffset, drop.Item);
+                            _itemDroppingSystem.CreateDroppedItem(Block.GetCenterPosition(hit.Position) + randomOffset, drop.Item);
                         }
                     }
                 }
@@ -333,6 +323,16 @@ public class Game
             else
             {
                 _currentMouseClickCooldown -= (float)deltaTime;
+            }
+
+            if (_actionContext.IsPressed(InputAction.DropItem))
+            {
+                var currentHeldSlot = _playerInventory.Hotbar.GetSlot(_playerInventory.SelectedHotbarSlot);
+                if (currentHeldSlot != null)
+                {
+                    _itemDroppingSystem.PlayerDropItem(_camera.Position, _camera.Direction, 7.5f, currentHeldSlot.ItemId);
+                    _playerInventory.Hotbar.RemoveItemFromSlot(_playerInventory.SelectedHotbarSlot, 1);
+                }
             }
         }
 

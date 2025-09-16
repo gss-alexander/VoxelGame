@@ -11,6 +11,7 @@ public class Entity
     public Vector3 Size { get; set; }
     public bool IsGrounded { get; set; }
     public bool GravityEnabled { get; set; }
+    public float Friction { get; set; } = 0f;
 
     private readonly Func<Vector3, bool> _isBlockSolidFunc;
     
@@ -26,6 +27,7 @@ public class Entity
     public void Update(float deltaTime)
     {
         ApplyGravity(deltaTime);
+        ApplyFriction(deltaTime);
         MoveWithCollision(deltaTime);
     }
 
@@ -33,6 +35,18 @@ public class Entity
     {
         if (!GravityEnabled) return;
         Velocity = Velocity with { Y = Velocity.Y - Gravity * deltaTime };
+    }
+
+    private void ApplyFriction(float deltaTime)
+    {
+        if (Friction <= 0f) return;
+        if (Velocity.Length() <= 0f) return;
+
+        var horizontalVelocity = Velocity with { Y = 0f };
+        var velocityChange = horizontalVelocity * (Friction * deltaTime);
+
+        horizontalVelocity -= velocityChange;
+        Velocity = horizontalVelocity with { Y = Velocity.Y };
     }
 
     private void MoveWithCollision(float deltaTime)
