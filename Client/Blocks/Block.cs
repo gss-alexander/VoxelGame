@@ -40,9 +40,9 @@ public class Block
     public static Vector3D<int> WorldBlockToLocalChunkPosition(Vector3D<int> worldBlockPosition)
     {
         return new Vector3D<int>(
-            worldBlockPosition.X % Chunk.Size,
+            ((worldBlockPosition.X % Chunk.Size) + Chunk.Size) % Chunk.Size,
             worldBlockPosition.Y,
-            worldBlockPosition.Z % Chunk.Size
+            ((worldBlockPosition.Z % Chunk.Size) + Chunk.Size) % Chunk.Size
         );
     }
 
