@@ -45,6 +45,31 @@ public class Chunk
         );
     }
 
+    public static void GetNeighbouringChunksForBlock(Vector3D<int> blockWorldPosition, List<Vector2D<int>> resultList)
+    {
+        var chunkPosition = BlockToChunkPosition(blockWorldPosition);
+        var localBlockPosition = Block.WorldBlockToLocalChunkPosition(blockWorldPosition);
+        if (localBlockPosition.X == 0)
+        {
+            resultList.Add(chunkPosition with { X = chunkPosition.X - 1});
+        }
+        
+        if (localBlockPosition.X == Size - 1)
+        {
+            resultList.Add(chunkPosition with { X = chunkPosition.X + 1});
+        }
+        
+        if (localBlockPosition.Z == 0)
+        {
+            resultList.Add(chunkPosition with { Y = chunkPosition.Y - 1});
+        }
+        
+        if (localBlockPosition.Z == Size - 1)
+        {
+            resultList.Add(chunkPosition with { Y = chunkPosition.Y + 1});
+        }
+    }
+
     public Chunk(ChunkData data, BlockTextures blockTextures, BlockDatabase blockDatabase, Func<Vector3D<int>, int> getBlockFunc)
     {
         _data = data;
@@ -82,6 +107,12 @@ public class Chunk
             var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures, _getBlockFunc);
             Renderer.SetMeshes(newMeshes.Opaque, newMeshes.Transparent);
         }
+    }
+
+    public void ForceMeshRegeneration()
+    {
+        var newMeshes = ChunkMeshBuilder.Create(_data, _blockDatabase, _blockTextures, _getBlockFunc);
+        Renderer.SetMeshes(newMeshes.Opaque, newMeshes.Transparent);
     }
 
     public int GetBlock(int x, int y, int z)

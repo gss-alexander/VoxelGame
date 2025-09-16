@@ -144,9 +144,26 @@ public class ChunkSystem
         return chunk.GetBlock(localPosition.X, localPosition.Y, localPosition.Z);
     }
 
+    private readonly List<Vector2D<int>> _destroyedBlockNeighboursToRebuild = new();
     public void DestroyBlock(Vector3D<int> blockPosition)
     {
         SetBlock(blockPosition, _blockDatabase.GetInternalId("air"));
+
+        if (Block.IsChunkBorderBlock(blockPosition))
+        {
+            // If the block destroyed is on the border of a chunk then we also need to rebuild the mesh of the
+            // neighbouring chunk.
+            _destroyedBlockNeighboursToRebuild.Clear();
+            Chunk.GetNeighbouringChunksForBlock(blockPosition, _destroyedBlockNeighboursToRebuild);
+            foreach (var neighbourChunkPosition in _destroyedBlockNeighboursToRebuild)
+            {
+                if (_visibleChunks.TryGetValue(neighbourChunkPosition, out var chunk))
+                {
+                    Console.WriteLine($"[Chunk System]: Forcing chunk regeneration for chunk {neighbourChunkPosition}");
+                    chunk.ForceMeshRegeneration();
+                }
+            }
+        }
     }
 
     public void PlaceBlock(Vector3D<int> blockPosition, int blockId)

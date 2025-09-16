@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Client.Chunks;
 using Silk.NET.Maths;
 
 namespace Client.Blocks;
@@ -34,5 +35,21 @@ public class Block
         };
 
         return originBlockPosition + offset;
+    }
+
+    public static Vector3D<int> WorldBlockToLocalChunkPosition(Vector3D<int> worldBlockPosition)
+    {
+        return new Vector3D<int>(
+            worldBlockPosition.X % Chunk.Size,
+            worldBlockPosition.Y,
+            worldBlockPosition.Z % Chunk.Size
+        );
+    }
+
+    public static bool IsChunkBorderBlock(Vector3D<int> worldBlockPosition)
+    {
+        var localPosition = WorldBlockToLocalChunkPosition(worldBlockPosition);
+        return localPosition.X == 0 || localPosition.X == Chunk.Size - 1 || localPosition.Z == 0 ||
+               localPosition.Z == Chunk.Size - 1;
     }
 }
