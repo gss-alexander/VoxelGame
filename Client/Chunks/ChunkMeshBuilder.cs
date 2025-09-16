@@ -19,6 +19,37 @@ public static class ChunkMeshBuilder
             Transparent = transparent;
         }
     }
+    
+    private readonly struct FaceVisibility
+    {
+        public readonly bool Front;
+        public readonly bool Back;
+        public readonly bool Left;
+        public readonly bool Right;
+        public readonly bool Top;
+        public readonly bool Bottom;
+
+        public FaceVisibility(bool front, bool back, bool left, bool right, bool top, bool bottom)
+        {
+            Front = front;
+            Back = back;
+            Left = left;
+            Right = right;
+            Top = top;
+            Bottom = bottom;
+        }
+
+        public bool IsFaceVisible(BlockGeometry.FaceDirection direction) => direction switch
+        {
+            BlockGeometry.FaceDirection.Front => Front,
+            BlockGeometry.FaceDirection.Back => Back,
+            BlockGeometry.FaceDirection.Left => Left,
+            BlockGeometry.FaceDirection.Right => Right,
+            BlockGeometry.FaceDirection.Top => Top,
+            BlockGeometry.FaceDirection.Bottom => Bottom,
+            _ => false
+        };
+    }
 
     private static readonly ObjectPool<ArrayBuffer<float>> _vertexBuffers =
         new(() => new ArrayBuffer<float>(Chunk.Size * Chunk.Height * Chunk.Size * 6 * 24), buffer => buffer.Clear());
@@ -38,6 +69,7 @@ public static class ChunkMeshBuilder
         var transparentIndicesOffset = 0u;
         var opaqueIndicesOffset = 0u;
         var totalBlocks = Chunk.Size * Chunk.Height * Chunk.Size;
+        
         for (var i = 0; i < totalBlocks; i++)
         {
             var x = i % Chunk.Size;
@@ -52,13 +84,15 @@ public static class ChunkMeshBuilder
                 continue;
             }
 
+            var faceVisibility = CalculateAllFaceVisibility(x, y, z, chunkData, blockDatabase, getBlockFunc);
+
             var isTransparent = blockData.IsTransparent;
             var vertices = isTransparent ? transparentVertices : opaqueVertices;
             var indices = isTransparent ? transparentIndices : opaqueIndices;
 
             foreach (var face in BlockGeometry.Faces)
             {
-                if (IsFaceBlockSolid(x, y, z, face.Direction, chunkData, blockDatabase, getBlockFunc))
+                if (!faceVisibility.IsFaceVisible(face.Direction))
                 {
                     continue;
                 }
@@ -111,11 +145,44 @@ public static class ChunkMeshBuilder
         _indexBuffers.Release(opaqueIndices);
         _indexBuffers.Release(transparentIndices);
 
+
         sw.Stop();
         MeasureProfiler.SaveData();
         Console.WriteLine($"[Chunk Mesh Builder]: Generated mesh in {sw.ElapsedMilliseconds}ms");
         ChunkGenerationTimeTracking.MeshGenerationTime.AddTime((float)sw.Elapsed.TotalSeconds);
         return result;
+    }
+    
+    private static FaceVisibility CalculateAllFaceVisibility(int x, int y, int z, ChunkData chunkData,
+        BlockDatabase blockDatabase, Func<Vector3D<int>, int> getBlockFunc)
+    {
+        var frontVisible = IsFaceVisible(x, y, z + 1, chunkData, blockDatabase, getBlockFunc);
+        var backVisible = IsFaceVisible(x, y, z - 1, chunkData, blockDatabase, getBlockFunc);
+        var leftVisible = IsFaceVisible(x - 1, y, z, chunkData, blockDatabase, getBlockFunc);
+        var rightVisible = IsFaceVisible(x + 1, y, z, chunkData, blockDatabase, getBlockFunc);
+        var topVisible = IsFaceVisible(x, y + 1, z, chunkData, blockDatabase, getBlockFunc);
+        var bottomVisible = IsFaceVisible(x, y - 1, z, chunkData, blockDatabase, getBlockFunc);
+
+        return new FaceVisibility(frontVisible, backVisible, leftVisible, rightVisible, topVisible, bottomVisible);
+    }
+    
+    private static bool IsFaceVisible(int neighborX, int neighborY, int neighborZ, ChunkData chunkData,
+        BlockDatabase blockDatabase, Func<Vector3D<int>, int> getBlockFunc)
+    {
+        if (neighborX < 0 || neighborX >= Chunk.Size ||
+            neighborY < 0 || neighborY >= Chunk.Height ||
+            neighborZ < 0 || neighborZ >= Chunk.Size)
+        {
+            var worldPosition = Chunk.LocalChunkToWorldPosition(chunkData.Position, new Vector3D<int>(neighborX, neighborY, neighborZ));
+            var neighborBlockId = getBlockFunc(worldPosition);
+            var neighborBlockData = blockDatabase.GetById(neighborBlockId);
+            return !neighborBlockData.IsSolid || neighborBlockData.IsTransparent;
+        }
+
+        var neighborPos = new Vector3D<int>(neighborX, neighborY, neighborZ);
+        var blockId = chunkData.GetBlock(neighborPos);
+        var blockData = blockDatabase.GetById(blockId);
+        return !blockData.IsSolid || blockData.IsTransparent;
     }
     
     private static bool IsFaceBlockSolid(int x, int y, int z, BlockGeometry.FaceDirection face, ChunkData chunkData,
