@@ -159,10 +159,10 @@ public static class ChunkMeshBuilder
         {
             var worldBlockPosition = Chunk.LocalChunkToWorldPosition(chunkData.Position, position);
             var blockId = blockFunc(worldBlockPosition);
-            return blockDatabase.GetById(blockId).IsSolid;
+            return blockDatabase.IsBlockSolid(blockId);
         }
 
         var block = chunkData.GetBlock(position);
-        return blockDatabase.GetById(block).IsSolid;
+        return blockDatabase.IsBlockSolid(block);
     }
 }

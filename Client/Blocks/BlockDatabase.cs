@@ -8,6 +8,7 @@ public class BlockDatabase
     }
     
     private readonly Dictionary<int, BlockData> _blocks = new();
+    private readonly bool[] _isSolidBlockArray;
 
     private readonly Dictionary<string, int> _externalToInternalIdMapping = new();
 
@@ -30,6 +31,12 @@ public class BlockDatabase
             Strength = 0f
         });
         _externalToInternalIdMapping.Add("air", blocks.Length);
+
+        _isSolidBlockArray = new bool[_blocks.Count];
+        foreach (var (id, blockData) in _blocks)
+        {
+            _isSolidBlockArray[id] = blockData.IsSolid;
+        }
     }
 
     public int GetInternalId(string externalId)
@@ -45,5 +52,10 @@ public class BlockDatabase
     public BlockData GetById(int id)
     {
         return _blocks[id];
+    }
+
+    public bool IsBlockSolid(int id)
+    {
+        return _isSolidBlockArray[id];
     }
 }
