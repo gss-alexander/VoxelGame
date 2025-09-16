@@ -125,7 +125,7 @@ public class Game
         
         _soundPlayer = new SoundPlayer();
 
-        _frameBufferSize = window.Size;
+        OnFrameBufferResize(window.Size);
 
         _imGuiController = new ImGuiController(OpenGl.Context, window, inputContext);
 
@@ -469,6 +469,8 @@ public class Game
     {
         OpenGl.Context.Viewport(newSize);
         _frameBufferSize = newSize;
+        WindowDimensions.Width = _frameBufferSize.X;
+        WindowDimensions.Height = _frameBufferSize.Y;
     }
 
     public void OnKeyDown(IKeyboard keyboard, Key pressedKey, int keyCode)
