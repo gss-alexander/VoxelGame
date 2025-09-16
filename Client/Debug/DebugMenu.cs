@@ -3,6 +3,7 @@ using Client.Blocks;
 using Client.Chunks;
 using Client.Diagnostics;
 using Client.Items;
+using Client.Settings;
 using Client.Sound;
 
 namespace Client.Debug;
@@ -25,13 +26,14 @@ public class DebugMenu
     private readonly ChunkSystem _chunkSystem;
     private readonly Player _player;
     private readonly SoundPlayer _soundPlayer;
+    private readonly GraphicsSettings _graphicsSettings;
 
     private int _selectedItemIndex;
 
     public DebugMenu(Camera camera, BlockDatabase blockDatabase, BlockSelector blockSelector, ItemDatabase itemDatabase,
         VoxelRaycaster voxelRaycaster, PlayerInventory playerInventory, TimeAverageTracker deltaTimeAverage,
         TimeAverageTracker updateTimeAverage, TimeAverageTracker renderTimeAverage, ChunkSystem chunkSystem,
-        Player player, SoundPlayer soundPlayer)
+        Player player, SoundPlayer soundPlayer, GraphicsSettings graphicsSettings)
     {
         _camera = camera;
         _blockDatabase = blockDatabase;
@@ -45,6 +47,7 @@ public class DebugMenu
         _chunkSystem = chunkSystem;
         _player = player;
         _soundPlayer = soundPlayer;
+        _graphicsSettings = graphicsSettings;
     }
 
     public void Draw()
@@ -61,7 +64,10 @@ public class DebugMenu
         DrawToggles();
         ImGuiNET.ImGui.Separator();
         DrawSoundInfo();
+        ImGuiNET.ImGui.Separator();
         DrawControlButtons();
+        ImGuiNET.ImGui.Separator();
+        GraphicsSettings();
 
         ImGuiNET.ImGui.End(); 
     }
@@ -157,5 +163,12 @@ public class DebugMenu
         {
             _player.Position = new Vector3(0f, 100f, 0f);
         }
+    }
+
+    private void GraphicsSettings()
+    {
+        var renderDistance = _graphicsSettings.RenderDistance;
+        ImGuiNET.ImGui.SliderInt("Render distance", ref renderDistance, 1, 20);
+        _graphicsSettings.RenderDistance = renderDistance;
     }
 }
