@@ -18,6 +18,19 @@ public abstract class UiElement
         CenterMiddle
     }
 
+    public enum PivotMode
+    {
+        LeftTop,
+        LeftBottom,
+        LeftMiddle,
+        RightTop,
+        RightBottom,
+        RightMiddle,
+        CenterTop,
+        CenterBottom,
+        CenterMiddle
+    }
+
     public Vector2 Position
     {
         get => _position;
@@ -31,7 +44,8 @@ public abstract class UiElement
     public Vector2 AbsolutePosition => 
         (Parent?.AbsolutePosition ?? Vector2.Zero) + 
         CalculateAnchorPoint() + 
-        Position;
+        Position - 
+        CalculatePivotOffset();
 
     public int ZOrder { get; set; }
 
@@ -45,6 +59,7 @@ public abstract class UiElement
         }
     }
     public AnchorMode Anchor { get; set; } 
+    public PivotMode Pivot { get; set; } = PivotMode.LeftTop;
     public bool Visible { get; set; } = true;
     public List<UiElement> Children { get; } = new();
     public UiElement? Parent { get; set; }
@@ -56,7 +71,7 @@ public abstract class UiElement
 
     public abstract void Update(float deltaTime);
     public abstract void Render(float deltaTime);
-    public abstract void HandleInput(Vector2 mousePosition, bool isClicked);
+    public abstract bool HandleInput(Vector2 mousePosition, bool isClicked);
 
     public void AddChild(UiElement element)
     {
@@ -69,6 +84,15 @@ public abstract class UiElement
         if (Children.Remove(element))
         {
             element.Parent = null;
+        }
+    }
+
+    public void CollectElements(List<UiElement> collection)
+    {
+        collection.Add(this);
+        foreach (var child in Children)
+        {
+            child.CollectElements(collection);
         }
     }
 
@@ -97,5 +121,24 @@ public abstract class UiElement
         };
 
         return parentSize * anchorMultiplier;
+    }
+
+    private Vector2 CalculatePivotOffset()
+    {
+        var pivotMultiplier = Pivot switch
+        {
+            PivotMode.LeftTop => new Vector2(0f, 0f),
+            PivotMode.LeftMiddle => new Vector2(0f, 0.5f),
+            PivotMode.LeftBottom => new Vector2(0f, 1f),
+            PivotMode.CenterTop => new Vector2(0.5f, 0f),
+            PivotMode.CenterMiddle => new Vector2(0.5f, 0.5f),
+            PivotMode.CenterBottom => new Vector2(0.5f, 1f),
+            PivotMode.RightTop => new Vector2(1f, 0f),
+            PivotMode.RightMiddle => new Vector2(1f, 0.5f),
+            PivotMode.RightBottom => new Vector2(1f, 1f),
+            _ => throw new NotImplementedException()
+        };
+
+        return Size * pivotMultiplier;
     }
 }
