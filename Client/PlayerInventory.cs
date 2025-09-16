@@ -4,6 +4,7 @@ namespace Client;
 
 public class PlayerInventory
 {
+    public ItemStorage.Slot? CurrentHeldSlot => Hotbar.GetSlot(SelectedHotbarSlot);
     public int SelectedHotbarSlot { get; set; }
     
     public ItemStorage Hotbar { get; }

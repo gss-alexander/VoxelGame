@@ -54,8 +54,8 @@ public static class ItemLoader
         {
             DisplayName = data["display_name"].ToString(),
             Texture = data["texture"].ToString(),
+            Type = ToolTypeExtensions.FromString(data["tool_type"].ToString()),
             Durability = Convert.ToInt32(data["durability"]),
-            MiningLevel = Convert.ToInt32(data["mining_level"]),
             MiningSpeed = Convert.ToSingle(data["mining_speed"]),
         };
     }

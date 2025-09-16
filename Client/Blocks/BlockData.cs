@@ -1,4 +1,6 @@
-﻿namespace Client.Blocks;
+﻿using Client.Items;
+
+namespace Client.Blocks;
 
 public class BlockData
 {
@@ -43,4 +45,5 @@ public class BlockData
     public string? PlacementSoundId { get; set; }
     public string? BreakingSoundId { get; set; }
     public BlockDrop[]? Drops { get; set; }
+    public ToolType? ToolType { get; set; }
 }

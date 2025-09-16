@@ -1,4 +1,5 @@
 using System.Numerics;
+using Client.Items;
 using Client.Sound;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -14,6 +15,8 @@ public class BlockBreaking
     private readonly Shader _shader;
     private readonly TextureArray _breakingTextureArray;
     private readonly SoundPlayer _soundPlayer;
+    private readonly PlayerInventory _playerInventory;
+    private readonly ItemDatabase _itemDatabase;
 
     private const float DestructionPerSecond = 10.0f;
     private const int DestructionTextureCount = 5;
@@ -30,12 +33,15 @@ public class BlockBreaking
     private float _currentDestruction;
     private float _timeUntilNextSoundClip;
 
-    public BlockBreaking(GL gl, Shader shader, TextureArray breakingTextureArray, SoundPlayer soundPlayer)
+    public BlockBreaking(GL gl, Shader shader, TextureArray breakingTextureArray, SoundPlayer soundPlayer,
+        PlayerInventory playerInventory, ItemDatabase itemDatabase)
     {
         _gl = gl;
         _shader = shader;
         _breakingTextureArray = breakingTextureArray;
         _soundPlayer = soundPlayer;
+        _playerInventory = playerInventory;
+        _itemDatabase = itemDatabase;
 
         _gl.BindVertexArray(0);
         _vbo = new BufferObject<float>(gl, [], BufferTargetARB.ArrayBuffer);
@@ -84,7 +90,7 @@ public class BlockBreaking
             _timeUntilNextSoundClip -= deltaTime;
         }
 
-        _currentDestruction += DestructionPerSecond * deltaTime;
+        _currentDestruction += (DestructionPerSecond * GetToolEfficiencyBonus(lookingAtBlock)) * deltaTime;
         var currentTexture = GetDestructionTexture();
         if (currentTexture != _lastTexturePos)
         {
@@ -110,6 +116,26 @@ public class BlockBreaking
         _vao.Bind();
         
         _gl.DrawElements(PrimitiveType.Triangles, 36, DrawElementsType.UnsignedInt, ReadOnlySpan<float>.Empty);
+    }
+
+    private float GetToolEfficiencyBonus(BlockData? targetBlockData)
+    {
+        if (targetBlockData == null) return 1f;
+        if (!targetBlockData.ToolType.HasValue) return 1f;
+        
+        var currentHeldSlot = _playerInventory.CurrentHeldSlot;
+        if (currentHeldSlot == null) return 1f;
+
+        var currentHeldItem = _itemDatabase.Get(currentHeldSlot.ItemId);
+        if (currentHeldItem is ToolItemData toolItem)
+        {
+            if (toolItem.Type == targetBlockData.ToolType)
+            {
+                return toolItem.MiningSpeed;
+            }
+        }
+
+        return 1f;
     }
 
     private void UpdateMeshData(float textureIndex)

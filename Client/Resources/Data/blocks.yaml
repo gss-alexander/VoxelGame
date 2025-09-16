@@ -12,6 +12,7 @@ blocks:
         count: 1
     placement_sound_id: "blocks/placement/default"
     breaking_sound_id: "step"
+    tool_type: "shovel"
     
   grass:
     display_name: "Grass"
@@ -26,6 +27,7 @@ blocks:
       - item: "grass" 
         probability: 1.0
         count: 1
+    tool_type: "shovel"
     
   cobblestone:
     display_name: "Cobblestone"
@@ -38,6 +40,7 @@ blocks:
       - item: "cobblestone"
         probability: 1.0
         count: 1
+    tool_type: "pickaxe"
     
   log:
     display_name: "Log"
@@ -52,6 +55,7 @@ blocks:
     - item: "log"
       probability: 1.0
       count: 1
+    tool_type: "axe"
     
   glass:
     display_name: "Glass"
@@ -85,6 +89,7 @@ blocks:
     - item: "sand"
       probability: 1.0
       count: 1
+    tool_type: "shovel"
     
   plank:
     display_name: "Plank"
@@ -97,6 +102,7 @@ blocks:
     - item: "plank"
       probability: 1.0
       count: 1
+    tool_type: "axe"
       
   crafting_table:
     display_name: "Crafting table"
@@ -111,3 +117,4 @@ blocks:
       - item: "crafting_table"
         probability: 1.0
         count: 1
+    tool_type: "axe"

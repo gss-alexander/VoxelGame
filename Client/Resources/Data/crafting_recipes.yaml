@@ -26,3 +26,17 @@
             - [plank, plank, plank]
             - [null, stick, null]
             - [null, stick, null]
+    wooden_axe:
+        result: wooden_axe
+        amount: 1
+        components:
+            - [plank, plank, null]
+            - [plank, stick, null]
+            - [null, stick, null]
+    wooden_shovel:
+        result: wooden_shovel
+        amount: 1
+        components:
+            - [null, plank, null]
+            - [null, stick, null]
+            - [null, stick, null]

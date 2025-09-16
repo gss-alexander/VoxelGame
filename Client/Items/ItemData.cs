@@ -13,8 +13,8 @@ public class MaterialItemData : ItemData
 public class ToolItemData : ItemData
 {
     public int Durability { get; set; }
-    public int MiningLevel { get; set; }
     public float MiningSpeed { get; set; }
+    public ToolType Type { get; set; }
 }
 
 public class FuelItemData : ItemData

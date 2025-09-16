@@ -184,7 +184,7 @@ public class Game
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "4.png"))
             .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
             .Build(OpenGl.Context);
-        _blockBreaking = new BlockBreaking(OpenGl.Context, blockBreakingShader, blockBreakingTextureArray, _soundPlayer);
+        _blockBreaking = new BlockBreaking(OpenGl.Context, blockBreakingShader, blockBreakingTextureArray, _soundPlayer, _playerInventory, _itemDatabase);
         _blockPlacement = new BlockPlacement(_playerInventory, itemDatabase, _blockDatabase, (blockPos, blockId) =>
         {
             _chunkSystem.PlaceBlock(blockPos, blockId);

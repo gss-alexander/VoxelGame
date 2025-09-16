@@ -8,9 +8,25 @@
         display_name: "Wooden Pickaxe"
         texture: "wooden_pickaxe.png"
         type: "tool"
+        tool_type: "pickaxe"
         durability: 65
-        mining_level: 1
-        mining_speed: 2
+        mining_speed: 5
+        
+    wooden_axe:
+        display_name: "Wooden Axe"
+        texture: "wooden_axe.png"
+        type: "tool"
+        tool_type: "axe"
+        durability: 65
+        mining_speed: 3
+        
+    wooden_shovel:
+        display_name: "Wooden Shovel"
+        texture: "wooden_shovel.png"
+        type: "tool"
+        tool_type: "shovel"
+        durability: 65
+        mining_speed: 3
         
     coal:
         display_name: "Coal"
