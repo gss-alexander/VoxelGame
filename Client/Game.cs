@@ -330,7 +330,8 @@ public class Game
                 var currentHeldSlot = _playerInventory.Hotbar.GetSlot(_playerInventory.SelectedHotbarSlot);
                 if (currentHeldSlot != null)
                 {
-                    _itemDroppingSystem.PlayerDropItem(_camera.Position, _camera.Direction, 7.5f, currentHeldSlot.ItemId);
+                    var dropOrigin = _camera.Position + _camera.Direction * 0.25f;
+                    _itemDroppingSystem.PlayerDropItem(dropOrigin, _camera.Direction, 7.5f, currentHeldSlot.ItemId);
                     _playerInventory.Hotbar.RemoveItemFromSlot(_playerInventory.SelectedHotbarSlot, 1);
                 }
             }
