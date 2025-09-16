@@ -23,7 +23,7 @@ blocks:
     is_solid: true
     strength: 10.0
     drops:
-      - item: "coal" 
+      - item: "grass" 
         probability: 1.0
         count: 1
     
@@ -34,6 +34,10 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 150.0
+    drops:
+      - item: "cobblestone"
+        probability: 1.0
+        count: 1
     
   log:
     display_name: "Log"
