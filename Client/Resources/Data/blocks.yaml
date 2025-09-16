@@ -35,7 +35,7 @@ blocks:
       default: "cobblestone.png"
     is_transparent: false
     is_solid: true
-    strength: 150.0
+    strength: 100.0
     drops:
       - item: "cobblestone"
         probability: 1.0
