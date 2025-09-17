@@ -24,6 +24,10 @@ public class Image : UiElement
 
     public override void Update(float deltaTime)
     {
+        foreach (var child in Children)
+        {
+            child.Update(deltaTime);
+        }
     }
 
     public override void Render(float deltaTime)
@@ -32,8 +36,8 @@ public class Image : UiElement
 
         if (IsDirty)
         {
-            _meshRenderer.UpdateMesh(GenerateQuadMesh());
             IsDirty = false;
+            _meshRenderer.UpdateMesh(GenerateQuadMesh());
         }
         
         OpenGl.Context.Enable(EnableCap.Blend);

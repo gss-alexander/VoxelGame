@@ -9,8 +9,31 @@ public class ItemStorage
 
     public class Slot
     {
-        public string ItemId { get; set; } = "null";
-        public int Count { get; set; }
+        public bool IsEmpty => ItemId == "null";
+        public event Action OnChanged;
+        
+        public string ItemId
+        {
+            get => _itemId;
+            set
+            {
+                _itemId = value;
+                OnChanged?.Invoke();
+            }
+        }
+
+        public int Count
+        {
+            get => _count;
+            set
+            {
+                _count = value;
+                OnChanged?.Invoke();
+            }
+        }
+
+        private string _itemId = "null";
+        private int _count;
     }
 
     private readonly Slot[] _slots;
@@ -22,6 +45,7 @@ public class ItemStorage
         for (var i = 0; i < slotCount; i++)
         {
             _slots[i] = new Slot();
+            _slots[i].OnChanged += () => OnChanged?.Invoke();
         }
     }
 

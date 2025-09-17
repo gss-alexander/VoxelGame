@@ -37,6 +37,7 @@ public abstract class UiElement
         {
             _position = value;
             IsDirty = true;
+            MakeChildrenDirty();
         }
     }
     
@@ -55,6 +56,7 @@ public abstract class UiElement
         {
             _size = value;
             IsDirty = true;
+            MakeChildrenDirty();
         }
     }
     public AnchorMode Anchor { get; set; } 
@@ -71,7 +73,17 @@ public abstract class UiElement
     public abstract void Update(float deltaTime);
     public abstract void Render(float deltaTime);
     public abstract bool HandleInput(Vector2 mousePosition, bool isClicked);
-
+    
+    public void SetAbsolutePosition(Vector2 absolutePosition)
+    {
+        var parentAbsolutePosition = Parent?.AbsolutePosition ?? Vector2.Zero;
+        var anchorPoint = CalculateAnchorPoint();
+        var pivotOffset = CalculatePivotOffset();
+        
+        Position = absolutePosition - parentAbsolutePosition - anchorPoint + pivotOffset;
+        IsDirty = true;
+        MakeChildrenDirty();
+    }
     public void AddChild(UiElement element)
     {
         Children.Add(element);
@@ -94,6 +106,14 @@ public abstract class UiElement
         }
         
         Children.Clear();
+    }
+    
+    private void MakeChildrenDirty()
+    {
+        foreach (var child in Children)
+        {
+            child.IsDirty = true;
+        }
     }
 
     public void CollectElements(List<UiElement> collection)

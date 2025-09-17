@@ -55,33 +55,25 @@ public class InventoryScreen : UiScreen
         
         for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
         {
-            var slot = _inventory.Hotbar.GetSlot(i);
-            if (slot != null)
-            {
-                var size = new Vector2(800f / 9f, 88f);
-                var position = new Vector2((850f / 9f) * i + 30f, -40f);
+            var slot = _inventory.Hotbar.GetSlotInternal(i);
+            var size = new Vector2(800f / 9f, 88f);
+            var position = new Vector2((850f / 9f) * i + 30f, -40f);
                 
-                var slotElement = new InventorySlot(position, size * 0.8f, _itemTextures);
-                slotElement.Slot = slot;
-                _backgroundPanel.AddChild(slotElement);
-                _slotElements.Add(slotElement);
-            }
+            var slotElement = new InventorySlot(slot, position, size * 0.8f, _itemTextures);
+            _backgroundPanel.AddChild(slotElement);
+            _slotElements.Add(slotElement);
         }
         
         for (var i = 0; i < _inventory.Storage.SlotCount; i++)
         {
-            var slot = _inventory.Storage.GetSlot(i);
-            if (slot != null)
-            {
-                var row = (int)MathF.Floor((float)i / 9);
-                var size = new Vector2(800f / 9f, 88f);
-                var position = new Vector2((850f / 9f) * (i % 9) + 30f, -140f - (90f * row));
-                
-                var slotElement = new InventorySlot(position, size * 0.8f, _itemTextures);
-                slotElement.Slot = slot;
-                _backgroundPanel.AddChild(slotElement);
-                _slotElements.Add(slotElement);
-            }
+            var slot = _inventory.Storage.GetSlotInternal(i);
+            var row = (int)MathF.Floor((float)i / 9);
+            var size = new Vector2(800f / 9f, 88f);
+            var position = new Vector2((850f / 9f) * (i % 9) + 30f, -140f - (90f * row));
+            
+            var slotElement = new InventorySlot(slot, position, size * 0.8f, _itemTextures);
+            _backgroundPanel.AddChild(slotElement);
+            _slotElements.Add(slotElement);
         }
     }
 }

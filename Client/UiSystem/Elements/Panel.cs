@@ -6,6 +6,10 @@ public class Panel : UiElement
 {
     public override void Update(float deltaTime)
     {
+        foreach (var child in Children)
+        {
+            child.Update(deltaTime);
+        }
     }
 
     public override void Render(float deltaTime)

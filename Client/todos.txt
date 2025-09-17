@@ -1,0 +1,1 @@
+# Make hotbar selectable via 1 - 9 keys

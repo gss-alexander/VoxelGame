@@ -9,6 +9,8 @@ public class UiManager
 {
     private readonly ActionContext _actionContext;
     private readonly Dictionary<Screen, UiScreen> _screens = new();
+
+    private readonly List<UiElement> _uiElementCollector = new();
     
     public UiManager(ActionContext actionContext, GameController gameController, PlayerInventory inventory, ItemTextures itemTextures)
     {
@@ -65,16 +67,17 @@ public class UiManager
 
     public void Update(float deltaTime)
     {
-        if (_actionContext.IsReleased(InputAction.UiClick))
+        _uiElementCollector.Clear();
+        
+        if (_actionContext.IsPressed(InputAction.UiClick))
         {
-            var elements = new List<UiElement>();
             foreach (var screen in _screens.Values)
             {
                 if (!screen.IsActive) continue;
-                screen.CollectElements(elements);
+                screen.CollectElements(_uiElementCollector);
             }
 
-            var sortedElements = elements.OrderBy(e => e.ZOrder);
+            var sortedElements = _uiElementCollector.OrderByDescending(e => e.ZOrder);
             foreach (var sortedElement in sortedElements)
             {
                 if (sortedElement.Visible && sortedElement.HandleInput(_actionContext.MousePosition, true))
@@ -82,6 +85,24 @@ public class UiManager
                     break;
                 }
             }
+        }
+        else
+        {
+            foreach (var screen in _screens.Values)
+            {
+                if (!screen.IsActive) continue;
+                screen.CollectElements(_uiElementCollector);
+            }
+
+            foreach (var element in _uiElementCollector)
+            {
+                element.HandleInput(_actionContext.MousePosition, false);
+            }
+        }
+
+        foreach (var screen in _screens.Values)
+        {
+            screen.Update(deltaTime);
         }
     }
 
