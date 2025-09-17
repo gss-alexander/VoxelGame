@@ -27,40 +27,23 @@ public class VoxelRaycaster
 
     public Hit? Cast(Vector3 origin, Vector3 direction, float maxDistance)
     {
-        // Normalize direction to ensure consistent behavior
         direction = Vector3.Normalize(direction);
-        
-        // Initialization Phase
-        // The algorithm breaks the ray into intervals of t, each spanning one voxel.
-        // We need to track our current voxel position and calculate how far we can travel
-        // before hitting the next voxel boundary in each dimension.
-        
-        // 1. Identify the voxel where the ray origin is located
-        // This gives us our starting voxel coordinates in the discrete voxel grid
+
         var blockOrigin = Block.WorldToBlockPosition(origin);
         
-        // 2. Current voxel coordinates - these will be updated as we traverse
         var x = blockOrigin.X;
         var y = blockOrigin.Y;
         var z = blockOrigin.Z;
         
-        // 3. Step direction for each axis (+1 or -1)
-        // This determines whether we increment or decrement coordinates when crossing boundaries
-        // The sign of the direction vector tells us which way we're moving along each axis
         var stepX = direction.X > 0 ? 1 : (direction.X < 0 ? -1 : 0);
         var stepY = direction.Y > 0 ? 1 : (direction.Y < 0 ? -1 : 0);
         var stepZ = direction.Z > 0 ? 1 : (direction.Z < 0 ? -1 : 0);
         
-        // 4-5. Calculate tMax values - the t parameter where ray crosses the next voxel boundary
-        // This represents how far along the ray we can travel before hitting the next grid line
-        // If direction component is 0, we never cross boundaries in that dimension
+        // Calculate tMax values - the t parameter where ray crosses the next voxel boundary
         float tMaxX, tMaxY, tMaxZ;
         
         if (stepX != 0)
         {
-            // Calculate which voxel boundary we'll hit next in X direction
-            // Voxel boundaries are at half-integer positions: ..., -0.5, 0.5, 1.5, ...
-            // If moving positive, we want the right edge; if negative, the left edge
             float voxelBoundaryX = stepX > 0 ? x + 0.5f : x - 0.5f;
             tMaxX = (voxelBoundaryX - origin.X) / direction.X;
         }
@@ -89,23 +72,16 @@ public class VoxelRaycaster
             tMaxZ = float.MaxValue;
         }
         
-        // 6. Calculate tDelta values - how much t increases when moving one voxel in each direction
-        // This represents the "cost" in t-parameter to move exactly one voxel width/height/depth
-        // We precompute this so we can quickly update tMax values during traversal
+        // Calculate tDelta values
         float tDeltaX = stepX != 0 ? Math.Abs(1.0f / direction.X) : float.MaxValue;
         float tDeltaY = stepY != 0 ? Math.Abs(1.0f / direction.Y) : float.MaxValue;
         float tDeltaZ = stepZ != 0 ? Math.Abs(1.0f / direction.Z) : float.MaxValue;
         
-        // Convert max distance to t parameter for boundary checking
         float tMax = maxDistance;
         
         // Incremental Traversal Phase
-        // The core insight: we always step into the voxel whose boundary is closest along the ray
-        // This ensures we visit voxels in the exact order the ray passes through them
         while (true)
         {
-            // Check current voxel for collision before moving to next
-            // This ensures we detect hits in the starting voxel and maintain proper order
             var currentPos = new Vector3D<int>(x, y, z);
             if (_isVoxelSolidFunc(currentPos))
             {
@@ -113,20 +89,16 @@ public class VoxelRaycaster
                 return new Hit(currentPos, BlockGeometry.FaceDirection.Top);
             }
             
-            // Determine which axis has the nearest boundary crossing
-            // The axis with minimum tMax is the one we'll cross first
-            // This is the heart of the algorithm - always step toward the nearest boundary
             if (tMaxX < tMaxY)
             {
                 if (tMaxX < tMaxZ)
                 {
-                    // X boundary is closest - step in X direction
                     if (tMaxX > tMax) break; // Exceeded max distance
                     
                     x += stepX;
                     tMaxX += tDeltaX; // Update when we'll hit the next X boundary
                     
-                    // Check for hit after stepping - face is opposite to step direction
+                    // Face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
                         var face = -stepX > 0 ? BlockGeometry.FaceDirection.Right : BlockGeometry.FaceDirection.Left;
@@ -135,13 +107,13 @@ public class VoxelRaycaster
                 }
                 else
                 {
-                    // Z boundary is closest - step in Z direction
+                    // step in Z direction
                     if (tMaxZ > tMax) break;
                     
                     z += stepZ;
                     tMaxZ += tDeltaZ;
                     
-                    // Check for hit after stepping - face is opposite to step direction
+                    // face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
                         var face = -stepZ > 0 ? BlockGeometry.FaceDirection.Front : BlockGeometry.FaceDirection.Back;
@@ -153,13 +125,13 @@ public class VoxelRaycaster
             {
                 if (tMaxY < tMaxZ)
                 {
-                    // Y boundary is closest - step in Y direction
+                    // step in Y direction
                     if (tMaxY > tMax) break;
                     
                     y += stepY;
                     tMaxY += tDeltaY;
                     
-                    // Check for hit after stepping - face is opposite to step direction
+                    //  face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
                         var face = -stepY > 0 ? BlockGeometry.FaceDirection.Top : BlockGeometry.FaceDirection.Bottom;
@@ -168,13 +140,13 @@ public class VoxelRaycaster
                 }
                 else
                 {
-                    // Z boundary is closest - step in Z direction
+                    // step in Z direction
                     if (tMaxZ > tMax) break;
                     
                     z += stepZ;
                     tMaxZ += tDeltaZ;
                     
-                    // Check for hit after stepping - face is opposite to step direction
+                    //face is opposite to step direction
                     if (_isVoxelSolidFunc(new Vector3D<int>(x, y, z)))
                     {
                         var face = -stepZ > 0 ? BlockGeometry.FaceDirection.Front : BlockGeometry.FaceDirection.Back;
