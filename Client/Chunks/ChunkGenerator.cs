@@ -67,7 +67,7 @@ public class ChunkGenerator
     {
         _noise.SetSeed(_seed);
         
-        var stoneId = _blockDatabase.GetInternalId("cobblestone");
+        var stoneId = _blockDatabase.GetInternalId("stone");
         var dirtId = _blockDatabase.GetInternalId("dirt");
         var grassId = _blockDatabase.GetInternalId("grass");
         var bedrockId = _blockDatabase.GetInternalId("bedrock");
