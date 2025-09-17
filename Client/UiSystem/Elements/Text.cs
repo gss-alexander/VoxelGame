@@ -40,7 +40,7 @@ public class Text : UiElement
         _meshRenderer.SetVertexAttribute(1, 2, VertexAttribPointerType.Float, 4, 2);
         _meshRenderer.Unbind();
 
-        _characterMap = new CharacterMap(OpenGl.Context);
+        _characterMap = CharacterMap.LoadForFont("Roboto-VariableFont_wdth,wght");
     }
     
     public override void Update(float deltaTime)

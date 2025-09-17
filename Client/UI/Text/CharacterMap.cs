@@ -4,15 +4,27 @@ namespace Client.UI.Text;
 
 public class CharacterMap
 {
+    private static readonly Dictionary<string, CharacterMap> _characterMaps = new();
+    
     public const float BaseFontSize = 16f;
     
-    private readonly GL _gl;
     private readonly Dictionary<char, Character> _map = new();
 
-    public CharacterMap(GL gl)
+    public static CharacterMap LoadForFont(string fontName)
     {
-        _gl = gl;
-        Initialize();
+        if (_characterMaps.TryGetValue(fontName, out var cachedCharacterMap))
+        {
+            return cachedCharacterMap;
+        }
+
+        var characterMap = new CharacterMap(fontName);
+        _characterMaps.Add(fontName, characterMap);
+        return characterMap;
+    }
+
+    public CharacterMap(string fontName)
+    {
+        Initialize(fontName);
     }
 
     public Character GetCharacter(char c)
@@ -20,9 +32,9 @@ public class CharacterMap
         return _map[c];
     }
 
-    private void Initialize()
+    private void Initialize(string fontName)
     {
-        FontLoader.LoadFace(Path.Combine("..", "..", "..", "Resources", "Fonts", "Roboto-VariableFont_wdth,wght.ttf"));
+        FontLoader.LoadFace(Path.Combine("..", "..", "..", "Resources", "Fonts", $"{fontName}.ttf"));
         
         // Loads the first 128 characters as opengl textures
         for (int characterIndex = 0; characterIndex < 128; characterIndex++)
@@ -31,7 +43,7 @@ public class CharacterMap
             {
                 var c = (char)characterIndex;
                 FontLoader.LoadChar(c);
-                var character = new Character(_gl,
+                var character = new Character(OpenGl.Context,
                     FontLoader.LoadedCharWidth,
                     FontLoader.LoadedCharHeight,
                     FontLoader.LoadedCharLeft,
@@ -43,7 +55,7 @@ public class CharacterMap
             }
         }
         
-        Console.WriteLine($"[Character map]: Loaded {_map.Count} characters");
+        Console.WriteLine($"[Character map]: Loaded {_map.Count} characters for font {fontName}");
         FontLoader.ClearFreeTypeResources();
     }
 }
