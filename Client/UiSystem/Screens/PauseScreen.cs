@@ -28,16 +28,6 @@ public class PauseScreen : UiScreen
         background.ZOrder = 0;
         rootElement.AddChild(background);
 
-        var titleText = new Text();
-        titleText.FontSize = 32f;
-        titleText.Content = "Voxel Game";
-        titleText.Size = new Vector2(200f, 200f);
-        titleText.Anchor = UiElement.AnchorMode.CenterTop;
-        titleText.Alignment = Text.TextAlignment.Center;
-        titleText.Position = new Vector2(0f, 200f);
-        titleText.ZOrder = 0;
-        rootElement.AddChild(titleText);
-
         CreateContinueButton();
         CreateQuitButton();
     }
@@ -52,6 +42,12 @@ public class PauseScreen : UiScreen
         button.OnClick += () => IsActive = false;
         button.ZOrder = 1;
         rootElement.AddChild(button);
+        
+        var image = new Image();
+        image.Sprite = Textures.GetTexture(Textures.TextureCategory.Ui, "pause_menu_button");
+        image.Size = button.Size;
+        image.Anchor = UiElement.AnchorMode.LeftTop;
+        button.AddChild(image);
 
         var label = new Text();
         label.FontSize = 12f;
@@ -59,14 +55,11 @@ public class PauseScreen : UiScreen
         label.Position = Vector2.Zero;
         label.Size = button.Size;
         label.ZOrder = 0;
-        label.Anchor = UiElement.AnchorMode.LeftTop;
+        label.Anchor = UiElement.AnchorMode.CenterMiddle;
+        label.Pivot = UiElement.PivotMode.CenterMiddle;
+        label.HorizontalAlign = Text.HorizontalAlignment.Center;
+        label.VerticalAlign = Text.VerticalAlignment.Middle;
         button.AddChild(label);
-
-        var image = new Image();
-        image.Sprite = Textures.GetTexture(Textures.TextureCategory.Ui, "pause_menu_button");
-        image.Size = button.Size;
-        image.Anchor = UiElement.AnchorMode.LeftTop;
-        button.AddChild(image);
     }
     
     private void CreateQuitButton()
@@ -80,19 +73,22 @@ public class PauseScreen : UiScreen
         button.ZOrder = 1;
         rootElement.AddChild(button);
 
+        var image = new Image();
+        image.Sprite = Textures.GetTexture(Textures.TextureCategory.Ui, "pause_menu_button");
+        image.Size = button.Size;
+        image.Anchor = UiElement.AnchorMode.LeftTop;
+        button.AddChild(image);
+        
         var label = new Text();
         label.FontSize = 12f;
         label.Content = "Quit";
         label.Position = Vector2.Zero;
         label.Size = button.Size;
         label.ZOrder = 0;
-        label.Anchor = UiElement.AnchorMode.LeftTop;
+        label.Anchor = UiElement.AnchorMode.CenterMiddle;
+        label.Pivot = UiElement.PivotMode.CenterMiddle;
+        label.HorizontalAlign = Text.HorizontalAlignment.Center;
+        label.VerticalAlign = Text.VerticalAlignment.Middle;
         button.AddChild(label);
-
-        var image = new Image();
-        image.Sprite = Textures.GetTexture(Textures.TextureCategory.Ui, "pause_menu_button");
-        image.Size = button.Size;
-        image.Anchor = UiElement.AnchorMode.LeftTop;
-        button.AddChild(image);
     }
 }
