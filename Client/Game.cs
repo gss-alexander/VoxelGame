@@ -311,6 +311,10 @@ public class Game
                 }
             
                 _chunkSystem.DestroyBlock(hit.Position);
+                if (block.DestructionSoundId != null)
+                {
+                    _soundPlayer.PlaySound(block.DestructionSoundId);
+                }
             }
         
             if (_currentMouseClickCooldown <= 0f)

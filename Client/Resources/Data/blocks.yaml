@@ -12,6 +12,7 @@ blocks:
         count: 1
     placement_sound_id: "blocks/placement/default"
     breaking_sound_id: "step"
+    destruction_sound_id: "blocks/destruction/dirt"
     tool_type: "shovel"
     
   grass:

@@ -5,6 +5,8 @@ sounds:
     path: "block_place.wav"
   blocks/breaking/default:
     path: "block_break.wav"
+  blocks/destruction/dirt:
+    path: "dirt_break.wav"
   blocks/placement/glass:
     path: "glass_place.wav"
   step:
