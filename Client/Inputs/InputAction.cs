@@ -18,4 +18,5 @@ public enum InputAction
     // UI
     UiClick,
     TogglePause,
+    ToggleInventory
 }

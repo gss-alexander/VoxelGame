@@ -148,9 +148,6 @@ public class Game
 
         _playerInventory = new PlayerInventory();
         
-        var textShader = new Shader(GetShaderPath("text.vert"), GetShaderPath("text.frag"));
-        // _textRenderer = new TextRenderer(textShader, characterMap);
-        
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
         itemDatabase.RegisterBlockItems(_blockDatabase.GetAll().Select(b => b.data).ToArray());
@@ -163,19 +160,8 @@ public class Game
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
 
-        // var uiTexture = new Texture(OpenGl.Context, GetTexturePath("hotbar_slot_background.png"));
-        // _hotbarRenderer = new HotbarRenderer(OpenGl.Context, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            // uiTexture, _textRenderer);
-
-        // var inventoryRenderer = new InventoryRenderer(_playerInventory, window.Size.AsFloatVector(), _itemTextures,
-        //     uiTexture, _textRenderer);
-        // var draggableItemRenderer =
-        //     new DraggableItemRenderer(_textRenderer, window.Size.AsFloatVector(), _itemTextures);
-
         var craftingRecipes = CraftingRecipesLoader.Load();
         var craftingGrid = new CraftingGrid(3, 3, craftingRecipes);
-        // var craftingGridUi = new CraftingGridUi(craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
-        // _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
 
         var blockBreakingShader =
             new Shader(GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -212,11 +198,6 @@ public class Game
     private SoundPlayer _soundPlayer;
 
     private bool _isWorldLoaded;
-
-    private static string GetTexturePath(string name)
-    {
-        return Path.Combine("..", "..", "..", "Resources", "Textures", name);
-    }
 
     private static string GetShaderPath(string name)
     {
@@ -366,6 +347,11 @@ public class Game
         if (_actionContext.IsPressed(InputAction.TogglePause))
         {
             _uiManager.TogglePauseMenu();
+        }
+
+        if (_actionContext.IsPressed(InputAction.ToggleInventory))
+        {
+            _uiManager.TryToggleInventoryMenu();
         }
         
         _uiManager.Update((float)deltaTime);

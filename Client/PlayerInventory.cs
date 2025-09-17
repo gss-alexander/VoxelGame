@@ -24,7 +24,7 @@ public class PlayerInventory
     public PlayerInventory()
     {
         Hotbar = new ItemStorage(9, 64);
-        Storage = new ItemStorage(32, 64);
+        Storage = new ItemStorage(27, 64);
     }
 
     public static void Copy(PlayerInventory source, PlayerInventory destination)

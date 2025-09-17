@@ -66,6 +66,7 @@ public class ActionContext
         UpdateMouseAction(InputAction.PlaceBlock, MouseButton.Right);
         UpdateKeyboardAction(InputAction.TogglePause, Key.Escape);
         UpdateMouseAction(InputAction.UiClick, MouseButton.Left);
+        UpdateKeyboardAction(InputAction.ToggleInventory, Key.Tab);
     }
 
     private void UpdateKeyboardAction(InputAction action, Key associatedKey)

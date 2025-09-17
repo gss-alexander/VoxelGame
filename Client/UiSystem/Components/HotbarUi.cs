@@ -18,7 +18,7 @@ public class HotbarUi : Image
         _itemTextures = itemTextures;
         
         Size = new Vector2(800f, 88f);
-        Position = new Vector2(0f, -100f);
+        Position = new Vector2(0f, -50f);
         Anchor = AnchorMode.CenterBottom;
         Pivot = PivotMode.CenterMiddle;
         Sprite = Textures.GetTexture(Textures.TextureCategory.Ui, "hotbar_background");

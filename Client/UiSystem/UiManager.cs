@@ -34,11 +34,33 @@ public class UiManager
         hudScreen.Initialize();
         _screens.Add(Screen.Hud, hudScreen);
         hudScreen.IsActive = true;
+
+        // Inventory
+        var inventoryScreen = new InventoryScreen(inventory, itemTextures);
+        inventoryScreen.Initialize();
+        inventoryScreen.OnOpen += () =>
+        {
+            _actionContext.SetCursorLocked(false);
+            _actionContext.MovementBlocked = true;
+        };
+        inventoryScreen.OnClose += () =>
+        {
+            _actionContext.SetCursorLocked(true);
+            _actionContext.MovementBlocked = false;
+        };
+        _screens.Add(Screen.Inventory, inventoryScreen);
     }
 
     public void TogglePauseMenu()
     {
         _screens[Screen.PauseMenu].IsActive = !_screens[Screen.PauseMenu].IsActive;
+    }
+
+    public void TryToggleInventoryMenu()
+    {
+        if (_screens[Screen.PauseMenu].IsActive) return;
+
+        _screens[Screen.Inventory].IsActive = !_screens[Screen.Inventory].IsActive;
     }
 
     public void Update(float deltaTime)
