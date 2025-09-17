@@ -1,5 +1,6 @@
 using System.Numerics;
 using Client.Items;
+using Client.UiSystem.Components;
 using Client.UiSystem.Elements;
 
 namespace Client.UiSystem.Screens;
@@ -52,64 +53,34 @@ public class InventoryScreen : UiScreen
         }
         _slotElements.Clear();
         
-        
         for (var i = 0; i < _inventory.Hotbar.SlotCount; i++)
         {
             var slot = _inventory.Hotbar.GetSlot(i);
-            var size = new Vector2(800f / 9f, 88f);
-            var position = new Vector2((850f / 9f) * i, -40f);
-            
             if (slot != null)
             {
-                var slotElement = new Image();
-                slotElement.Sprite = _itemTextures.GetTextureForItem(slot.ItemId);
-                slotElement.Size = size * 0.8f;
-                slotElement.Anchor = UiElement.AnchorMode.LeftBottom;
-                slotElement.Pivot = UiElement.PivotMode.LeftBottom;
-                slotElement.Position = position with { X = position.X + 30f};
+                var size = new Vector2(800f / 9f, 88f);
+                var position = new Vector2((850f / 9f) * i + 30f, -40f);
+                
+                var slotElement = new InventorySlot(position, size * 0.8f, _itemTextures);
+                slotElement.Slot = slot;
                 _backgroundPanel.AddChild(slotElement);
                 _slotElements.Add(slotElement);
-
-                var countLabel = new Text();
-                countLabel.Anchor = UiElement.AnchorMode.RightTop;
-                countLabel.Pivot = UiElement.PivotMode.RightMiddle;
-                countLabel.HorizontalAlign = Text.HorizontalAlignment.Right;
-                countLabel.FontSize = 5f;
-                countLabel.Color = Vector3.Zero;
-                countLabel.Content = slot.Count.ToString();
-                countLabel.Position = new Vector2(-5f, 10f);
-                slotElement.AddChild(countLabel);
             }
         }
         
         for (var i = 0; i < _inventory.Storage.SlotCount; i++)
         {
-            var row = (int)MathF.Floor((float)i / 9);
-            
             var slot = _inventory.Storage.GetSlot(i);
-            var size = new Vector2(800f / 9f, 88f);
-            var position = new Vector2((850f / 9f) * (i % 9) + 30f, -140f - (90f * row));
-            
             if (slot != null)
             {
-                var slotElement = new Image();
-                slotElement.Sprite = _itemTextures.GetTextureForItem(slot.ItemId);
-                slotElement.Size = size * 0.8f;
-                slotElement.Anchor = UiElement.AnchorMode.LeftBottom;
-                slotElement.Pivot = UiElement.PivotMode.LeftBottom;
-                slotElement.Position = position;
+                var row = (int)MathF.Floor((float)i / 9);
+                var size = new Vector2(800f / 9f, 88f);
+                var position = new Vector2((850f / 9f) * (i % 9) + 30f, -140f - (90f * row));
+                
+                var slotElement = new InventorySlot(position, size * 0.8f, _itemTextures);
+                slotElement.Slot = slot;
                 _backgroundPanel.AddChild(slotElement);
                 _slotElements.Add(slotElement);
-
-                var countLabel = new Text();
-                countLabel.Anchor = UiElement.AnchorMode.RightTop;
-                countLabel.Pivot = UiElement.PivotMode.RightMiddle;
-                countLabel.HorizontalAlign = Text.HorizontalAlignment.Right;
-                countLabel.FontSize = 5f;
-                countLabel.Color = Vector3.Zero;
-                countLabel.Content = slot.Count.ToString();
-                countLabel.Position = new Vector2(-5f, 10f);
-                slotElement.AddChild(countLabel);
             }
         }
     }
