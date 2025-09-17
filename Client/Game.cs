@@ -58,7 +58,7 @@ public class Game
     private BlockTextures _blockTextures;
     private BlockDatabase _blockDatabase;
 
-    private TextRenderer _textRenderer;
+    // private TextRenderer _textRenderer;
 
     private BlockBreaking _blockBreaking;
     private BlockPlacement _blockPlacement;
@@ -148,9 +148,8 @@ public class Game
 
         _playerInventory = new PlayerInventory();
         
-        var characterMap = new CharacterMap(OpenGl.Context);
         var textShader = new Shader(GetShaderPath("text.vert"), GetShaderPath("text.frag"));
-        _textRenderer = new TextRenderer(textShader, characterMap);
+        // _textRenderer = new TextRenderer(textShader, characterMap);
         
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
@@ -164,19 +163,19 @@ public class Game
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
 
-        var uiTexture = new Texture(OpenGl.Context, GetTexturePath("hotbar_slot_background.png"));
-        _hotbarRenderer = new HotbarRenderer(OpenGl.Context, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            uiTexture, _textRenderer);
+        // var uiTexture = new Texture(OpenGl.Context, GetTexturePath("hotbar_slot_background.png"));
+        // _hotbarRenderer = new HotbarRenderer(OpenGl.Context, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
+            // uiTexture, _textRenderer);
 
-        var inventoryRenderer = new InventoryRenderer(_playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            uiTexture, _textRenderer);
-        var draggableItemRenderer =
-            new DraggableItemRenderer(_textRenderer, window.Size.AsFloatVector(), _itemTextures);
+        // var inventoryRenderer = new InventoryRenderer(_playerInventory, window.Size.AsFloatVector(), _itemTextures,
+        //     uiTexture, _textRenderer);
+        // var draggableItemRenderer =
+        //     new DraggableItemRenderer(_textRenderer, window.Size.AsFloatVector(), _itemTextures);
 
         var craftingRecipes = CraftingRecipesLoader.Load();
         var craftingGrid = new CraftingGrid(3, 3, craftingRecipes);
-        var craftingGridUi = new CraftingGridUi(craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
-        _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
+        // var craftingGridUi = new CraftingGridUi(craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
+        // _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
 
         var blockBreakingShader =
             new Shader(GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -205,12 +204,9 @@ public class Game
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
             _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player, _soundPlayer, _graphicsSettings);
 
-        var sprite = new Texture(OpenGl.Context,
-                Path.Combine("..", "..", "..", "Resources", "Textures", "Blocks", "crafting_table_side.png"));
-
         _gameController = new GameController(() => _window.Close());
         
-        _uiManager = new UiManager(_actionContext, _gameController);
+        _uiManager = new UiManager(_actionContext, _gameController, _playerInventory, _itemTextures);
     }
 
     private SoundPlayer _soundPlayer;
@@ -247,14 +243,14 @@ public class Game
         var isLeftClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Left);
         if (isLeftClickPressed != _lastLeftClickStatus && isLeftClickPressed)
         {
-            _uiRenderer.OnMouseClicked(MouseButton.Left, _primaryMouse.Position);
+            // _uiRenderer.OnMouseClicked(MouseButton.Left, _primaryMouse.Position);
         }
         _lastLeftClickStatus = isLeftClickPressed;
         
         var isRightClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Right);
         if (isRightClickPressed != _lastRightClickStatus && isRightClickPressed)
         {
-            _uiRenderer.OnMouseClicked(MouseButton.Right, _primaryMouse.Position);
+            // _uiRenderer.OnMouseClicked(MouseButton.Right, _primaryMouse.Position);
         }
         _lastRightClickStatus = isRightClickPressed;
         
@@ -363,7 +359,7 @@ public class Game
         
         _itemDroppingSystem.Update((float)deltaTime);
         
-        _uiRenderer.Update(_primaryMouse.Position);
+        // _uiRenderer.Update(_primaryMouse.Position);
         
         _cloudSystem.Update((float)deltaTime);
 
@@ -438,7 +434,7 @@ public class Game
         _uiManager.Render((float)deltaTime);
         
         _crosshairRenderer.Render();
-        _uiRenderer.Render();
+        // _uiRenderer.Render();
         
         _imGuiController.Render();
 
@@ -498,7 +494,7 @@ public class Game
     {
         if (pressedKey == Key.Tab)
         {
-            _uiRenderer.ToggleInventory();
+            // _uiRenderer.ToggleInventory();
         }
     }
 

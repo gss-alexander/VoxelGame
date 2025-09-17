@@ -2,6 +2,7 @@
 
 public class ItemStorage
 {
+    public event Action OnChanged;
     public int SlotCount => _slots.Length;
     
     private readonly int _slotCapacity;
@@ -72,6 +73,7 @@ public class ItemStorage
             slot.ItemId = itemId;
         }
         slot.Count += count;
+        OnChanged?.Invoke();
     }
 
     public void AddItemToSlot(int slotIndex, string itemId, int count)
@@ -91,6 +93,7 @@ public class ItemStorage
             slot.ItemId = itemId;
             slot.Count = count;
         }
+        OnChanged?.Invoke();
     }
 
     public void RemoveItemFromSlot(int slotIndex, int amount)
@@ -117,6 +120,7 @@ public class ItemStorage
         {
             slot.ItemId = "null";
         }
+        OnChanged?.Invoke();
     }
 
     public bool CanAdd(string itemId, int count)

@@ -6,8 +6,8 @@ namespace Client.UiSystem.Screens;
 
 public abstract class UiScreen
 {
-    public Action OnOpen;
-    public Action OnClose;
+    public event Action OnOpen;
+    public event Action OnClose;
 
     public bool IsActive
     {
@@ -19,12 +19,12 @@ public abstract class UiScreen
             
             if (_isActive && !wasActive)
             {
-                OnOpen.Invoke();
+                OnOpen?.Invoke();
             }
 
             if (!_isActive && wasActive)
             {
-                OnClose.Invoke();
+                OnClose?.Invoke();
             }
         }
     }

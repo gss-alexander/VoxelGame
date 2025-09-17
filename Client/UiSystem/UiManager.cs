@@ -1,4 +1,5 @@
 using Client.Inputs;
+using Client.Items;
 using Client.UiSystem.Elements;
 using Client.UiSystem.Screens;
 
@@ -9,10 +10,11 @@ public class UiManager
     private readonly ActionContext _actionContext;
     private readonly Dictionary<Screen, UiScreen> _screens = new();
     
-    public UiManager(ActionContext actionContext, GameController gameController)
+    public UiManager(ActionContext actionContext, GameController gameController, PlayerInventory inventory, ItemTextures itemTextures)
     {
         _actionContext = actionContext;
         
+        // Pause screen
         var pauseScreen = new PauseScreen(gameController);
         pauseScreen.Initialize();
         pauseScreen.OnOpen += () =>
@@ -25,8 +27,13 @@ public class UiManager
             _actionContext.SetCursorLocked(true);
             _actionContext.MovementBlocked = false;
         };
-
         _screens.Add(Screen.PauseMenu, pauseScreen);
+
+        // HUD
+        var hudScreen = new HudScreen(inventory, itemTextures);
+        hudScreen.Initialize();
+        _screens.Add(Screen.Hud, hudScreen);
+        hudScreen.IsActive = true;
     }
 
     public void TogglePauseMenu()

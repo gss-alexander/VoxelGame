@@ -86,6 +86,16 @@ public abstract class UiElement
         }
     }
 
+    public void DestroyAllChildren()
+    {
+        foreach (var child in Children)
+        {
+            child.Parent = null;
+        }
+        
+        Children.Clear();
+    }
+
     public void CollectElements(List<UiElement> collection)
     {
         collection.Add(this);

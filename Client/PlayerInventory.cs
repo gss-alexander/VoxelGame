@@ -4,15 +4,26 @@ namespace Client;
 
 public class PlayerInventory
 {
+    public event Action OnSelectedHotbarSlotChanged;
     public ItemStorage.Slot? CurrentHeldSlot => Hotbar.GetSlot(SelectedHotbarSlot);
-    
-    public int SelectedHotbarSlot { get; set; }
+
+    public int SelectedHotbarSlot
+    {
+        get => _selectedHotbarSlot;
+        set
+        {
+            _selectedHotbarSlot = value;
+            OnSelectedHotbarSlotChanged?.Invoke();
+        }
+    }
     public ItemStorage Hotbar { get; }
     public ItemStorage Storage { get; }
 
+    private int _selectedHotbarSlot;
+
     public PlayerInventory()
     {
-        Hotbar = new ItemStorage(8, 64);
+        Hotbar = new ItemStorage(9, 64);
         Storage = new ItemStorage(32, 64);
     }
 
