@@ -6,19 +6,16 @@ namespace Client;
 public class Texture
 {
     private readonly uint _handle;
-    private readonly GL _gl;
 
-    public unsafe Texture(GL gl, string path)
+    public unsafe Texture(string path)
     {
-        _gl = gl;
-
-        _handle = _gl.GenTexture();
+        _handle = OpenGl.Context.GenTexture();
         Bind();
 
         var imageResult = ImageResult.FromMemory(File.ReadAllBytes(path), ColorComponents.RedGreenBlueAlpha);
         fixed (byte* ptr = imageResult.Data)
         {
-            _gl.TexImage2D(TextureTarget.Texture2D,
+            OpenGl.Context.TexImage2D(TextureTarget.Texture2D,
                 0,
                 InternalFormat.Rgba,
                 (uint)imageResult.Width,
@@ -33,40 +30,44 @@ public class Texture
         SetParameters();
     }
 
-    public unsafe Texture(GL gl, uint width, uint height, byte* data)
+    public unsafe Texture(byte[] data, uint width, uint height)
     {
-        _gl = gl;
-        _handle = _gl.GenTexture();
+        _handle = OpenGl.Context.GenTexture();
         Bind();
 
-        _gl.TexImage2D(
-            TextureTarget.Texture2D,
-            0,
-            InternalFormat.Red,
-            width,
-            height,
-            0,
-            GLEnum.Red,
-            PixelType.UnsignedByte,
-            data
-        );
+        fixed (byte* ptr = data)
+        {
+            OpenGl.Context.TexImage2D(
+                TextureTarget.Texture2D,
+                0,
+                InternalFormat.Rgba,
+                width,
+                height,
+                0,
+                GLEnum.Rgba,
+                PixelType.UnsignedByte,
+                ptr
+            );
+        }
+        
+        SetParameters();
     }
 
     public void Bind(TextureUnit textureSlot = TextureUnit.Texture0)
     {
-        _gl.ActiveTexture(textureSlot);
-        _gl.BindTexture(TextureTarget.Texture2D, _handle);
+        OpenGl.Context.ActiveTexture(textureSlot);
+        OpenGl.Context.BindTexture(TextureTarget.Texture2D, _handle);
     }
 
     private void SetParameters()
     {
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) GLEnum.Nearest);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) GLEnum.Nearest);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
-        _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 8);
+        OpenGl.Context.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) GLEnum.ClampToEdge);
+        OpenGl.Context.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) GLEnum.ClampToEdge);
+        OpenGl.Context.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) GLEnum.Nearest);
+        OpenGl.Context.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) GLEnum.Nearest);
+        OpenGl.Context.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
+        OpenGl.Context.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 8);
         
-        _gl.GenerateMipmap(TextureTarget.Texture2D);
+        OpenGl.Context.GenerateMipmap(TextureTarget.Texture2D);
     }
 }

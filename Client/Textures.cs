@@ -34,6 +34,6 @@ public static class Textures
     private static Texture LoadTexture(TextureCategory category, string name)
     {
         var path = Path.Combine("..", "..", "..", "Resources", "Textures", category.ToString(), $"{name}.png");
-        return new Texture(OpenGl.Context, path);
+        return new Texture(path);
     }
 }
