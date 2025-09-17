@@ -17,7 +17,6 @@ using Client.Sound;
 using Client.UI;
 using Client.UI.Text;
 using Client.UiSystem;
-using Client.UiSystem.Components;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;

@@ -1,14 +1,11 @@
 using System.Numerics;
 
-namespace Client.UiSystem.Components;
+namespace Client.UiSystem.Elements;
 
-public class Button : UiElement
+public class Panel : UiElement
 {
-    public event Action OnClick;
-    
     public override void Update(float deltaTime)
     {
-        
     }
 
     public override void Render(float deltaTime)
@@ -21,13 +18,6 @@ public class Button : UiElement
 
     public override bool HandleInput(Vector2 mousePosition, bool isClicked)
     {
-        if (!IsPointInside(mousePosition)) return false;
-        
-        if (isClicked)
-        {
-            OnClick.Invoke();
-        }
-
-        return true;
+        return false;
     }
 }

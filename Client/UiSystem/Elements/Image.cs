@@ -1,7 +1,7 @@
 using System.Numerics;
 using Silk.NET.OpenGL;
 
-namespace Client.UiSystem.Components;
+namespace Client.UiSystem.Elements;
 
 public class Image : UiElement
 {

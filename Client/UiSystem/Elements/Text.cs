@@ -2,7 +2,7 @@ using System.Numerics;
 using Client.UI.Text;
 using Silk.NET.OpenGL;
 
-namespace Client.UiSystem.Components;
+namespace Client.UiSystem.Elements;
 
 public class Text : UiElement
 {

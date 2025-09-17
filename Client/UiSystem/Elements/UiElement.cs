@@ -1,7 +1,6 @@
 using System.Numerics;
-using Silk.NET.Vulkan;
 
-namespace Client.UiSystem;
+namespace Client.UiSystem.Elements;
 
 public abstract class UiElement
 {
