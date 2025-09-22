@@ -13,6 +13,7 @@ public class DebugMenu
     public bool FreeCamEnabled { get; private set; }
     public bool RenderWireframes { get; private set; }
     public bool UseVSync { get; private set; }
+    public bool EnableSound { get; private set; }
     
     private readonly Camera _camera;
     private readonly BlockDatabase _blockDatabase;
@@ -85,6 +86,10 @@ public class DebugMenu
         var useVSync = UseVSync;
         ImGuiNET.ImGui.Checkbox("V-Sync", ref useVSync);
         UseVSync = useVSync;
+
+        var enableSound = EnableSound;
+        ImGuiNET.ImGui.Checkbox("Sound enabled", ref enableSound);
+        EnableSound = enableSound;
     }
 
     private void DrawAverages()

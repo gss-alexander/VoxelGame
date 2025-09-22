@@ -126,7 +126,7 @@ public class Game
             GetShaderPath("shader.frag")
         );
         
-        _soundPlayer = new SoundPlayer();
+        _soundPlayer = new SoundPlayer(() => _debugMenu.EnableSound);
 
         OnFrameBufferResize(window.Size);
 
