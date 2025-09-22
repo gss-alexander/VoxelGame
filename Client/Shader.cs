@@ -53,6 +53,12 @@ public class Shader
         var location = GetUniformLocation(name);
         OpenGl.Context.Uniform1(location, value);
     }
+    
+    public void SetUniform(string name, Vector2 value)
+    {
+        var location = GetUniformLocation(name);
+        OpenGl.Context.Uniform2(location, value);
+    }
 
     public void SetUniform(string name, Vector3 value)
     {

@@ -12,6 +12,7 @@ blocks:
         count: 1
     placement_sound_id: "blocks/placement/default"
     breaking_sound_id: "step"
+    destruction_sound_id: "blocks/destruction/dirt"
     tool_type: "shovel"
     
   grass:
@@ -33,6 +34,19 @@ blocks:
     display_name: "Cobblestone"
     textures:
       default: "cobblestone.png"
+    is_transparent: false
+    is_solid: true
+    strength: 80.0
+    drops:
+      - item: "cobblestone"
+        probability: 1.0
+        count: 1
+    tool_type: "pickaxe"
+    
+  stone:
+    display_name: "Stone"
+    textures:
+      default: "stone.png"
     is_transparent: false
     is_solid: true
     strength: 100.0
@@ -126,3 +140,13 @@ blocks:
     is_transparent: false
     is_solid: true
     strength: 10000.0
+    
+  cactus:
+    display_name: "Cactus"
+    textures:
+      default: "cactus_side.png"
+      top: "cactus_top_bot.png"
+      bottom: "cactus_top_bot.png"
+    is_transparent: false
+    is_solid: true
+    strength: 10.0

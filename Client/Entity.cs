@@ -65,17 +65,7 @@ public class Entity
         if (HasCollision(newPosition))
         {
             newPosition.Y -= deltaMovement.Y;
-
-            if (deltaMovement.Y < 0)
-            {
-                IsGrounded = true;
-            }
-
             Velocity = Velocity with { Y = 0f };
-        }
-        else
-        {
-            IsGrounded = false;
         }
 
         newPosition.Z += deltaMovement.Z;
@@ -86,6 +76,9 @@ public class Entity
         }
 
         Position = newPosition;
+
+        var groundCheckPosition = newPosition with { Y = newPosition.Y - 0.01f };
+        IsGrounded = HasCollision(groundCheckPosition);
     }
     
     private bool HasCollision(Vector3 position)

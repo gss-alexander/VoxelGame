@@ -1,5 +1,7 @@
-﻿using Client.Blocks;
+﻿using System.Diagnostics;
+using Client.Blocks;
 using Client.Chunks.Structures;
+using Client.Diagnostics;
 using Silk.NET.Maths;
 
 namespace Client.Chunks;
@@ -12,6 +14,8 @@ public class ChunkGenerator
     private readonly BlockDatabase _blockDatabase;
     private readonly int _seed;
 
+    private readonly Stopwatch _generationStopwatch = new();
+
     public ChunkGenerator(FastNoiseLite noise, BlockDatabase blockDatabase, int seed)
     {
         _noise = noise;
@@ -21,6 +25,7 @@ public class ChunkGenerator
 
     public ChunkData Generate(Vector2D<int> chunkPosition)
     {
+        _generationStopwatch.Restart();
         var fillBlockId = _blockDatabase.GetInternalId("air");
         var chunkData = new ChunkData(chunkPosition, fillBlockId);
         
@@ -32,6 +37,8 @@ public class ChunkGenerator
             PlaceStructure(chunkData, structure);
         }
 
+        _generationStopwatch.Stop();
+        ChunkGenerationTimeTracking.TerrainGenerationTime.AddTime((float)_generationStopwatch.Elapsed.TotalSeconds);
         return chunkData;
     }
 
@@ -67,7 +74,7 @@ public class ChunkGenerator
     {
         _noise.SetSeed(_seed);
         
-        var stoneId = _blockDatabase.GetInternalId("cobblestone");
+        var stoneId = _blockDatabase.GetInternalId("stone");
         var dirtId = _blockDatabase.GetInternalId("dirt");
         var grassId = _blockDatabase.GetInternalId("grass");
         var bedrockId = _blockDatabase.GetInternalId("bedrock");

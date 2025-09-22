@@ -16,6 +16,7 @@ using Client.Settings;
 using Client.Sound;
 using Client.UI;
 using Client.UI.Text;
+using Client.UiSystem;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -43,7 +44,7 @@ public class Game
     private CrosshairRenderer _crosshairRenderer;
 
     private VoxelRaycaster _voxelRaycaster;
-    private Player _player;
+    private Player.Player _player;
     private BlockSelector _blockSelector;
 
     private UiRenderer _uiRenderer;
@@ -57,7 +58,7 @@ public class Game
     private BlockTextures _blockTextures;
     private BlockDatabase _blockDatabase;
 
-    private TextRenderer _textRenderer;
+    // private TextRenderer _textRenderer;
 
     private BlockBreaking _blockBreaking;
     private BlockPlacement _blockPlacement;
@@ -70,8 +71,6 @@ public class Game
     private ItemTextures _itemTextures;
 
     private HotbarRenderer _hotbarRenderer;
-
-    private bool _playerControlsEnabled = false;
 
     private ActionContext _actionContext;
 
@@ -88,6 +87,10 @@ public class Game
     private AudioContext _audioContext;
 
     private GraphicsSettings _graphicsSettings = new();
+
+    private UiManager _uiManager;
+
+    private GameController _gameController;
 
     public unsafe void Load(IWindow window)
     {
@@ -123,9 +126,9 @@ public class Game
             GetShaderPath("shader.frag")
         );
         
-        _soundPlayer = new SoundPlayer();
+        _soundPlayer = new SoundPlayer(() => _debugMenu.EnableSound);
 
-        _frameBufferSize = window.Size;
+        OnFrameBufferResize(window.Size);
 
         _imGuiController = new ImGuiController(OpenGl.Context, window, inputContext);
 
@@ -133,7 +136,7 @@ public class Game
         _crosshairRenderer.Initialize(OpenGl.Context, window.Size.X, window.Size.Y);
 
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
-        _player = new Player(new Vector3(0f, 100f, 0f), worldPos =>
+        _player = new Player.Player(new Vector3(0f, 100f, 0f), worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
@@ -144,10 +147,6 @@ public class Game
         _blockSpriteRenderer = new BlockSpriteRenderer(OpenGl.Context, _blockTextures);
 
         _playerInventory = new PlayerInventory();
-        
-        var characterMap = new CharacterMap(OpenGl.Context);
-        var textShader = new Shader(GetShaderPath("text.vert"), GetShaderPath("text.frag"));
-        _textRenderer = new TextRenderer(textShader, characterMap);
         
         var items = ItemLoader.Load();
         var itemDatabase = new ItemDatabase(items);
@@ -161,19 +160,8 @@ public class Game
             return _chunkSystem.IsBlockSolid(blockPos);
         }, _blockDatabase, _blockTextures);
 
-        var uiTexture = new Texture(OpenGl.Context, GetTexturePath("hotbar_slot_background.png"));
-        _hotbarRenderer = new HotbarRenderer(OpenGl.Context, _playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            uiTexture, _textRenderer);
-
-        var inventoryRenderer = new InventoryRenderer(_playerInventory, window.Size.AsFloatVector(), _itemTextures,
-            uiTexture, _textRenderer);
-        var draggableItemRenderer =
-            new DraggableItemRenderer(_textRenderer, window.Size.AsFloatVector(), _itemTextures);
-
         var craftingRecipes = CraftingRecipesLoader.Load();
         var craftingGrid = new CraftingGrid(3, 3, craftingRecipes);
-        var craftingGridUi = new CraftingGridUi(craftingGrid, window.Size.AsFloatVector(), uiTexture, _itemTextures);
-        _uiRenderer = new UiRenderer(_hotbarRenderer, inventoryRenderer, draggableItemRenderer, _playerInventory, craftingGridUi);
 
         var blockBreakingShader =
             new Shader(GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
@@ -202,16 +190,19 @@ public class Game
         _debugMenu = new DebugMenu(_camera, _blockDatabase, _blockSelector, _itemDatabase, _voxelRaycaster,
             _playerInventory, _deltaTimeAverage, _updateTimeAverage, _renderTimeAverage, _chunkSystem, _player, _soundPlayer, _graphicsSettings);
 
+        _gameController = new GameController(() => _window.Close());
+        
+        _uiManager = new UiManager(_actionContext, _gameController, _playerInventory, _itemTextures, _player.Health);
+
+        _player.Health.OnDamage += () =>
+        {
+            _soundPlayer.PlaySound("player/hurt");
+        };
     }
 
     private SoundPlayer _soundPlayer;
 
     private bool _isWorldLoaded;
-
-    private static string GetTexturePath(string name)
-    {
-        return Path.Combine("..", "..", "..", "Resources", "Textures", name);
-    }
 
     private static string GetShaderPath(string name)
     {
@@ -238,19 +229,18 @@ public class Game
         var isLeftClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Left);
         if (isLeftClickPressed != _lastLeftClickStatus && isLeftClickPressed)
         {
-            _uiRenderer.OnMouseClicked(MouseButton.Left, _primaryMouse.Position);
+            // _uiRenderer.OnMouseClicked(MouseButton.Left, _primaryMouse.Position);
         }
         _lastLeftClickStatus = isLeftClickPressed;
         
         var isRightClickPressed = _primaryMouse.IsButtonPressed(MouseButton.Right);
         if (isRightClickPressed != _lastRightClickStatus && isRightClickPressed)
         {
-            _uiRenderer.OnMouseClicked(MouseButton.Right, _primaryMouse.Position);
+            // _uiRenderer.OnMouseClicked(MouseButton.Right, _primaryMouse.Position);
         }
         _lastRightClickStatus = isRightClickPressed;
         
-        _playerControlsEnabled = _uiRenderer.AllowPlayerMovement;
-        _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
+        // _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
         _chunkSystem.UpdateChunkVisibility(_camera.Position, _graphicsSettings.RenderDistance);
 
@@ -260,7 +250,7 @@ public class Game
             _isFirstUpdate = false;
         }
 
-        if (_playerControlsEnabled)
+        if (!_actionContext.MovementBlocked)
         {
             var raycast = _voxelRaycaster.Cast(_camera.Position, _camera.Direction, 10f);
             if (raycast.HasValue)
@@ -302,6 +292,10 @@ public class Game
                 }
             
                 _chunkSystem.DestroyBlock(hit.Position);
+                if (block.DestructionSoundId != null)
+                {
+                    _soundPlayer.PlaySound(block.DestructionSoundId);
+                }
             }
         
             if (_currentMouseClickCooldown <= 0f)
@@ -332,14 +326,14 @@ public class Game
 
         if (!_debugMenu.FreeCamEnabled)
         {
-            var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera(true) : Vector3.Zero;
+            var movementInput = !_actionContext.MovementBlocked ? GetMovementInputWithCamera(true) : Vector3.Zero;
             _player.Update((float)deltaTime, new Vector2(movementInput.X, movementInput.Z));
             _camera.Position = _player.Position + new Vector3(0f, _player.Size.Y * 0.5f, 0f); 
         }
         else
         {
             const float freecamSpeed = 20f;
-            var movementInput = _playerControlsEnabled ? GetMovementInputWithCamera(false) : Vector3.Zero;
+            var movementInput = !_actionContext.MovementBlocked ? GetMovementInputWithCamera(false) : Vector3.Zero;
             _camera.Position += movementInput * (freecamSpeed * (float)deltaTime);
         }
         
@@ -351,9 +345,21 @@ public class Game
         
         _itemDroppingSystem.Update((float)deltaTime);
         
-        _uiRenderer.Update(_primaryMouse.Position);
+        // _uiRenderer.Update(_primaryMouse.Position);
         
         _cloudSystem.Update((float)deltaTime);
+
+        if (_actionContext.IsPressed(InputAction.TogglePause))
+        {
+            _uiManager.TogglePauseMenu();
+        }
+
+        if (_actionContext.IsPressed(InputAction.ToggleInventory))
+        {
+            _uiManager.TryToggleInventoryMenu();
+        }
+        
+        _uiManager.Update((float)deltaTime);
         
         _updateStopwatch.Stop();
         _updateTimeAverage.AddTime((float)_updateStopwatch.Elapsed.TotalSeconds);
@@ -416,8 +422,10 @@ public class Game
         
         _debugMenu.Draw();
         
+        _uiManager.Render((float)deltaTime);
+        
         _crosshairRenderer.Render();
-        _uiRenderer.Render();
+        // _uiRenderer.Render();
         
         _imGuiController.Render();
 
@@ -469,19 +477,15 @@ public class Game
     {
         OpenGl.Context.Viewport(newSize);
         _frameBufferSize = newSize;
+        WindowDimensions.Width = _frameBufferSize.X;
+        WindowDimensions.Height = _frameBufferSize.Y;
     }
 
     public void OnKeyDown(IKeyboard keyboard, Key pressedKey, int keyCode)
     {
-        if (pressedKey == Key.Escape)
-        {
-            _chunkSystem.StopChunkGenerationThread();
-            _window.Close();
-        }
-
         if (pressedKey == Key.Tab)
         {
-            _uiRenderer.ToggleInventory();
+            // _uiRenderer.ToggleInventory();
         }
     }
 
@@ -514,7 +518,7 @@ public class Game
             _lastMousePosition = position;
         }
         
-        if (_playerControlsEnabled)
+        if (!_actionContext.MovementBlocked)
         {
             var xOffset = (position.X - _lastMousePosition.X) * lookSensitivity;
             var yOffset = (position.Y - _lastMousePosition.Y) * lookSensitivity;
@@ -563,6 +567,8 @@ public class Game
 
     public void OnClosing()
     {
+        _chunkSystem.StopChunkGenerationThread();
+        
         var worldData = new WorldData("Test world");
         
         // Register all modified blocks
@@ -577,7 +583,5 @@ public class Game
         worldData.Inventory = _playerInventory;
         
         WorldStorage.StoreWorld(worldData);
-        
-        // _audioManager.Cleanup();
     }
 }

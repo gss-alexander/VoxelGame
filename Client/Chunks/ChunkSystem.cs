@@ -204,6 +204,7 @@ public class ChunkSystem
         var chunkPosition = Chunk.BlockToChunkPosition(blockPosition);
         if (!_visibleChunks.TryGetValue(chunkPosition, out var chunk))
         {
+            // todo: this should still place it
             return;
         }
 

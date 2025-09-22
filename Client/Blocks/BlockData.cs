@@ -44,6 +44,7 @@ public class BlockData
     public bool IsSolid { get; set; }
     public string? PlacementSoundId { get; set; }
     public string? BreakingSoundId { get; set; }
+    public string? DestructionSoundId { get; set; }
     public BlockDrop[]? Drops { get; set; }
     public ToolType? ToolType { get; set; }
 }

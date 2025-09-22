@@ -4,6 +4,7 @@ namespace Client.Sound;
 
 public class SoundPlayer
 {
+    private readonly Func<bool> _soundEnabledFunc;
     public int ActiveSoundSources => _activeSources.Count;
     
     private readonly Dictionary<string, AudioClip> _audioClips;
@@ -13,10 +14,9 @@ public class SoundPlayer
     private readonly ObjectPool<AudioSource> _audioSourcePool;
     private readonly List<AudioSource> _activeSources = new();
 
-    private string _lastSoundId;
-
-    public SoundPlayer()
+    public SoundPlayer(Func<bool> soundEnabledFunc)
     {
+        _soundEnabledFunc = soundEnabledFunc;
         _audioContext = new AudioContext();
         _audioSource = new AudioSource();
 
@@ -51,6 +51,8 @@ public class SoundPlayer
 
     public void PlaySound(string soundId)
     {
+        if (!_soundEnabledFunc()) return;
+        
         var source = _audioSourcePool.Get();
         if (!_audioClips.TryGetValue(soundId, out var clip))
         {

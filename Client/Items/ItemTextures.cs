@@ -17,6 +17,8 @@ public class ItemTextures
     private readonly TextureArray _itemSpriteTextures;
     private readonly TextureArray _blockSpriteTextures;
 
+    private readonly Dictionary<string, Texture> _textures = new();
+
     public ItemTextures(GL gl, ItemDatabase itemDatabase, BlockDatabase blockDatabase, BlockSpriteRenderer blockSpriteRenderer)
     {
         var items = new List<ItemData>();
@@ -55,6 +57,10 @@ public class ItemTextures
                 texturePath = Path.Combine(basePath, "missing.png");
                 Console.WriteLine($"[Item Textures]: MISSING TEXTURE FOR ITEM {item.ExternalId}");
             }
+
+            var texture = new Texture(texturePath);
+            _textures.Add(item.ExternalId, texture);
+            
             builder = builder.AddTexture(texturePath);
             Console.WriteLine($"[Item Textures]: Loaded item texture {item.ExternalId}");
             
@@ -75,12 +81,21 @@ public class ItemTextures
             var block = blocks[i];
             var blockId = blockDatabase.GetInternalId(block.ExternalId);
             var blockSpriteData = blockSpriteRenderer.GetBlockTextureData(blockId);
+
+            var texture = new Texture(blockSpriteData, BlockSpriteRenderer.SpriteSize, BlockSpriteRenderer.SpriteSize);
+            _textures.Add(block.ExternalId, texture);
+            
             builder = builder.AddTextureFromMemory(blockSpriteData);
             _textureIndexMap.Add(block.ExternalId, (uint)i);
             _textureTypeMap.Add(block.ExternalId, ItemTextureType.Block); 
         }
 
         return builder.Build(gl);
+    }
+
+    public Texture GetTextureForItem(string itemId)
+    {
+        return _textures[itemId];
     }
     
     public uint GetTextureIndexForItem(string itemId)
