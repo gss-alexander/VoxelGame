@@ -24,7 +24,7 @@ public class DebugMenu
     private readonly TimeAverageTracker _updateTimeAverage;
     private readonly TimeAverageTracker _renderTimeAverage;
     private readonly ChunkSystem _chunkSystem;
-    private readonly Player _player;
+    private readonly Player.Player _player;
     private readonly SoundPlayer _soundPlayer;
     private readonly GraphicsSettings _graphicsSettings;
 
@@ -33,7 +33,7 @@ public class DebugMenu
     public DebugMenu(Camera camera, BlockDatabase blockDatabase, BlockSelector blockSelector, ItemDatabase itemDatabase,
         VoxelRaycaster voxelRaycaster, PlayerInventory playerInventory, TimeAverageTracker deltaTimeAverage,
         TimeAverageTracker updateTimeAverage, TimeAverageTracker renderTimeAverage, ChunkSystem chunkSystem,
-        Player player, SoundPlayer soundPlayer, GraphicsSettings graphicsSettings)
+        Player.Player player, SoundPlayer soundPlayer, GraphicsSettings graphicsSettings)
     {
         _camera = camera;
         _blockDatabase = blockDatabase;

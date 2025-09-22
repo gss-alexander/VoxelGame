@@ -11,3 +11,5 @@ sounds:
     path: "glass_place.wav"
   step:
     path: "step.wav"
+  player/hurt:
+    path: "player_hurt.wav"

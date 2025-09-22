@@ -44,7 +44,7 @@ public class Game
     private CrosshairRenderer _crosshairRenderer;
 
     private VoxelRaycaster _voxelRaycaster;
-    private Player _player;
+    private Player.Player _player;
     private BlockSelector _blockSelector;
 
     private UiRenderer _uiRenderer;
@@ -136,7 +136,7 @@ public class Game
         _crosshairRenderer.Initialize(OpenGl.Context, window.Size.X, window.Size.Y);
 
         _voxelRaycaster = new VoxelRaycaster(_chunkSystem.IsBlockSolid);
-        _player = new Player(new Vector3(0f, 100f, 0f), worldPos =>
+        _player = new Player.Player(new Vector3(0f, 100f, 0f), worldPos =>
         {
             var blockPos = Block.WorldToBlockPosition(worldPos);
             return _chunkSystem.IsBlockSolid(blockPos);
@@ -192,7 +192,12 @@ public class Game
 
         _gameController = new GameController(() => _window.Close());
         
-        _uiManager = new UiManager(_actionContext, _gameController, _playerInventory, _itemTextures);
+        _uiManager = new UiManager(_actionContext, _gameController, _playerInventory, _itemTextures, _player.Health);
+
+        _player.Health.OnDamage += () =>
+        {
+            _soundPlayer.PlaySound("player/hurt");
+        };
     }
 
     private SoundPlayer _soundPlayer;

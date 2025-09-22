@@ -12,7 +12,7 @@ public class UiManager
 
     private readonly List<UiElement> _uiElementCollector = new();
     
-    public UiManager(ActionContext actionContext, GameController gameController, PlayerInventory inventory, ItemTextures itemTextures)
+    public UiManager(ActionContext actionContext, GameController gameController, PlayerInventory inventory, ItemTextures itemTextures, Health playerHealth)
     {
         _actionContext = actionContext;
         
@@ -32,7 +32,7 @@ public class UiManager
         _screens.Add(Screen.PauseMenu, pauseScreen);
 
         // HUD
-        var hudScreen = new HudScreen(inventory, itemTextures);
+        var hudScreen = new HudScreen(inventory, itemTextures, playerHealth);
         hudScreen.Initialize();
         _screens.Add(Screen.Hud, hudScreen);
         hudScreen.IsActive = true;

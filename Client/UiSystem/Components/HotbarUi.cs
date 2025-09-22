@@ -12,13 +12,13 @@ public class HotbarUi : Image
     private readonly List<UiElement> _slotElements = new();
     private Image? _selectedSlotImage;
 
-    public HotbarUi(PlayerInventory inventory, ItemTextures itemTextures)
+    public HotbarUi(PlayerInventory inventory, ItemTextures itemTextures, Vector2 position)
     {
         _inventory = inventory;
         _itemTextures = itemTextures;
         
         Size = new Vector2(800f, 88f);
-        Position = new Vector2(0f, -50f);
+        Position = position;
         Anchor = AnchorMode.CenterBottom;
         Pivot = PivotMode.CenterMiddle;
         Sprite = Textures.GetTexture(Textures.TextureCategory.Ui, "hotbar_background");

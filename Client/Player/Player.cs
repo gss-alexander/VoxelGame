@@ -1,15 +1,15 @@
 ﻿using System.Numerics;
 using Client.Inputs;
 using Client.Sound;
-using Silk.NET.Maths;
 
-namespace Client;
+namespace Client.Player;
 
 public class Player
 {
     private readonly ActionContext _actionContext;
     private readonly SoundPlayer _soundPlayer;
 
+    public Health Health { get; } = new(10f, 10f);
     public Vector3 Position
     {
         get => _entity.Position;
@@ -30,6 +30,9 @@ public class Player
     private float _footstepTimer;
     private bool _wasGroundedLastFrame;
     private Vector3 _lastPosition;
+
+    private float _timeSpentFalling;
+    private const float TimeBeforeFallDamage = 1.0f;
 
     public Player(Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc, ActionContext actionContext, SoundPlayer soundPlayer)
     {
@@ -72,6 +75,7 @@ public class Player
         _entity.Update(deltaTime);
         
         UpdateFootstepSounds(deltaTime);
+        UpdateFallDamage(deltaTime);
         
         _wasGroundedLastFrame = _entity.IsGrounded;
         _lastPosition = _entity.Position;
@@ -139,5 +143,30 @@ public class Player
     {
         var horizontalMovement = new Vector2(_entity.Position.X - _lastPosition.X, _entity.Position.Z - _lastPosition.Z);
         return horizontalMovement.Length() > MinimumMovementThreshold * deltaTime;
+    }
+
+    private void UpdateFallDamage(float deltaTime)
+    {
+        if (!_entity.IsGrounded)
+        {
+            _timeSpentFalling += deltaTime;
+            return;
+        }
+        
+        if (_entity.IsGrounded)
+        {
+            if (!_wasGroundedLastFrame)
+            {
+                if (_timeSpentFalling >= TimeBeforeFallDamage)
+                {
+                    // todo: better damage calculation
+                    Health.Damage(1f);
+                }
+            }
+            else
+            {
+                _timeSpentFalling = 0f;
+            }
+        }
     }
 }
