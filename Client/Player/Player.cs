@@ -34,6 +34,9 @@ public class Player
     private float _timeSpentFalling;
     private const float TimeBeforeFallDamage = 1.0f;
 
+    private const float JumpBufferTimeInSeconds = 0.1f;
+    private float _secondsSinceJumpPressed;
+
     public Player(Vector3 startingPosition, Func<Vector3, bool> isBlockSolidFunc, ActionContext actionContext, SoundPlayer soundPlayer)
     {
         _actionContext = actionContext;
@@ -52,7 +55,12 @@ public class Player
 
         var jumpDoublePressed = _actionContext.IsDoublePressed(InputAction.Jump, 0.5f);
 
-        if (_actionContext.IsHeld(InputAction.Jump) && _entity.IsGrounded)
+        _secondsSinceJumpPressed += deltaTime;
+        if (_actionContext.IsPressed(InputAction.Jump))
+        {
+            _secondsSinceJumpPressed = 0f;
+        }
+        if (_secondsSinceJumpPressed <= JumpBufferTimeInSeconds && _entity.IsGrounded)
         {
             velocity.Y = JumpSpeed;
             _entity.IsGrounded = false;
