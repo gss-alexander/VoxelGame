@@ -1,4 +1,5 @@
-﻿using StbImageSharp;
+﻿using Client.FileSystem;
+using StbImageSharp;
 
 namespace Client.Items.MeshGeneration;
 
@@ -208,7 +209,7 @@ public static class SpriteMeshGenerator
 
     private static SpriteSolidMap LoadImageDataForItem(string texture)
     {
-        var path = Path.Combine("..", "..", "..", "Resources", "Textures", "Items", texture);
+        var path = Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Items", texture);
 
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
