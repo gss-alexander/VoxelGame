@@ -1,11 +1,12 @@
-﻿using YamlDotNet.Serialization;
+﻿using Client.FileSystem;
+using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace Client.Crafting;
 
 public static class CraftingRecipesLoader
 {
-    private static readonly string FilePath = Path.Combine("..", "..", "..", "Resources", "Data", "crafting_recipes.yaml");
+    private static readonly string FilePath = Path.Combine(ResourceDirectory.DirectoryPath, "Data", "crafting_recipes.yaml");
 
     private class CraftingRecipeConfig
     {

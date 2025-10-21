@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <OutputPath>../../bin/$(Configuration)/</OutputPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,14 +20,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Resources\Fonts\" />
-      <Folder Include="Resources\Textures\Misc\BlockBreaking\" />
-      <Folder Include="Resources\Textures\Ui\" />
-      <Folder Include="UI\Elements\" />
+        <Content Include="../Resources/**/*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Resources/%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Client.Audio\Client.Audio.csproj" />
     </ItemGroup>
-
 </Project>

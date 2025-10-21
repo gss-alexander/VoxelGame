@@ -8,6 +8,7 @@ using Client.Clouds;
 using Client.Crafting;
 using Client.Debug;
 using Client.Diagnostics;
+using Client.FileSystem;
 using Client.Inputs;
 using Client.Items;
 using Client.Items.Dropping;
@@ -115,7 +116,7 @@ public class Game
 
         OpenGl.Context = window.CreateOpenGL();
         
-        _blockData = BlockDataLoader.Load(Path.Combine("..", "..", "..", "Resources", "Data", "blocks.yaml"));
+        _blockData = BlockDataLoader.Load(Path.Combine(ResourceDirectory.DirectoryPath, "Data", "blocks.yaml"));
         _blockDatabase = new BlockDatabase(_blockData);
         _blockTextures = new BlockTextures(OpenGl.Context, _blockDatabase);
 
@@ -166,11 +167,11 @@ public class Game
         var blockBreakingShader =
             new Shader(GetShaderPath("blockBreaking.vert"), GetShaderPath("blockBreaking.frag"));
         var blockBreakingTextureArray = new TextureArrayBuilder(16, 16)
-            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "1.png"))
-            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "2.png"))
-            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "3.png"))
-            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "4.png"))
-            .AddTexture(Path.Combine("..", "..", "..", "Resources", "Textures", "Misc", "BlockBreaking", "5.png"))
+            .AddTexture(Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Misc", "BlockBreaking", "1.png"))
+            .AddTexture(Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Misc", "BlockBreaking", "2.png"))
+            .AddTexture(Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Misc", "BlockBreaking", "3.png"))
+            .AddTexture(Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Misc", "BlockBreaking", "4.png"))
+            .AddTexture(Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Misc", "BlockBreaking", "5.png"))
             .Build(OpenGl.Context);
         _blockBreaking = new BlockBreaking(OpenGl.Context, blockBreakingShader, blockBreakingTextureArray, _soundPlayer, _playerInventory, _itemDatabase);
         _blockPlacement = new BlockPlacement(_playerInventory, itemDatabase, _blockDatabase, (blockPos, blockId) =>
@@ -206,7 +207,7 @@ public class Game
 
     private static string GetShaderPath(string name)
     {
-        return Path.Combine("..", "..", "..", "Resources", "Shaders", name);
+        return Path.Combine(ResourceDirectory.DirectoryPath, "Shaders", name);
     }
 
     private float _mouseClickCooldownInSeconds = 0.1f;

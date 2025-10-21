@@ -1,3 +1,5 @@
+using Client.FileSystem;
+
 namespace Client;
 
 public static class Textures
@@ -33,7 +35,7 @@ public static class Textures
 
     private static Texture LoadTexture(TextureCategory category, string name)
     {
-        var path = Path.Combine("..", "..", "..", "Resources", "Textures", category.ToString(), $"{name}.png");
+        var path = Path.Combine(ResourceDirectory.DirectoryPath, "Textures", category.ToString(), $"{name}.png");
         return new Texture(path);
     }
 }

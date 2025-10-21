@@ -1,4 +1,5 @@
-﻿using Silk.NET.OpenGL;
+﻿using Client.FileSystem;
+using Silk.NET.OpenGL;
 
 namespace Client.Blocks;
 
@@ -46,7 +47,7 @@ public class BlockTextures
     {
         var textureArrayBuilder = new TextureArrayBuilder(16, 16);
         
-        var textureDirectoryPath = Path.Combine("..", "..", "..", "Resources", "Textures", "Blocks");
+        var textureDirectoryPath = Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Blocks");
         var textureFiles = Directory.GetFiles(textureDirectoryPath, "*.png");
         for (var i = 0; i < textureFiles.Length; i++)
         {

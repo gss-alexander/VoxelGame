@@ -1,4 +1,5 @@
-﻿using YamlDotNet.Core;
+﻿using Client.FileSystem;
+using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -8,7 +9,7 @@ namespace Client.Items;
 // Reads items from YAML file on disk
 public static class ItemLoader
 {
-    private static readonly string FilePath = Path.Combine("..", "..", "..", "Resources", "Data", "items.yaml");
+    private static readonly string FilePath = Path.Combine(ResourceDirectory.DirectoryPath, "Data", "items.yaml");
 
     private class ItemConfig
     {

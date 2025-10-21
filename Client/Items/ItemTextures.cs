@@ -1,4 +1,5 @@
 ﻿using Client.Blocks;
+using Client.FileSystem;
 using Silk.NET.OpenGL;
 
 namespace Client.Items;
@@ -46,7 +47,7 @@ public class ItemTextures
 
     private TextureArray LoadItemSprites(GL gl, List<ItemData> items)
     {
-        var basePath = Path.Combine("..", "..", "..", "Resources", "Textures", "Items");
+        var basePath = Path.Combine(ResourceDirectory.DirectoryPath, "Textures", "Items");
         var builder = new TextureArrayBuilder(16, 16);
         for (var i = 0; i < items.Count; i++)
         {

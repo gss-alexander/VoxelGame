@@ -1,4 +1,5 @@
 using Client.Audio;
+using Client.FileSystem;
 
 namespace Client.Sound;
 
@@ -20,7 +21,7 @@ public class SoundPlayer
         _audioContext = new AudioContext();
         _audioSource = new AudioSource();
 
-        _audioClips = SoundLoader.LoadAudio(Path.Combine("..", "..", "..", "Resources", "Data", "sounds.yaml"));
+        _audioClips = SoundLoader.LoadAudio(Path.Combine(ResourceDirectory.DirectoryPath, "Data", "sounds.yaml"));
 
         _audioSourcePool = new ObjectPool<AudioSource>(() =>
         {

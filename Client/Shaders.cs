@@ -1,4 +1,5 @@
-﻿using Silk.NET.OpenGL;
+﻿using Client.FileSystem;
+using Silk.NET.OpenGL;
 
 namespace Client;
 
@@ -26,6 +27,6 @@ public static class Shaders
     
     private static string GetShaderPath(string name)
     {
-        return Path.Combine("..", "..", "..", "Resources", "Shaders", name);
+        return Path.Combine(ResourceDirectory.DirectoryPath, "Shaders", name);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Silk.NET.OpenGL;
+﻿using Client.FileSystem;
+using Silk.NET.OpenGL;
 
 namespace Client.UI.Text;
 
@@ -34,7 +35,7 @@ public class CharacterMap
 
     private void Initialize(string fontName)
     {
-        FontLoader.LoadFace(Path.Combine("..", "..", "..", "Resources", "Fonts", $"{fontName}.ttf"));
+        FontLoader.LoadFace(Path.Combine(ResourceDirectory.DirectoryPath, "Fonts", $"{fontName}.ttf"));
         
         // Loads the first 128 characters as opengl textures
         for (int characterIndex = 0; characterIndex < 128; characterIndex++)
