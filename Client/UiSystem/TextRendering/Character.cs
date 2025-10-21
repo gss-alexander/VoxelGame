@@ -1,8 +1,7 @@
-﻿using System.Numerics;
-using Silk.NET.Maths;
+﻿using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
-namespace Client.UI.Text;
+namespace Client.UiSystem.TextRendering;
 
 public class Character
 {

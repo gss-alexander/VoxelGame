@@ -4,7 +4,7 @@ using static FreeTypeSharp.FT;
 using static FreeTypeSharp.FT_LOAD;
 using static FreeTypeSharp.FT_Render_Mode_;
 
-namespace Client.UI.Text;
+namespace Client.UiSystem.TextRendering;
 
 public static class FontLoader
 {

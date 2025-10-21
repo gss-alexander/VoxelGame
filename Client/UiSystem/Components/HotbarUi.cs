@@ -56,10 +56,10 @@ public class HotbarUi : Image
                 AddChild(slotElement);
                 _slotElements.Add(slotElement);
 
-                var countLabel = new Text();
+                var countLabel = new Elements.Text();
                 countLabel.Anchor = AnchorMode.RightTop;
                 countLabel.Pivot = PivotMode.RightMiddle;
-                countLabel.HorizontalAlign = Text.HorizontalAlignment.Right;
+                countLabel.HorizontalAlign = Elements.Text.HorizontalAlignment.Right;
                 countLabel.FontSize = 5f;
                 countLabel.Color = Vector3.Zero;
                 countLabel.Content = slot.Count.ToString();

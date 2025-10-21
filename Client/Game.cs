@@ -15,8 +15,6 @@ using Client.Items.Dropping;
 using Client.Persistence;
 using Client.Settings;
 using Client.Sound;
-using Client.UI;
-using Client.UI.Text;
 using Client.UiSystem;
 using Silk.NET.Input;
 using Silk.NET.Maths;
@@ -48,8 +46,6 @@ public class Game
     private Player.Player _player;
     private BlockSelector _blockSelector;
 
-    private UiRenderer _uiRenderer;
-
     private BoundingBoxRenderer _boundingBoxRenderer;
     private Shader _lineShader;
 
@@ -70,8 +66,6 @@ public class Game
 
     private ItemDroppingSystem _itemDroppingSystem;
     private ItemTextures _itemTextures;
-
-    private HotbarRenderer _hotbarRenderer;
 
     private ActionContext _actionContext;
 

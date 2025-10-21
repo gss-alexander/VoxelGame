@@ -13,7 +13,7 @@ public class InventorySlot : Panel
 
     public ItemStorage.Slot Slot { get; }
 
-    private readonly Text _countLabel = new();
+    private readonly Elements.Text _countLabel = new();
     private readonly Image _iconImage = new();
     private readonly Panel _container = new();
 

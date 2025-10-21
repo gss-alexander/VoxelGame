@@ -1,4 +1,4 @@
-﻿namespace Client.UI.Text;
+﻿namespace Client.UiSystem.TextRendering;
 
 public enum TextAlignment
 {

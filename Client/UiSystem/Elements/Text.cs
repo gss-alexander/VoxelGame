@@ -1,5 +1,5 @@
 using System.Numerics;
-using Client.UI.Text;
+using Client.UiSystem.TextRendering;
 using Silk.NET.OpenGL;
 
 namespace Client.UiSystem.Elements;

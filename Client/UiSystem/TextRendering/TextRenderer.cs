@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Silk.NET.OpenGL;
 
-namespace Client.UI.Text;
+namespace Client.UiSystem.TextRendering;
 
 public class TextRenderer
 {
