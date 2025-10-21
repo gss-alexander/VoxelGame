@@ -67,6 +67,16 @@ public class ActionContext
         UpdateKeyboardAction(InputAction.TogglePause, Key.Escape);
         UpdateMouseAction(InputAction.UiClick, MouseButton.Left);
         UpdateKeyboardAction(InputAction.ToggleInventory, Key.Tab);
+        
+        UpdateKeyboardAction(InputAction.HotbarSelect1, Key.Number1);
+        UpdateKeyboardAction(InputAction.HotbarSelect2, Key.Number2);
+        UpdateKeyboardAction(InputAction.HotbarSelect3, Key.Number3);
+        UpdateKeyboardAction(InputAction.HotbarSelect4, Key.Number4);
+        UpdateKeyboardAction(InputAction.HotbarSelect5, Key.Number5);
+        UpdateKeyboardAction(InputAction.HotbarSelect6, Key.Number6);
+        UpdateKeyboardAction(InputAction.HotbarSelect7, Key.Number7);
+        UpdateKeyboardAction(InputAction.HotbarSelect8, Key.Number8);
+        UpdateKeyboardAction(InputAction.HotbarSelect9, Key.Number9);
     }
 
     private void UpdateKeyboardAction(InputAction action, Key associatedKey)

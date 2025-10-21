@@ -1,4 +1,5 @@
-﻿using Client.Items;
+﻿using Client.Inputs;
+using Client.Items;
 
 namespace Client;
 
@@ -66,6 +67,46 @@ public class PlayerInventory
 
         Console.WriteLine($"[PlayerInventory]: Failed to add {count} of item {itemId} to inventory");
         return false;
+    }
+
+    public void UpdateKeyHotbarSelection(ActionContext actionContext)
+    {
+        if (actionContext.IsPressed(InputAction.HotbarSelect1))
+        {
+            SelectedHotbarSlot = 0;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect2))
+        {
+            SelectedHotbarSlot = 1;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect3))
+        {
+            SelectedHotbarSlot = 2;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect4))
+        {
+            SelectedHotbarSlot = 3;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect5))
+        {
+            SelectedHotbarSlot = 4;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect6))
+        {
+            SelectedHotbarSlot = 5;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect7))
+        {
+            SelectedHotbarSlot = 6;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect8))
+        {
+            SelectedHotbarSlot = 7;
+        }
+        else if (actionContext.IsPressed(InputAction.HotbarSelect9))
+        {
+            SelectedHotbarSlot = 8;
+        }
     }
 
     public void CycleSelectedHotbarSlot(int direction)

@@ -238,6 +238,8 @@ public class Game
         // _primaryMouse.Cursor.CursorMode = _playerControlsEnabled ? CursorMode.Raw : CursorMode.Normal;
         
         _chunkSystem.UpdateChunkVisibility(_camera.Position, _graphicsSettings.RenderDistance);
+        
+        _playerInventory.UpdateKeyHotbarSelection(_actionContext);
 
         if (_isFirstUpdate)
         {
