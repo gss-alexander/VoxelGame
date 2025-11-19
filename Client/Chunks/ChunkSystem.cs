@@ -17,6 +17,8 @@ public class ChunkSystem
     
     // Will be updated by chunk visibility checks
     private readonly List<Vector2D<int>> _chunksToHide = new();
+    private readonly List<Chunk> _chunksWithTransparency = new();
+    private readonly List<Vector2D<int>> _chunksToProcess = new();
 
     private FastNoiseLite _noise;
     private readonly ChunkGenerator _chunkGenerator;
@@ -248,7 +250,7 @@ public class ChunkSystem
         foreach (var (chunkPos, chunk) in _visibleChunks)
         {
             var distance = CalculateChunkPositionDistance(playerChunkPosition, chunk.Position);
-            if (CalculateChunkPositionDistance(playerChunkPosition, chunk.Position) > renderDistance)
+            if (distance > renderDistance)
             {
                 _chunksToHide.Add(chunkPos);
             }
@@ -277,19 +279,25 @@ public class ChunkSystem
             }
         }
 
-        foreach (var chunk in chunksToGenerate.OrderBy(c => CalculateChunkPositionDistance(playerChunkPosition, c)))
+        // Sort in-place to avoid OrderBy allocation
+        chunksToGenerate.Sort((a, b) =>
+            CalculateChunkPositionDistance(playerChunkPosition, a).CompareTo(
+                CalculateChunkPositionDistance(playerChunkPosition, b)));
+
+        foreach (var chunk in chunksToGenerate)
         {
             _chunkGenerationQueue.Enqueue(chunk);
         }
 
-        // Can I really call myself a programmer after this?
+        // Wait for chunks to be generated with a small delay to avoid busy-waiting
         while (_readyChunksAwaitingRendering.Count < renderDistance * 6)
         {
-            continue;
+            Thread.Sleep(1);
         }
 
-        var chunksToProcess = _readyChunksAwaitingRendering.Keys.ToList();
-        foreach (var chunkPos in chunksToProcess)
+        _chunksToProcess.Clear();
+        _chunksToProcess.AddRange(_readyChunksAwaitingRendering.Keys);
+        foreach (var chunkPos in _chunksToProcess)
         {
             if (_readyChunksAwaitingRendering.TryRemove(chunkPos, out var chunkToFinish))
             {
@@ -314,7 +322,7 @@ public class ChunkSystem
         foreach (var (chunkPos, chunk) in _visibleChunks)
         {
             var distance = CalculateChunkPositionDistance(playerChunkPosition, chunk.Position);
-            if (CalculateChunkPositionDistance(playerChunkPosition, chunk.Position) > renderDistance)
+            if (distance > renderDistance)
             {
                 _chunksToHide.Add(chunkPos);
             }
@@ -343,13 +351,19 @@ public class ChunkSystem
             }
         }
 
-        foreach (var chunk in chunksToGenerate.OrderBy(c => CalculateChunkPositionDistance(playerChunkPosition, c)))
+        // Sort in-place to avoid OrderBy allocation
+        chunksToGenerate.Sort((a, b) =>
+            CalculateChunkPositionDistance(playerChunkPosition, a).CompareTo(
+                CalculateChunkPositionDistance(playerChunkPosition, b)));
+
+        foreach (var chunk in chunksToGenerate)
         {
             _chunkGenerationQueue.Enqueue(chunk);
         }
 
-        var chunksToProcess = _readyChunksAwaitingRendering.Keys.ToList();
-        foreach (var chunkPos in chunksToProcess)
+        _chunksToProcess.Clear();
+        _chunksToProcess.AddRange(_readyChunksAwaitingRendering.Keys);
+        foreach (var chunkPos in _chunksToProcess)
         {
             if (_readyChunksAwaitingRendering.TryRemove(chunkPos, out var chunkToFinish))
             {
@@ -375,18 +389,25 @@ public class ChunkSystem
 
     public void RenderTransparency(Vector3 playerPosition)
     {
-        var chunksWithTransparency = new List<Chunk>();
+        _chunksWithTransparency.Clear();
         foreach (var (_, chunk) in _visibleChunks)
         {
             if (chunk.HasTransparentBlocks())
             {
-                chunksWithTransparency.Add(chunk);
+                _chunksWithTransparency.Add(chunk);
             }
         }
 
-        chunksWithTransparency = chunksWithTransparency.OrderBy(chunk =>
-            Vector2.Distance(chunk.ChunkWorldCenter, new Vector2(playerPosition.X, playerPosition.Z))).ToList();
-        foreach (var chunk in chunksWithTransparency)
+        var playerPos2D = new Vector2(playerPosition.X, playerPosition.Z);
+        // Sort in-place to avoid allocation from OrderBy().ToList()
+        _chunksWithTransparency.Sort((a, b) =>
+        {
+            var distA = Vector2.Distance(a.ChunkWorldCenter, playerPos2D);
+            var distB = Vector2.Distance(b.ChunkWorldCenter, playerPos2D);
+            return distA.CompareTo(distB);
+        });
+
+        foreach (var chunk in _chunksWithTransparency)
         {
             chunk.RenderTransparent();
         }

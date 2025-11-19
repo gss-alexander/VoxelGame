@@ -86,18 +86,20 @@ public class Entity
         var min = position - Size / 2f;
         var max = position + Size / 2f;
 
-        var minX = (int)MathF.Floor(min.X);
-        var maxX = (int)MathF.Floor(max.X);
-        var minY = (int)MathF.Floor(min.Y);
-        var maxY = (int)MathF.Floor(max.Y);
-        var minZ = (int)MathF.Floor(min.Z);
-        var maxZ = (int)MathF.Floor(max.Z);
+        // Calculate exact block range that could collide (voxels span from coord-0.5 to coord+0.5)
+        // This avoids checking unnecessary extra blocks
+        var minX = (int)MathF.Floor(min.X + 0.5f);
+        var maxX = (int)MathF.Floor(max.X + 0.5f);
+        var minY = (int)MathF.Floor(min.Y + 0.5f);
+        var maxY = (int)MathF.Floor(max.Y + 0.5f);
+        var minZ = (int)MathF.Floor(min.Z + 0.5f);
+        var maxZ = (int)MathF.Floor(max.Z + 0.5f);
 
-        for (var x = minX - 1; x <= maxX + 1; x++)
+        for (var x = minX; x <= maxX; x++)
         {
-            for (var y = minY - 1; y <= maxY + 1; y++)
+            for (var y = minY; y <= maxY; y++)
             {
-                for (var z = minZ - 1; z <= maxZ + 1; z++)
+                for (var z = minZ; z <= maxZ; z++)
                 {
                     if (_isBlockSolidFunc(new Vector3(x, y, z)))
                     {

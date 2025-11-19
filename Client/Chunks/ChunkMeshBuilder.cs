@@ -69,7 +69,11 @@ public static class ChunkMeshBuilder
         var transparentIndicesOffset = 0u;
         var opaqueIndicesOffset = 0u;
         var totalBlocks = Chunk.Size * Chunk.Height * Chunk.Size;
-        
+
+        // Pre-calculate chunk world offset to avoid redundant calculations per vertex
+        var chunkWorldOffsetX = Chunk.Size * chunkData.Position.X;
+        var chunkWorldOffsetZ = Chunk.Size * chunkData.Position.Y;
+
         for (var i = 0; i < totalBlocks; i++)
         {
             var x = i % Chunk.Size;
@@ -89,6 +93,7 @@ public static class ChunkMeshBuilder
             var isTransparent = blockData.IsTransparent;
             var vertices = isTransparent ? transparentVertices : opaqueVertices;
             var indices = isTransparent ? transparentIndices : opaqueIndices;
+            ref var indicesOffset = ref (isTransparent ? ref transparentIndicesOffset : ref opaqueIndicesOffset);
 
             foreach (var face in BlockGeometry.Faces)
             {
@@ -98,45 +103,37 @@ public static class ChunkMeshBuilder
                 }
 
                 var textureIndex = blockTextures.GetBlockTextureIndex(blockId, face.Direction);
-                        
+
                 for (var vertexIndex = 0; vertexIndex < face.Vertices.Length; vertexIndex += 6)
                 {
-                    var vX = face.Vertices[vertexIndex] + x + (Chunk.Size * chunkData.Position.X);
+                    var vX = face.Vertices[vertexIndex] + x + chunkWorldOffsetX;
                     var vY = face.Vertices[vertexIndex + 1] + y;
-                    var vZ = face.Vertices[vertexIndex + 2] + z + (Chunk.Size * chunkData.Position.Y);
+                    var vZ = face.Vertices[vertexIndex + 2] + z + chunkWorldOffsetZ;
                     var vU = face.Vertices[vertexIndex + 3];
                     var vV = face.Vertices[vertexIndex + 4];
                     var brightness = face.Vertices[vertexIndex + 5];
-        
+
                     vertices.Write(vX);
                     vertices.Write(vY);
                     vertices.Write(vZ);
                     vertices.Write(vU);
                     vertices.Write(vV);
                     vertices.Write(textureIndex);
-                    vertices.Write(brightness); 
+                    vertices.Write(brightness);
                 }
 
                 foreach (var index in face.Indices)
                 {
-                    var indicesOffset = isTransparent ? transparentIndicesOffset : opaqueIndicesOffset;
                     indices.Write(index + indicesOffset);
                 }
 
-                if (isTransparent)
-                {
-                    transparentIndicesOffset += 4;
-                }
-                else
-                {
-                    opaqueIndicesOffset += 4;
-                }
+                indicesOffset += 4;
             }
         }
 
         var result = new ChunkMeshGenerationResult(
-            new Mesh(opaqueVertices.Read(), opaqueIndices.Read()),
-            new Mesh(transparentVertices.Read(), transparentIndices.Read())
+            new Mesh(opaqueVertices.ToArray(), opaqueIndices.ToArray()),
+            new Mesh(transparentVertices.ToArray(), transparentIndices.ToArray())
         );
         
         _vertexBuffers.Release(opaqueVertices);

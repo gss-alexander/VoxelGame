@@ -28,4 +28,11 @@ public class ArrayBuffer<T>
     {
         return new ReadOnlySpan<T>(_buffer, 0, Size);
     }
+
+    public T[] ToArray()
+    {
+        var result = new T[Size];
+        Array.Copy(_buffer, result, Size);
+        return result;
+    }
 }

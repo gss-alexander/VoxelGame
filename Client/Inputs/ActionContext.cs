@@ -49,10 +49,11 @@ public class ActionContext
     public void CollectInputs(float deltaTime)
     {
         _currentTime += deltaTime;
-        
-        foreach (var key in _doublePressed.Keys.ToList())
+
+        // Avoid allocation by iterating over enum values instead of dictionary keys
+        foreach (var action in Enum.GetValues<InputAction>())
         {
-            _doublePressed[key] = false;
+            _doublePressed[action] = false;
         }
         
         UpdateKeyboardAction(InputAction.Jump, Key.Space);
